@@ -13,14 +13,15 @@ Thanks to the developers of **Retoc** and **UAssetAPI** which are included in th
 
 ## Known issues and plans
 - Most bosses or boss arenas are broken after randomizing
-  - Tachy and Democrawler teleport outside the arena
-  - Tutorial boss is unkillable
-  - The Gigas kill cutscene teleports the player out of bounds
-  - Elder Phase 2 attacks do not work properly outside his arena (?)
-  - Mann becomes invincible and unresponsive at a certain HP threshold when outside his arena
+  - Tachy and Democrawler teleport outside the playable area when replacing other bosses
+  - The tutorial Hedgeboar Brute is unkillable when replacing other bosses
+  - The Gigas kill cutscene teleports the player out of bounds when replacing other bosses
+  - Elder Phase 2 attacks do not work properly when replacing other bosses
+  - Mann becomes invincible and unresponsive at a certain HP threshold when replacing other bosses
 - Many regular enemy encounters in the game are probably also broken. One spawn in the first zone has already stumped me for several hours so I haven't tested much of the game at all
 - Needs a GUI and usage documentation
-- Cross-randomizing of enemies between different ranks (I could also change the size of enemies pretty easily as a fun addition to this)
+- Cross-randomizing of enemies between different ranks (I can also change the size of enemies pretty easily as a fun addition to this)
+- The duo boss encounter in Eidos 9 is currently likely to be extremely unbalanced
 
 ## Installation
 Not yet ready
