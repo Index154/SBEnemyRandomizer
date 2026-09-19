@@ -1,5 +1,5 @@
 # Stellar Blade Enemy Randomizer
-An enemy randomizer mod for Stellar Blade. Currently in very very early Alpha.
+An enemy randomizer mod for Stellar Blade. Currently in very very early Alpha. I'm a mostly self-taught hobby programmer so please excuse the poor code quality.
 
 Thanks to the developers of **Retoc** and **UAssetAPI** which are included in this project.
 
