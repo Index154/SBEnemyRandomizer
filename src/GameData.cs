@@ -285,12 +285,6 @@ public static class GameData{
         M_BodyBag_Nikke
     };
 
-    public class EnemyObj(string category, string rank)
-    {
-        public string category = category;
-        public string rank = rank;
-    };
-
     public static readonly List<string> EnemyCategories = new List<string>{
         "Antlion_0",
         "AntlionB",
@@ -1132,20 +1126,5 @@ public static class GameData{
             ["WeaponMaster"] = ["SE_M_WeaponMasterA_01", "SE_M_WeaponMasterB_01"]
         }
         
-    };
-    
-    // When replacing an enemy we may have to retain the RewardGroupAlias of the replaced enemy so the drops remain balanced
-    // DifficultyStatGroupAlias might be helpful for comparing enemy variants with different scaling
-    // There are many stats aside from those listed here but they seem to be largely unused or unchanged across variants
-    // (moveSpeed and meshScale might be fun to mess around with a bit)
-    public struct EnemyCharacterData{
-        public EnemyBase enemyBase;
-        public int maxHP;
-        public int maxShield;
-        public int physicAttackPower;
-        public int RangeAttackPower;
-        public int ShieldAttackPower;
-        public string difficultyStatGroupAlias;
-        public string rewardGroupAlias;
     };
 }
