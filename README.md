@@ -3,7 +3,7 @@ An enemy randomizer mod for Stellar Blade. Currently in very very early Alpha. I
 
 Thanks to the developers of **Retoc** and **UAssetAPI** which are included in this project.
 
-**My progress so far:**
+## My progress so far
 - Relevant enemy spawns have been identified. NPCs and other entities are untouched (I hope)
 - The script loads the game files, replaces all relevant enemy spawns, creates the mod files and then moves them to the ~mods folder
 - The behavior logic of replacement enemies is fully functional from my limited testing so far
@@ -11,7 +11,7 @@ Thanks to the developers of **Retoc** and **UAssetAPI** which are included in th
 - Bosses can be replaced in a way that does not add any new duplicates
 - Enemy scaling is currently achieved by simply giving an enemy the stats of the one it is replacing. While vanilla does have some scaling of enemies across the game, different enemy types (and even different subvariants of the same enemy type) have their stats changed in wildly different ways so this is not a good reference
 
-**Known issues and things to work on before this mod can be actively playtested:**
+## Known issues and plans
 - Most bosses or boss arenas are broken after randomizing
   - Tachy and Democrawler teleport outside the arena
   - Tutorial boss is unkillable
