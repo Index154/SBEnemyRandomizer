@@ -166,7 +166,7 @@ public class Program{
                 consistentReplacements.Add(characterAlias.Value.ToString(), replacementAlias);
             }
 
-            // Clone the target character row and replace the stats
+            // Clone the replacement charactertable entry and modify it. This is necessary so we can have different scaling for each copy of an enemy. We could add some more checks to reduce some of the duplicate entries this produces but I don't think that's worth the effort
             StructPropertyData originalEnemyEntry = new();
             StructPropertyData replacementEnemyEntry = new();
             foreach(StructPropertyData ch in characters){
@@ -181,14 +181,12 @@ public class Program{
             string newEntryName = Regex.Replace(replacementAlias, @".*_M_", $"_M_{rank}_{incrementalID}_");
             newEntryName = zone.Value.ToString().Replace("Zone_", "") + newEntryName;
 
-            if(!characters.Any(ch => ch.Name.Value.ToString() == newEntryName)){
-                ScaleAndFixEnemy(newEnemyEntry, originalEnemyEntry, incrementalID, row.Name.Value.ToString());
-                incrementalID++;
-                newEnemyEntry.Name = FName.FromString(charactersAsset, newEntryName);
-                characters.Add(newEnemyEntry);
-            }
+            ScaleAndFixEnemy(newEnemyEntry, originalEnemyEntry, incrementalID, row.Name.Value.ToString());
+            incrementalID++;
+            newEnemyEntry.Name = FName.FromString(charactersAsset, newEntryName);
+            characters.Add(newEnemyEntry);
 
-            // Replace the enemy spawn
+            // Modify the spawn event to spawn the new custom charactertable entry instead
             Console.WriteLine($"{incrementalID - 1} | {row.Name.Value}: {characterAlias.Value} => {replacementAlias} / {newEntryName}");
             characterAlias.Value = FName.FromString(spawnEventsAsset, newEntryName);
             
@@ -200,6 +198,7 @@ public class Program{
 
     static void ScaleAndFixEnemy(StructPropertyData newEnemy, StructPropertyData originalEnemy, uint incrementalID, string spawnEventName){
 
+        // Assign every new enemy a unique ID in case it matters. Also makes troubleshooting easier
         ((UInt32PropertyData)newEnemy["ID"]).Value = incrementalID;
 
         // Keep some of the data of the replaced enemy such as combat data and drop tables for balance reasons
