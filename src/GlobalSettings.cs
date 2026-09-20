@@ -4,6 +4,7 @@ public class GlobalSettings
 {
     // Settings provided by the user through GUI (unimplemented)
     public static string gamePath = "D:/Steam/steamapps/common/StellarBlade/SB/Content/Paks";
+    public static int seed = 12414321;
     // Which rank of enemy should an enemy of a given rank be replaceable by?
     public static bool smallToSmall = true;
     public static bool smallToNormal = false;

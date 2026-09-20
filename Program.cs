@@ -86,6 +86,13 @@ public class Program{
         uint incrementalID = 990000000;
         Dictionary<string, string> consistentReplacements = [];
 
+        // Seeding logic
+        Random seedGenerator = (seed == -1) ? new() : new(seed);
+        int randoSeed = seedGenerator.Next(int.MinValue, int.MaxValue);
+        Random rndCategory = new(randoSeed);
+        Random rndAlias = new(randoSeed);
+
+        // Go through spawn events and modify those that are relevant
         foreach(StructPropertyData row in spawnEvents){
 
             ArrayPropertyData characterAliasArray = (ArrayPropertyData)row["CharacterAlias"];
@@ -116,8 +123,6 @@ public class Program{
                 replacementAlias = consistentReplacements[characterAlias.Value.ToString()];
             }else if(onlyPlaceOnce){
                 
-                Random rndCategory = new();
-                Random rndAlias = new();
                 string keyToRemoveFrom = "";
                 while(replacementAlias == ""){
                     KeyValuePair<string, string[]> randomKVP = EnemiesToPlaceOnce[rank].ElementAt(rndCategory.Next(EnemiesToPlaceOnce[rank].Count));
@@ -139,14 +144,12 @@ public class Program{
             }else{
 
                 // Pick a different enemy category
-                Random rndCategory = new();
                 string replacementCategory = characterAlias.Value.ToString();
                 while(characterAlias.Value.ToString().Contains(replacementCategory)){
                     replacementCategory = EnemyCategoriesToPlace[rank][rndCategory.Next(EnemyCategoriesToPlace[rank].Length)];
                 }
 
                 // Pick a random enemy from the category
-                Random rndAlias = new();
                 List<string> tempEnemyList = [];
                 foreach(string enemyAlias in enemySourceArray){
                     if(enemyAlias.Contains(replacementCategory)){
@@ -202,7 +205,7 @@ public class Program{
         ((UInt32PropertyData)newEnemy["ID"]).Value = incrementalID;
 
         // Keep some of the data of the replaced enemy such as combat data and drop tables for balance reasons
-        string[] dataToRetain = ["Rank", "MaxHP", "MaxShield", "MaxStamina", "PhysicAttackPower", "RangeAttackPower", "ShieldAttackPower", "StaminaAttackPower", "ShieldRegenPerSecond", "ShieldRegenPerSecondWhenBattle", "StaminaRegenPerSecond", "HPRegenPerSecond", "ShieldIgnorePercentage", "DifficultyStatGroupAlias", "HitDefenseLevel", "RewardGroupAlias", "RewardSpawnBucketType", "RewardOverrideSaveType", "RewardFormationAssetPath"];
+        string[] dataToRetain = ["Rank", "MaxHP", "MaxShield", "MaxStamina", "PhysicAttackPower", "RangeAttackPower", "ShieldAttackPower", "StaminaAttackPower", "ShieldRegenPerSecond", "ShieldRegenPerSecondWhenBattle", "StaminaRegenPerSecond", "HPRegenPerSecond", "ShieldIgnorePercentage", "DifficultyStatGroupAlias", "HitDefenseLevel", "RewardGroupAlias", "RewardSpawnBucketType", "RewardOverrideSaveType", "RewardFormationAssetPath", "TargetFilterRadius", "ProjectileTargetFilterRadius", "DefaultDetectAIAlias", "NarrowDetectAIAlias", "AIAuditorySenseRadius", "AIAuditorySenseDecibel", "AIAuditorySenseDuration"];
         foreach(string s in dataToRetain){
             newEnemy[s].RawValue = originalEnemy[s].RawValue;
         }
