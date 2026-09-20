@@ -222,7 +222,7 @@ public class Program{
         }
         // Lower stats for testing
         IntPropertyData maxHP = (IntPropertyData)newEnemy["MaxHP"];
-        maxHP.Value = 500;
+        //maxHP.Value = 500;
         
         // Reset spawn when loading save - Fix for testing. Enemies with SaveType Save will have their last name and last position written into your save file. This prevents us from rerandomizing mid-playthrough them without softlocking the game (in many cases)
         EnumPropertyData saveType = (EnumPropertyData)spawnEvent["SaveType"];
