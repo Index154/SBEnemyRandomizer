@@ -18,7 +18,8 @@ Thanks to the developers of **Retoc** and **UAssetAPI** which are included in th
   - The Gigas kill cutscene teleports the player out of bounds when replacing other bosses
   - Elder Phase 2 attacks do not work properly when replacing other bosses
   - Mann becomes invincible and unresponsive at a certain HP threshold when replacing other bosses
-- Many regular enemy encounters in the game are probably also broken. One spawn in the first zone has already stumped me for several hours so I haven't tested much of the game at all
+- Many regular enemy encounters in the game are probably also broken. I haven't tested much of the game at all yet
+  - DED10_E_CharS_037 / WindowBreakHydra spawn sometimes fails for unknown reasons. Can completely softlock the save file
 - Needs a GUI and usage documentation
 - Cross-randomizing of enemies between different ranks (I can also change the size of enemies pretty easily as a fun addition to this)
 - The duo boss encounter in Eidos 9 is currently likely to be extremely unbalanced
