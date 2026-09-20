@@ -757,9 +757,9 @@ public static class GameData{
             "AYL_M_BarnacleA_02",
             "DEDA_M_BarnacleA_02",
             "DEDA_M_BarnacleA_03",
-            //"SD_M_Beholder_01",
+            //"SD_M_Beholder_01",       // Broken AI because of tutorial checks
             "WLA_M_Beholder_01",
-            //"SD_M_Beholder_02",
+            //"SD_M_Beholder_02",       // Broken AI because of tutorial checks
             "SE_M_BotAnimal_01",
             "SE_M_BotAnimal_02",
             "SE_M_BotAnimal_03",
@@ -795,7 +795,7 @@ public static class GameData{
             "UME_M_ClriketBChain_01",
             "DED_M_ClriketBGround_01",
             "DEDA_M_ClriketBGround_01",
-            //"DED_M_ClriketBTutorial_01",
+            //"DED_M_ClriketBTutorial_01",      // Exclude it because it triggers some sort of tutorial
             "DED_M_ClriketCFear_01",
             "DEDA_M_ClriketCFear_01",
             "DEDN_M_ClriketCFear_01",
@@ -867,31 +867,31 @@ public static class GameData{
             "WLA_M_LumpB_01",
             "SE_M_LumpWhite_01",
             "WLB_M_LurkerA_01",
-            //"WLB_M_LurkerAUnderGround_01",
+            //"WLB_M_LurkerAUnderGround_01",        // Spawns out of reach and never surfaces
             "WLB_M_LurkerB_01",
-            //"WLB_M_LurkerBUnderGround_01",
+            //"WLB_M_LurkerBUnderGround_01",        // Spawns out of reach and never surfaces
             "WLA_M_MiteD_01",
             "UME_M_SkullGunner_01",
-            //"UME_M_SkullGunner_01_Seq",
+            //"UME_M_SkullGunner_01_Seq",       // Cutscene variant
             "UME_M_SkullGunnerAlone_01",
-            //"UME_M_SkullGunnerLieDown_01",
-            //"UME_M_SkullGunnerSitting_01",
-            //"UME_M_SkullGunnerSitting_02",
+            //"UME_M_SkullGunnerLieDown_01",        // Never becomes active / hittable
+            //"UME_M_SkullGunnerSitting_01",        // Never becomes active / hittable
+            //"UME_M_SkullGunnerSitting_02",        // Never becomes active / hittable
             "UME_M_SkullHammer_01",
-            //"UME_M_SkullHammer_01_Seq",
+            //"UME_M_SkullHammer_01_Seq",       // Cutscene variant
             "UME_M_SkullHammerAlone_01",
             "UME_M_SkullHammerAlone_02",
             "UME_M_SkullSpear_01",
-            //"UME_M_SkullSpear_01_Seq",
+            //"UME_M_SkullSpear_01_Seq",       // Cutscene variant
             "UME_M_SkullSpearAlone_01",
-            //"UME_M_SkullSpearLieDown_01",
-            //"UME_M_SkullSpearLieDown_02",
-            //"UME_M_SkullSpearSitting_01",
+            //"UME_M_SkullSpearLieDown_01",     // Never becomes active / hittable
+            //"UME_M_SkullSpearLieDown_02",     // Never becomes active / hittable
+            //"UME_M_SkullSpearSitting_01",     // Never becomes active / hittable
             "UME_M_SkullSword_01",
-            //"UME_M_SkullSword_01_Seq",
+            //"UME_M_SkullSword_01_Seq",       // Cutscene variant
             "UME_M_SkullSwordAlone_01",
-            //"UME_M_SkullSwordLieDown_01",
-            //"UME_M_SkullSwordSitting_01",
+            //"UME_M_SkullSwordLieDown_01",     // Never becomes active / hittable
+            //"UME_M_SkullSwordSitting_01",     // Never becomes active / hittable
             "DED_M_StatueA_01",
             "DEDN_M_StatueA_01",
             "DED_M_StatueA_02",
@@ -920,15 +920,15 @@ public static class GameData{
             "DEDA_M_TentacleB_01",
             "WLA_M_TentacleB_01",
             "WLB_M_TentacleB_01",
-            //"WLA_M_TentacleBGround_01",
-            //"WLB_M_TentacleBGround_01",
-            //"WLA_M_TentacleBGround_02",
-            //"SE_M_TurretLaser_01",
-            //"SE_M_TurretLaser_02",
-            //"SE_M_TurretLaser_03",
-            //"WLA_M_TurretLaserB_01",
-            //"WLB_M_TurretLaserB_01",
-            //"WLB_M_TurretLaserC_01",
+            //"WLA_M_TentacleBGround_01",       // Disappears underground and never surfaces
+            //"WLB_M_TentacleBGround_01",       // Disappears underground and never surfaces
+            //"WLA_M_TentacleBGround_02",       // Disappears underground and never surfaces
+            //"SE_M_TurretLaser_01",       // Might be unkillable?
+            //"SE_M_TurretLaser_02",       // Might be unkillable?
+            //"SE_M_TurretLaser_03",       // Might be unkillable?
+            //"WLA_M_TurretLaserB_01",       // Might be unkillable?
+            //"WLB_M_TurretLaserB_01",       // Might be unkillable?
+            //"WLB_M_TurretLaserC_01",       // Might be unkillable?
             "NST_M_VipGuard_01",
             "NST_M_VipGuard_02",
             "NST_M_VipGuard_03",
@@ -963,8 +963,8 @@ public static class GameData{
             "WLA_M_AntlionF_02",
             "WLB_M_AntlionF_02",
             "SE_M_AntlionWhite_01",
-            "ATL_M_BodyBag_01",
-            "AYL_M_BodyBag_01",
+            "ATL_M_BodyBag_01",     // Got softlocked once in ambush event in Eidos 7 which had a bodybag that killed itself
+            "AYL_M_BodyBag_01",        // But maybe something else caused it so idk
             "WLAN_M_BodyBag_01",
             "AYL_M_BodyBag_02",
             "AYL_M_BodyBagDead_01",
@@ -981,7 +981,7 @@ public static class GameData{
             "SE_M_DollHead_02",
             "WLB_M_LesserLurker_01",
             "WLB_M_LesserLurkerDetect_01",
-            //"WLB_M_LesserLurkerDig_01",
+            //"WLB_M_LesserLurkerDig_01",       // Spawns out of reach and never surfaces
             "DEDA_M_MiteA_01",
             "UME_M_MiteA_01",
             "UME_M_MiteB_01",
@@ -998,10 +998,10 @@ public static class GameData{
             "UME_M_SkullingWithSpear_01",
             "UME_M_SkullingWithSword_01",
             "SE_M_TentacleWhite_01",
-            //"SE_M_TentacleWhiteGround_01",
-            //"SD_M_ThornHead_01",
+            //"SE_M_TentacleWhiteGround_01",       // Disappears underground and never surfaces
+            //"SD_M_ThornHead_01",      // Broken AI because of tutorial checks
             "WLB_M_ThornHead_01",
-            //"SD_M_ThornHead_02"
+            //"SD_M_ThornHead_02"       // Broken AI because of tutorial checks
         }}
     
     };
