@@ -65,6 +65,9 @@ public class Program{
         File.Move($"{tempPath}/{modName}.pak", gamePath + $"/~mods/{modName}.pak", overwrite: true);
         File.Move($"{tempPath}/{modName}.ucas", gamePath + $"/~mods/{modName}.ucas", overwrite: true);
         File.Move($"{tempPath}/{modName}.utoc", gamePath + $"/~mods/{modName}.utoc", overwrite: true);
+
+        // Save file reset for testing
+        //File.Copy(Environment.ExpandEnvironmentVariables("%userprofile%/Downloads/StellarBladeSave03.sav"), Environment.ExpandEnvironmentVariables("%userprofile%/AppData/Local/SB/Saved/SaveGames/76561198169967897/StellarBladeSave03.sav"), overwrite: true);
     }
 
     static UAsset ReadUAsset(string uAssetPath, string mapPath){
@@ -84,9 +87,6 @@ public class Program{
         Dictionary<string, string> consistentReplacements = [];
 
         foreach(StructPropertyData row in spawnEvents){
-
-            // "WindowBreakHydra" replacement in DED10 only seems to work with very specific targets (e.g. SkullGunner) for no discernible reason. Most replacements just don't appear which softlocks the save file. None of the values I tried changing in the charactertable row made a difference. Skip randomizing this one spawn for now!
-            if(row.Name.Value.ToString() == "DED10_E_CharS_037") continue;      // 990000050 when filtering by DED
 
             ArrayPropertyData characterAliasArray = (ArrayPropertyData)row["CharacterAlias"];
             if(characterAliasArray.Value == null || characterAliasArray.Value.Length < 1) continue;
@@ -159,7 +159,7 @@ public class Program{
             }
 
             // Test specific enemy
-            //replacementAlias = "UMEN_M_SkullGunner_01";
+            //replacementAlias = "UME_M_SkullGunner_01";
 
             // These bosses have two spawn events each so prevent these from being randomized separately
             if(!consistentReplacements.ContainsKey(characterAlias.Value.ToString()) && (characterAlias.Value.ToString() == "NST_M_Raven_01" || characterAlias.Value.ToString() == "NST_M_ElderPhase1_01")) {
@@ -203,16 +203,21 @@ public class Program{
         ((UInt32PropertyData)newEnemy["ID"]).Value = incrementalID;
 
         // Keep some of the data of the replaced enemy such as combat data and drop tables for balance reasons
-        string[] dataToRetain = ["Rank", "MaxHP", "MaxShield", "MaxStamina", "PhysicAttackPower", "RangeAttackPower", "ShieldAttackPower", "StaminaAttackPower", "ShieldRegenPerSecond", "ShieldRegenPerSecondWhenBattle", "StaminaRegenPerSecond", "HPRegenPerSecond", "ShieldIgnorePercentage", "MeshScale", "DifficultyStatGroupAlias", "HitDefenseLevel", "BackSideHitAngle", "RewardGroupAlias", "RewardSpawnBucketType", "RewardOverrideSaveType", "RewardFormationAssetPath"];
+        string[] dataToRetain = ["Rank", "MaxHP", "MaxShield", "MaxStamina", "PhysicAttackPower", "RangeAttackPower", "ShieldAttackPower", "StaminaAttackPower", "ShieldRegenPerSecond", "ShieldRegenPerSecondWhenBattle", "StaminaRegenPerSecond", "HPRegenPerSecond", "ShieldIgnorePercentage", "DifficultyStatGroupAlias", "HitDefenseLevel", "RewardGroupAlias", "RewardSpawnBucketType", "RewardOverrideSaveType", "RewardFormationAssetPath"];
         foreach(string s in dataToRetain){
             newEnemy[s].RawValue = originalEnemy[s].RawValue;
         }
 
         // Conditional fixes for specific enemies
-        ArrayPropertyData defaultEffectArray = (ArrayPropertyData)newEnemy["DefaultEffectArray"];
+        // --------------------------------------------------------------------------------------
         // Tutorial Hedgeboar Brute is unkillable
         if(newEnemy.Name.Value.ToString() == "SD_M_HedgeBoarBrute_01"){
+            ArrayPropertyData defaultEffectArray = (ArrayPropertyData)newEnemy["DefaultEffectArray"];
             defaultEffectArray.Value = (PropertyData[])defaultEffectArray.Value.Where(val => val.ToString() != "Passive_Immortal").ToArray();
+        }
+        // "WindowBreakHydra" replacement in DED10 is prone to breaking for yet unknown reasons. Make a backup of your save file before putting in the first fusion cell!!! Triggering the spawn event autosaves the game and if the spawn happens to fail then your save is bricked forever because the game never places the enemy correctly again even if you undo the replacement!
+        if(spawnEventName == "DED10_E_CharS_037") {     // 990000050
+            newEnemy.RawValue = originalEnemy.RawValue;
         }
     }
 

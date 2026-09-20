@@ -392,7 +392,7 @@ public static class GameData{
             "AYL_M_Maelstrom_01",
             "CHAL_M_Scarlet_01",
             "CHAL_XION_M_Mann_01",
-            "DEDA_M_GrubShooterElite_01",
+            "DEDA_M_GrubShooterElite_01",       
             "DED_M_GorillaB_01",
             "DED_M_GrubShooterElite_01",
             "DED_M_Opener_01",
@@ -408,7 +408,7 @@ public static class GameData{
             "UME_M_Sawshark_01",
             "UME_M_SkullJuggernaut_01",
             "UME_M_Tachy_01",
-            //"WLAN_M_SkullJuggernaut_01",
+            //"WLAN_M_SkullJuggernaut_01",      // This variant has 7 spawns so we exclude it. Not sure if WLAN is a playable zone
             "WLA_M_GorillaBBrokenHead_01",
             "WLA_M_GrubShooterEliteB_01",
             "WLA_M_HedgeBoarBrute_01",
@@ -1010,25 +1010,25 @@ public static class GameData{
 
         {EnemyRank.Boss, new[]{
             "Behemoth",
-            "Crawler",
+            "Crawler",      // Democrawler
             "ElderPhase1",
             "ElderPhase2",
             "ExoSuit",
-            "Gorilla",
-            "GrubShooterElite",
+            "Gorilla",      // Gigas
+            "GrubShooterElite",     // Corrupter
             "HedgeBoarBrute",
             "Maelstrom",
             "Mann",
-            "Marionette",
-            "Opener",
+            "Marionette",       // Karakuri
+            "Opener",       // Abaddon
             "RavenBeast",
             "Raven_",
             "RoyalGuardFemale",
-            "Sawshark",
+            "Sawshark",     // Stalker
             "Scarlet",
             "SkullJuggernaut",
             "Tachy",
-            "WeaponMaster"
+            "WeaponMaster"      // Belial
         }},
 
         {EnemyRank.Normal, new[]{
@@ -1106,7 +1106,7 @@ public static class GameData{
         [EnemyRank.Boss] = new(){
             ["Behemoth"] = ["WLB_M_Behemoth_01"],
             ["Crawler"] = ["SE_M_Crawler_01"],
-            ["ElderPhase1"] = ["NST_M_ElderPhase1_01"],     // 2 spawns, maybe one for the cutscene or after the fight?
+            ["ElderPhase1"] = ["NST_M_ElderPhase1_01"],     // 2 spawns, one is for the cutscene after the fight
             ["ElderPhase2"] = ["NST_M_ElderPhase2_01"],
             ["ExoSuit"] = ["NST_M_ExoSuit_01"],
             ["Gorilla"] = ["DED_M_GorillaB_01", "WLA_M_GorillaBBrokenHead_01"],
@@ -1117,7 +1117,7 @@ public static class GameData{
             ["Marionette"] = ["SE_M_Marionette_01"],
             ["Opener"] = ["DED_M_Opener_01", "WLB_M_OpenerWasteland_01"],
             ["RavenBeast"] = ["XION_M_RavenBeast_01"],
-            ["Raven_"] = ["NST_M_Raven_01"],    // 2 spawns, maybe one per phase?
+            ["Raven_"] = ["NST_M_Raven_01"],    // 2 spawns, one is probably for a cutscene
             ["RoyalGuardFemale"] = ["WLA_M_RoyalGuardFemale_01", "WLB_M_RoyalGuardFemale_01"],
             ["Sawshark"] = ["UME_M_Sawshark_01", "WLB_M_SawsharkWasteland_01"],
             ["Scarlet"] = ["CHAL_M_Scarlet_01"],
