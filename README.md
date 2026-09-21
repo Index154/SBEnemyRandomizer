@@ -70,7 +70,9 @@ Not yet ready
 ## Usage
 Not yet ready
 
-## Building / Running
+## For developers
 Needs .NET 8 SDK
 
-dotnet run
+Debugging: dotnet run
+
+Publishing: dotnet publish -c Release

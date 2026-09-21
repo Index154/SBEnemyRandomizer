@@ -7,6 +7,7 @@ using UAssetAPI.Unversioned;
 using System.Diagnostics;
 using static SBEnemyRandomizer.src.GlobalSettings;
 using static SBEnemyRandomizer.src.GameData;
+using static SBEnemyRandomizer.src.Logger;
 using System.Text.RegularExpressions;
 
 namespace SBEnemyRandomizer;
@@ -14,28 +15,33 @@ namespace SBEnemyRandomizer;
 public class Program{
 
     async static Task Main(){
+
+        // Create folders
+        Directory.CreateDirectory(unpackPath);
+        Directory.CreateDirectory(repackPath);
+
         // Extract datatables from game files and convert to legacy format using retoc
         await RetocToLegacy(eventSpawnTable);
         await RetocToLegacy(characterTable);
 
         // Load legacy uasset files and modify them
-        UAsset spawnEventsAsset = ReadUAsset(tempPath + $"/unpacked/{assetSubdirectory}/{eventSpawnTable}", mapPath);
-        UAsset charactersAsset = ReadUAsset(tempPath + $"/unpacked/{assetSubdirectory}/{characterTable}", mapPath);
-        ShuffleNPCAppearances(charactersAsset);
+        UAsset spawnEventsAsset = ReadUAsset($"{unpackPath}/{eventSpawnTable}", mapPath);
+        UAsset charactersAsset = ReadUAsset($"{unpackPath}/{characterTable}", mapPath);
+        if(randomizeNPCAppearances) ShuffleNPCAppearances(charactersAsset);
         RandomizeSpawns(spawnEventsAsset, charactersAsset);
         //CheckEnemies(charactersAsset);
 
         // Save modified tables
-        spawnEventsAsset.Write(tempPath + $"/modified/{assetSubdirectory}/{eventSpawnTable}");
-        charactersAsset.Write(tempPath + $"/modified/{assetSubdirectory}/{characterTable}");
+        spawnEventsAsset.Write($"{repackPath}/{eventSpawnTable}");
+        charactersAsset.Write($"{repackPath}/{characterTable}");
 
         // Repack modified uassets and convert to game-ready zen format using retoc
         await RetocToZen();
     }
 
     async static Task RetocToLegacy(string uAssetName){
-        if(File.Exists($"{tempPath}/unpacked/{assetSubdirectory}/{uAssetName}")){
-            Console.WriteLine($"Unpacked [{uAssetName}] already exists");
+        if(File.Exists($"{unpackPath}/{uAssetName}")){
+            Log($"[{uAssetName}] has already been unpacked");
             return;
         }
 
@@ -66,7 +72,7 @@ public class Program{
         using var process = Process.Start(psi)!;
         string output = await process.StandardOutput.ReadToEndAsync();
         await process.WaitForExitAsync();
-        Console.WriteLine(output);
+        Log(output);
 
         File.Move($"{tempPath}/{modName}.pak", gamePath + $"/~mods/{modName}.pak", overwrite: true);
         File.Move($"{tempPath}/{modName}.ucas", gamePath + $"/~mods/{modName}.ucas", overwrite: true);
@@ -174,7 +180,7 @@ public class Program{
             }
 
             // Test specific enemy
-            //replacementAlias = "SE_M_Marionette_01";
+            if(forceReplacementEnemyName != "") replacementAlias = forceReplacementEnemyName;
 
             // These bosses have two spawn events each so prevent these from being randomized separately
             if(!consistentReplacements.ContainsKey(characterAlias.Value.ToString()) && (characterAlias.Value.ToString() == "NST_M_Raven_01" || characterAlias.Value.ToString() == "NST_M_ElderPhase1_01")) {
@@ -202,12 +208,12 @@ public class Program{
             characters.Add(newEnemyEntry);
 
             // Modify the spawn event to spawn the new custom charactertable entry instead
-            Console.WriteLine($"{incrementalID - 1} | {row.Name.Value}: {characterAlias.Value} => {replacementAlias}");
+            Log($"{incrementalID - 1} | {row.Name.Value}: {characterAlias.Value} => {replacementAlias}");
             characterAlias.Value = FName.FromString(spawnEventsAsset, newEntryName);
             
         }
         
-        Console.WriteLine($"Seed = {randoSeed}");
+        Log($"Seed = {randoSeed}");
     }
 
     static void ScaleAndFixEnemy(UAsset charactersAsset, UAsset spawnEventsAsset, StructPropertyData spawnEvent, StructPropertyData newEnemy, StructPropertyData originalEnemy, uint incrementalID, string spawnEventName){
@@ -257,11 +263,11 @@ public class Program{
             FloatPropertyData physicAttackPower = (FloatPropertyData)row["PhysicAttackPower"];
             FloatPropertyData shieldAttackPower = (FloatPropertyData)row["ShieldAttackPower"];
             if(rank.Value != null && row.Name.Value.ToString().Contains("N_")) {
-                Console.WriteLine($"{row.Name.Value} ({rank.Value})");
+                Log($"{row.Name.Value} ({rank.Value})");
             };
         }
 
-        //asset.Write(tempPath + $"/modified/{assetSubdirectory}/{characterTable}");
+        //asset.Write($"{repackPath}/{characterTable}");
     }
 
     static void ShuffleNPCAppearances(UAsset asset){
@@ -278,7 +284,7 @@ public class Program{
                 refAppearance.Value = FName.FromString(asset, replacementAppearance);
                 //NamePropertyData defaultStanceAlias = (NamePropertyData)row["DefaultStanceAlias"];
                 //defaultStanceAlias.Value = FName.FromString(asset, replacementAppearance + "_Default");
-                //Console.WriteLine($"{row.Name.Value}: {refAppearance.Value} => {replacementAppearance}");
+                //Log($"{row.Name.Value}: {refAppearance.Value} => {replacementAppearance}");
             };
         }
     }

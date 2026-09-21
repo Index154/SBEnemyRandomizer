@@ -1,7 +1,7 @@
 namespace SBEnemyRandomizer.src;
 
-public static class GameData{
-
+public static class GameData
+{
     // Zones:
     /* 
     SD = Star Descent / Beach
