@@ -9,6 +9,8 @@ using static SBEnemyRandomizer.src.GlobalSettings;
 using static SBEnemyRandomizer.src.GameData;
 using static SBEnemyRandomizer.src.Logger;
 using System.Text.RegularExpressions;
+using System.Text.Unicode;
+using System.Text;
 
 namespace SBEnemyRandomizer;
 
@@ -17,29 +19,35 @@ public class Program{
     async static Task Main()
     {
         // Create folders
-        Directory.CreateDirectory(unpackPath);
-        Directory.CreateDirectory(repackPath);
+        Directory.CreateDirectory(unpackTablePath);
+        Directory.CreateDirectory(repackTablePath);
+        Directory.CreateDirectory(unpackAIPath);
+        Directory.CreateDirectory(repackAIPath);
 
         // Extract datatables from game files and convert to legacy format using retoc
         await RetocToLegacy(eventSpawnTable);
         await RetocToLegacy(characterTable);
-
+        await RetocToLegacy(tachyAI);
+        
         // Load legacy uasset files and modify them
-        UAsset spawnEventsAsset = ReadUAsset($"{unpackPath}/{eventSpawnTable}", mapPath);
-        UAsset charactersAsset = ReadUAsset($"{unpackPath}/{characterTable}", mapPath);
+        UAsset spawnEventsAsset = ReadUAsset($"{unpackTablePath}/{eventSpawnTable}", mapPath);
+        UAsset charactersAsset = ReadUAsset($"{unpackTablePath}/{characterTable}", mapPath);
+        UAsset tachyAIAsset = ReadUAsset($"{unpackAIPath}/{tachyAI}", mapPath);
         if(randomizeNPCAppearances) ShuffleNPCAppearances(charactersAsset);
         RandomizeSpawns(spawnEventsAsset, charactersAsset);
+        ModifyAI(tachyAIAsset);
         //CheckEnemies(charactersAsset);
 
         // Save modified tables
-        spawnEventsAsset.Write($"{repackPath}/{eventSpawnTable}");
-        charactersAsset.Write($"{repackPath}/{characterTable}");
+        spawnEventsAsset.Write($"{repackTablePath}/{eventSpawnTable}");
+        charactersAsset.Write($"{repackTablePath}/{characterTable}");
+        tachyAIAsset.Write($"{repackAIPath}/{tachyAI}");
 
         // Repack modified uassets and convert to game-ready zen format using retoc
         await RetocToZen();
 
         // Save file reset for testing
-        File.Copy(Environment.ExpandEnvironmentVariables("%userprofile%/Downloads/StellarBladeSave03.sav"), Environment.ExpandEnvironmentVariables("%userprofile%/AppData/Local/SB/Saved/SaveGames/76561198169967897/StellarBladeSave03.sav"), overwrite: true);
+        if(replaceSaveDataOnRun) File.Copy(Environment.ExpandEnvironmentVariables("%userprofile%/Downloads/StellarBladeSave03.sav"), Environment.ExpandEnvironmentVariables("%userprofile%/AppData/Local/SB/Saved/SaveGames/76561198169967897/StellarBladeSave03.sav"), overwrite: true);
     }
 
     async static Task RunRetoc(string arguments)
@@ -59,7 +67,7 @@ public class Program{
 
     async static Task RetocToLegacy(string uAssetName)
     {
-        if(File.Exists($"{unpackPath}/{uAssetName}"))
+        if(File.Exists($"{unpackTablePath}/{uAssetName}") || File.Exists($"{unpackAIPath}/{uAssetName}"))
         {
             Log($"[{uAssetName}] has already been unpacked");
             return;
@@ -135,7 +143,6 @@ public class Program{
             }
             else if(onlyPlaceOnce)
             {
-                
                 Dictionary<string, string[]> enemyShuffleDict = EnemiesToPlaceOnce[rank];
                 if(rank == EnemyRank.Boss && zone.Value.ToString().Contains("_Boss_")) enemyShuffleDict = challengeBossesToPlaceOnce[EnemyRank.Boss];
                 
@@ -213,14 +220,14 @@ public class Program{
         ((UInt32PropertyData)newEnemy["ID"]).Value = incrementalID;
 
         // Keep some of the data of the replaced enemy such as combat data and drop tables for balance reasons
-        string[] dataToRetain = ["Rank", "MaxHP", "MaxShield", "MaxStamina", "PhysicAttackPower", "RangeAttackPower", "ShieldAttackPower", "StaminaAttackPower", "ShieldRegenPerSecond", "ShieldRegenPerSecondWhenBattle", "StaminaRegenPerSecond", "HPRegenPerSecond", "ShieldIgnorePercentage", "DifficultyStatGroupAlias", "HitDefenseLevel", "RewardGroupAlias", "RewardSpawnBucketType", "RewardOverrideSaveType", "RewardFormationAssetPath", "TargetFilterRadius", "ProjectileTargetFilterRadius", "DefaultDetectAIAlias", "NarrowDetectAIAlias", "AIAuditorySenseRadius", "AIAuditorySenseDecibel", "AIAuditorySenseDuration"];
+        string[] dataToRetain = ["Rank", "MaxHP", "MaxShield", "MaxStamina", "PhysicAttackPower", "RangeAttackPower", "ShieldAttackPower", "StaminaAttackPower", "ShieldRegenPerSecond", "ShieldRegenPerSecondWhenBattle", "StaminaRegenPerSecond", "HPRegenPerSecond", "ShieldIgnorePercentage", "HitDefenseLevel", "RewardGroupAlias", "RewardSpawnBucketType", "RewardOverrideSaveType", "RewardFormationAssetPath", "TargetFilterRadius", "ProjectileTargetFilterRadius", "DefaultDetectAIAlias", "NarrowDetectAIAlias", "AIAuditorySenseRadius", "AIAuditorySenseDecibel", "AIAuditorySenseDuration"];
         foreach(string s in dataToRetain){
             newEnemy[s].RawValue = originalEnemy[s].RawValue;
         }
         // Lower stats for testing
         if(lowerEnemyHPForTesting){
             IntPropertyData maxHP = (IntPropertyData)newEnemy["MaxHP"];
-            maxHP.Value = 3000;
+            maxHP.Value = 1000;
         }
         
         // Reset spawn when loading save - Fix for testing. Enemies with SaveType Save will have their name and last position written into your save file. This prevents rerandomizing enemies mid-playthrough without softlocking the game (in many cases). Most enemies are spawned the moment you enter the zone so it's very unwieldy to test the game without ever having enemy positions saved
@@ -233,13 +240,18 @@ public class Program{
         // --------------------------------------------------------------------------------------
         ArrayPropertyData defaultEffectArray = (ArrayPropertyData)newEnemy["DefaultEffectArray"];
         string newEnemyName = newEnemy.Name.Value.ToString();
-        // Remove immortality from certain enemies
-        if("SD_M_HedgeBoarBrute_01, SE_M_Marionette_01, DED_M_Opener_01, NST_M_ElderPhase1_01, NST_M_Raven_01, NST_M_ExoSuit_01, WLA_M_RoyalGuardFemale_01, WLB_M_RoyalGuardFemale_01, SE_M_WeaponMasterA_01".Contains(newEnemyName)){
+        // Remove immortality from certain bosses
+        if("SD_M_HedgeBoarBrute_01, SE_M_Marionette_01, DED_M_Opener_01, NST_M_ElderPhase1_01, NST_M_Raven_01, NST_M_ExoSuit_01, WLA_M_RoyalGuardFemale_01, WLB_M_RoyalGuardFemale_01, SE_M_WeaponMasterA_01, UME_M_Tachy_01, DED_M_GorillaB_01, UME_M_SkullJuggernaut_01, SE_M_WeaponMasterB_01".Contains(newEnemyName)){
             defaultEffectArray.Value = defaultEffectArray.Value.Where(val => val.ToString() != "Passive_Immortal").ToArray();
         }
-        // Test Maelstrom
-        if(newEnemyName.Contains("Maelstrom")){
-            
+        // Remove special stance from certain bosses (would trigger problematic cutscenes when finishing them)
+        if("UME_M_Tachy_01, DED_M_GorillaB_01, UME_M_SkullJuggernaut_01, SE_M_WeaponMasterB_01".Contains(newEnemyName)){
+            ArrayPropertyData stanceAliasArray = (ArrayPropertyData)newEnemy["StanceAliasArray"];
+            stanceAliasArray.Value = stanceAliasArray.Value.Where(val => !val.ToString().Contains("_Finish")).ToArray();
+        }
+        // Enable TurretLaser enemies by default (still doesn't fix their AI)
+        if(newEnemyName.Contains("TurretLaser")){
+            defaultEffectArray.Value = defaultEffectArray.Value.Where(val => val.ToString() != "BlockAI_Infinite").ToArray();
         }
         // Proof of concept for adding new array values. Currently unused
         if(spawnEventName == "BingBongBingBong"){
@@ -248,6 +260,22 @@ public class Program{
         // "WindowBreakHydra". Most likely not actually broken but I'm keeping this here in case it comes up again
         if(spawnEventName == "DED10_E_CharS_037") {     // 990000050
             //newEnemy.RawValue = originalEnemy.RawValue;
+        }
+    }
+
+    static void ModifyAI(UAsset aiAsset)
+    {
+        List<Export> exports = aiAsset.Exports;
+
+        foreach(NormalExport exp in exports)
+        {
+            ArrayPropertyData skillName = (ArrayPropertyData)exp["SkillName"];
+            if(skillName == null) continue;
+            foreach(StrPropertyData skill in skillName.Value)
+            {
+                // Replace Tachy skills M_Tachy_BlinkStageMiddle1 and M_Tachy_BlinkStageMiddle2 so she doesn't teleport out of bounds
+                if(skill.Value.ToString().Contains("M_Tachy_BlinkStageMiddle")) skill.Value = FString.FromString("M_Tachy_MoveBackFar", Encoding.UTF8);
+            }
         }
     }
 
@@ -266,7 +294,7 @@ public class Program{
             };
         }
 
-        //asset.Write($"{repackPath}/{characterTable}");
+        //asset.Write($"{repackTablePath}/{characterTable}");
     }
 
     static void ShuffleNPCAppearances(UAsset asset)

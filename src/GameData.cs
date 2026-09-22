@@ -547,7 +547,7 @@ public static class GameData
             "WLA_M_TentacleBGround_01",
             "WLB_M_TentacleBGround_01",
             "WLA_M_TentacleBGround_02",
-            //"SE_M_TurretLaser_01",
+            //"SE_M_TurretLaser_01",    // Probably ignore these since most enemies won't do anything in their stead
             //"SE_M_TurretLaser_02",
             //"SE_M_TurretLaser_03",
             //"WLA_M_TurretLaserB_01",
@@ -847,12 +847,12 @@ public static class GameData
             //"WLA_M_TentacleBGround_01",       // Disappears underground and never surfaces
             //"WLB_M_TentacleBGround_01",       // Disappears underground and never surfaces
             //"WLA_M_TentacleBGround_02",       // Disappears underground and never surfaces
-            //"SE_M_TurretLaser_01",       // Might be unkillable?
-            //"SE_M_TurretLaser_02",       // Might be unkillable?
-            //"SE_M_TurretLaser_03",       // Might be unkillable?
-            //"WLA_M_TurretLaserB_01",       // Might be unkillable?
-            //"WLB_M_TurretLaserB_01",       // Might be unkillable?
-            //"WLB_M_TurretLaserC_01",       // Might be unkillable?
+            //"SE_M_TurretLaser_01",       // AI does not work
+            //"SE_M_TurretLaser_02",       // AI does not work
+            //"SE_M_TurretLaser_03",       // AI does not work
+            //"WLA_M_TurretLaserB_01",       // AI does not work
+            //"WLB_M_TurretLaserB_01",       // AI does not work
+            //"WLB_M_TurretLaserC_01",       // AI does not work
             "NST_M_VipGuard_01",
             "NST_M_VipGuard_02",
             "NST_M_VipGuard_03",

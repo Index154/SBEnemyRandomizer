@@ -15,6 +15,7 @@ public class GlobalSettings
     public static bool resetAllEnemySpawnsOnLoad = true;
     public static string customZoneNameRestriction = "";
     public static EnemyRank? customRankRestriction = EnemyRank.Boss;
+    public static bool replaceSaveDataOnRun = false;
 
     // Which rank of enemy should an enemy of a given rank be changed to? (unimplemented)
     public static bool smallToSmall = true;
@@ -42,13 +43,17 @@ public class GlobalSettings
     #else
     public static readonly string basePath = AppContext.BaseDirectory;
     #endif
-    public static readonly string assetSubdirectory = "SB/Content/Local/Data";
+    public static readonly string tableSubdirectory = "SB/Content/Local/Data";
+    public static readonly string aiSubdirectory = "SB/Content/GameDesign/Combat/BehaviorTree/Monster";
     public static readonly string tempPath = Path.Combine(basePath, "temp");
     public static readonly string retocPath = Path.Combine(basePath, "tools/retoc/retoc.exe");
     public static readonly string mapPath = Path.Combine(basePath, "tools/StellarBlade_1.1.0.usmap");
     public static readonly string logPath = Path.Combine(basePath, "logs");
-    public static readonly string unpackPath = $"{tempPath}/unpacked/{assetSubdirectory}";
-    public static readonly string repackPath = $"{tempPath}/modified/{assetSubdirectory}";
+    public static readonly string unpackTablePath = $"{tempPath}/unpacked/{tableSubdirectory}";
+    public static readonly string repackTablePath = $"{tempPath}/modified/{tableSubdirectory}";
+    public static readonly string unpackAIPath = $"{tempPath}/unpacked/{aiSubdirectory}";
+    public static readonly string repackAIPath = $"{tempPath}/modified/{aiSubdirectory}";
     public static readonly string eventSpawnTable = "EventSpawnTable.uasset";
     public static readonly string characterTable = "CharacterTable.uasset";
+    public static readonly string tachyAI = "M_Tachy_AI.uasset";
 }
