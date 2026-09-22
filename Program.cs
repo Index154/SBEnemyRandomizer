@@ -14,8 +14,8 @@ namespace SBEnemyRandomizer;
 
 public class Program{
 
-    async static Task Main(){
-
+    async static Task Main()
+    {
         // Create folders
         Directory.CreateDirectory(unpackPath);
         Directory.CreateDirectory(repackPath);
@@ -37,59 +37,54 @@ public class Program{
 
         // Repack modified uassets and convert to game-ready zen format using retoc
         await RetocToZen();
+
+        // Save file reset for testing
+        File.Copy(Environment.ExpandEnvironmentVariables("%userprofile%/Downloads/StellarBladeSave03.sav"), Environment.ExpandEnvironmentVariables("%userprofile%/AppData/Local/SB/Saved/SaveGames/76561198169967897/StellarBladeSave03.sav"), overwrite: true);
     }
 
-    async static Task RetocToLegacy(string uAssetName){
-        if(File.Exists($"{unpackPath}/{uAssetName}")){
+    async static Task RunRetoc(string arguments)
+    {
+        var psi = new ProcessStartInfo
+        {
+            FileName = retocPath,
+            Arguments = arguments,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        };
+        using var process = Process.Start(psi)!;
+        string output = await process.StandardOutput.ReadToEndAsync();
+        await process.WaitForExitAsync();
+    }
+
+    async static Task RetocToLegacy(string uAssetName)
+    {
+        if(File.Exists($"{unpackPath}/{uAssetName}"))
+        {
             Log($"[{uAssetName}] has already been unpacked");
             return;
         }
-
-        var psi = new ProcessStartInfo
-        {
-            FileName = retocPath,
-            Arguments = $"to-legacy \"{gamePath}\" \"{tempPath}/unpacked\" -f \"{uAssetName}\"",
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false
-        };
-        using var process = Process.Start(psi)!;
-        string output = await process.StandardOutput.ReadToEndAsync();
-        await process.WaitForExitAsync();
+        await RunRetoc($"to-legacy \"{gamePath}\" \"{tempPath}/unpacked\" -f \"{uAssetName}\"");
+        Log("Game files unpacked");
     }
 
-    async static Task RetocToZen(){
+    async static Task RetocToZen()
+    {
         string modName = "SBEnemyRandomizer_P";
-
-        var psi = new ProcessStartInfo
-        {
-            FileName = retocPath,
-            Arguments = $"to-zen \"{tempPath}/modified\" \"{tempPath}/{modName}.utoc\" --version UE4_26",
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false
-        };
-        using var process = Process.Start(psi)!;
-        string output = await process.StandardOutput.ReadToEndAsync();
-        await process.WaitForExitAsync();
-        Log(output);
+        await RunRetoc($"to-zen \"{tempPath}/modified\" \"{tempPath}/{modName}.utoc\" --version UE4_26");
 
         File.Move($"{tempPath}/{modName}.pak", gamePath + $"/~mods/{modName}.pak", overwrite: true);
         File.Move($"{tempPath}/{modName}.ucas", gamePath + $"/~mods/{modName}.ucas", overwrite: true);
         File.Move($"{tempPath}/{modName}.utoc", gamePath + $"/~mods/{modName}.utoc", overwrite: true);
-
-        // Save file reset for testing
-        //File.Copy(Environment.ExpandEnvironmentVariables("%userprofile%/Downloads/StellarBladeSave03.sav"), Environment.ExpandEnvironmentVariables("%userprofile%/AppData/Local/SB/Saved/SaveGames/76561198169967897/StellarBladeSave03.sav"), overwrite: true);
+        Log("Mod files moved to game directory");
     }
 
     static UAsset ReadUAsset(string uAssetPath, string mapPath){
-        Usmap mappings = new Usmap(mapPath);
-        UAsset asset = new UAsset(uAssetPath, EngineVersion.VER_UE4_26, mappings);
-        return asset;
+        return new UAsset(uAssetPath, EngineVersion.VER_UE4_26, new Usmap(mapPath));
     }
 
-    static void RandomizeSpawns(UAsset spawnEventsAsset, UAsset charactersAsset){
-
+    static void RandomizeSpawns(UAsset spawnEventsAsset, UAsset charactersAsset)
+    {
         DataTableExport spawnEventsTable = (DataTableExport)spawnEventsAsset.Exports[0];
         List<StructPropertyData> spawnEvents = spawnEventsTable.Table.Data;
         DataTableExport charactersTable = (DataTableExport)charactersAsset.Exports[0];
@@ -108,9 +103,9 @@ public class Program{
         Random rndCategory = new(randoSeed);
         Random rndAlias = new(randoSeed);
 
-        // Go through spawn events and modify those that are relevant
-        foreach(StructPropertyData row in spawnEvents){
-
+        // Go through spawn events and modify all that are relevant
+        foreach(StructPropertyData row in spawnEvents)
+        {
             ArrayPropertyData characterAliasArray = (ArrayPropertyData)row["CharacterAlias"];
             if(characterAliasArray.Value == null || characterAliasArray.Value.Length < 1) continue;
             NamePropertyData characterAlias = (NamePropertyData)characterAliasArray.Value[0];
@@ -119,7 +114,7 @@ public class Program{
             NamePropertyData zone = (NamePropertyData)row["Zone"];
             if(zone.Value == null || RelevantZones.IndexOf(zone.Value.ToString()) == -1) continue;
             // Testing for specific zone
-            //if(!zone.Value.ToString().Contains("DED")) continue;
+            if(customZoneNameRestriction != "" && !zone.Value.ToString().Contains(customZoneNameRestriction)) continue;
 
             // Determine enemy rank
             EnemyRank rank;
@@ -127,25 +122,30 @@ public class Program{
             else if(EnemiesToReplace[EnemyRank.Normal].Any(characterAlias.Value.ToString().Contains)) rank = EnemyRank.Normal;
             else if(EnemiesToReplace[EnemyRank.Boss].Any(characterAlias.Value.ToString().Contains)) rank = EnemyRank.Boss;
             else continue;
-            //if(rank != EnemyRank.Boss) continue;
+            if(customRankRestriction != null && rank != customRankRestriction) continue;
 
             string[] enemySourceArray = EnemiesToPlace[rank];
             bool onlyPlaceOnce = false;
             if(onlyShuffleExistingBoss && rank == EnemyRank.Boss) onlyPlaceOnce = true;
 
             string replacementAlias = "";
-            if(consistentReplacements.ContainsKey(characterAlias.Value.ToString())){
+            if(consistentReplacements.ContainsKey(characterAlias.Value.ToString()))
+            {
                 replacementAlias = consistentReplacements[characterAlias.Value.ToString()];
-            }else if(onlyPlaceOnce){
+            }
+            else if(onlyPlaceOnce)
+            {
                 
                 Dictionary<string, string[]> enemyShuffleDict = EnemiesToPlaceOnce[rank];
                 if(rank == EnemyRank.Boss && zone.Value.ToString().Contains("_Boss_")) enemyShuffleDict = challengeBossesToPlaceOnce[EnemyRank.Boss];
                 
                 string keyToRemoveFrom = "";
-                while(replacementAlias == ""){
+                while(replacementAlias == "")
+                {
                     KeyValuePair<string, string[]> randomKVP = enemyShuffleDict.ElementAt(rndCategory.Next(enemyShuffleDict.Count));
                     string[] replacementCategory = randomKVP.Value;
-                    if(!characterAlias.Value.ToString().Contains(randomKVP.Key)){
+                    if(!characterAlias.Value.ToString().Contains(randomKVP.Key))
+                    {
                         keyToRemoveFrom = randomKVP.Key;
                         replacementAlias = replacementCategory[rndAlias.Next(replacementCategory.Length)];
                     }
@@ -155,9 +155,7 @@ public class Program{
                 List<string> tempList = enemyShuffleDict[keyToRemoveFrom].ToList();
                 tempList.Remove(replacementAlias);
                 enemyShuffleDict[keyToRemoveFrom] = tempList.ToArray();
-                if(enemyShuffleDict[keyToRemoveFrom].Length < 1){
-                    enemyShuffleDict.Remove(keyToRemoveFrom);
-                }
+                if(enemyShuffleDict[keyToRemoveFrom].Length < 1) enemyShuffleDict.Remove(keyToRemoveFrom);
 
             }else{
 
@@ -170,20 +168,18 @@ public class Program{
                 // Pick a random enemy from the category
                 List<string> tempEnemyList = [];
                 foreach(string enemyAlias in enemySourceArray){
-                    if(enemyAlias.Contains(replacementCategory)){
-                        tempEnemyList.Add(enemyAlias);
-                    }
+                    if(enemyAlias.Contains(replacementCategory)) tempEnemyList.Add(enemyAlias);
                 }
                 int index = rndAlias.Next(tempEnemyList.Count);
                 replacementAlias = tempEnemyList[index];
-
             }
 
-            // Test specific enemy
+            // Force specific enemy for testing
             if(forceReplacementEnemyName != "") replacementAlias = forceReplacementEnemyName;
 
             // These bosses have two spawn events each so prevent these from being randomized separately
-            if(!consistentReplacements.ContainsKey(characterAlias.Value.ToString()) && (characterAlias.Value.ToString() == "NST_M_Raven_01" || characterAlias.Value.ToString() == "NST_M_ElderPhase1_01")) {
+            if(!consistentReplacements.ContainsKey(characterAlias.Value.ToString()) && (characterAlias.Value.ToString() == "NST_M_Raven_01" || characterAlias.Value.ToString() == "NST_M_ElderPhase1_01"))
+            {
                 consistentReplacements.Add(characterAlias.Value.ToString(), replacementAlias);
             }
 
@@ -191,12 +187,8 @@ public class Program{
             StructPropertyData originalEnemyEntry = new();
             StructPropertyData replacementEnemyEntry = new();
             foreach(StructPropertyData ch in characters){
-                if(ch.Name.Value.ToString() == characterAlias.Value.ToString()) {
-                    originalEnemyEntry = ch;
-                }
-                if(ch.Name.Value.ToString() == replacementAlias) {
-                    replacementEnemyEntry = ch;
-                }
+                if(ch.Name.Value.ToString() == characterAlias.Value.ToString()) originalEnemyEntry = ch;
+                if(ch.Name.Value.ToString() == replacementAlias)  replacementEnemyEntry = ch;
             }
             StructPropertyData newEnemyEntry = (StructPropertyData)replacementEnemyEntry.Clone();
             string newEntryName = Regex.Replace(replacementAlias, @".*_M_", $"_M_{rank}_{incrementalID}_");
@@ -210,14 +202,13 @@ public class Program{
             // Modify the spawn event to spawn the new custom charactertable entry instead
             Log($"{incrementalID - 1} | {row.Name.Value}: {characterAlias.Value} => {replacementAlias}");
             characterAlias.Value = FName.FromString(spawnEventsAsset, newEntryName);
-            
         }
         
         Log($"Seed = {randoSeed}");
     }
 
-    static void ScaleAndFixEnemy(UAsset charactersAsset, UAsset spawnEventsAsset, StructPropertyData spawnEvent, StructPropertyData newEnemy, StructPropertyData originalEnemy, uint incrementalID, string spawnEventName){
-
+    static void ScaleAndFixEnemy(UAsset charactersAsset, UAsset spawnEventsAsset, StructPropertyData spawnEvent, StructPropertyData newEnemy, StructPropertyData originalEnemy, uint incrementalID, string spawnEventName)
+    {
         // Assign every new enemy a unique ID in case it matters. Also makes troubleshooting easier
         ((UInt32PropertyData)newEnemy["ID"]).Value = incrementalID;
 
@@ -227,33 +218,41 @@ public class Program{
             newEnemy[s].RawValue = originalEnemy[s].RawValue;
         }
         // Lower stats for testing
-        IntPropertyData maxHP = (IntPropertyData)newEnemy["MaxHP"];
-        //maxHP.Value = 500;
+        if(lowerEnemyHPForTesting){
+            IntPropertyData maxHP = (IntPropertyData)newEnemy["MaxHP"];
+            maxHP.Value = 3000;
+        }
         
-        // Reset spawn when loading save - Fix for testing. Enemies with SaveType Save will have their last name and last position written into your save file. This prevents us from rerandomizing mid-playthrough them without softlocking the game (in many cases)
-        EnumPropertyData saveType = (EnumPropertyData)spawnEvent["SaveType"];
-        if(saveType.Value.ToString() == "ESBZoneObjSaveType_Save") saveType.Value = FName.FromString(spawnEventsAsset, "ESBZoneObjSaveType_ResetZone");
+        // Reset spawn when loading save - Fix for testing. Enemies with SaveType Save will have their name and last position written into your save file. This prevents rerandomizing enemies mid-playthrough without softlocking the game (in many cases). Most enemies are spawned the moment you enter the zone so it's very unwieldy to test the game without ever having enemy positions saved
+        if(resetAllEnemySpawnsOnLoad){
+            EnumPropertyData saveType = (EnumPropertyData)spawnEvent["SaveType"];
+            if(saveType.Value.ToString() == "ESBZoneObjSaveType_Save") saveType.Value = FName.FromString(spawnEventsAsset, "ESBZoneObjSaveType_ResetZone");
+        }
 
         // Conditional fixes for specific enemies
         // --------------------------------------------------------------------------------------
         ArrayPropertyData defaultEffectArray = (ArrayPropertyData)newEnemy["DefaultEffectArray"];
+        string newEnemyName = newEnemy.Name.Value.ToString();
         // Remove immortality from certain enemies
-        if("SD_M_HedgeBoarBrute_01, SE_M_Marionette_01".Contains(newEnemy.Name.Value.ToString())){
+        if("SD_M_HedgeBoarBrute_01, SE_M_Marionette_01, DED_M_Opener_01, NST_M_ElderPhase1_01, NST_M_Raven_01, NST_M_ExoSuit_01, WLA_M_RoyalGuardFemale_01, WLB_M_RoyalGuardFemale_01, SE_M_WeaponMasterA_01".Contains(newEnemyName)){
             defaultEffectArray.Value = defaultEffectArray.Value.Where(val => val.ToString() != "Passive_Immortal").ToArray();
         }
+        // Test Maelstrom
+        if(newEnemyName.Contains("Maelstrom")){
+            
+        }
         // Proof of concept for adding new array values. Currently unused
-        if(spawnEventName == "DED_Boss_Gorilla_E_CharS_001"){
+        if(spawnEventName == "BingBongBingBong"){
             defaultEffectArray.Value = defaultEffectArray.Value.Append(new NamePropertyData { Value = FName.FromString(charactersAsset, "M_GorillaB_Default")}).ToArray();
         }
-
-        // "WindowBreakHydra" replacement in DED10 is prone to breaking for yet unknown reasons. Make a backup of your save file before putting in the first fusion cell!!! Triggering the spawn event autosaves the game and if the spawn happens to fail then your save is bricked forever because the game never places the enemy correctly again even if you undo the replacement!
+        // "WindowBreakHydra". Most likely not actually broken but I'm keeping this here in case it comes up again
         if(spawnEventName == "DED10_E_CharS_037") {     // 990000050
             //newEnemy.RawValue = originalEnemy.RawValue;
         }
     }
 
-    static void CheckEnemies(UAsset asset){
-
+    static void CheckEnemies(UAsset asset)
+    {
         DataTableExport dtExport = (DataTableExport)asset.Exports[0];
         List<StructPropertyData> entries = dtExport.Table.Data;
 
@@ -270,8 +269,8 @@ public class Program{
         //asset.Write($"{repackPath}/{characterTable}");
     }
 
-    static void ShuffleNPCAppearances(UAsset asset){
-
+    static void ShuffleNPCAppearances(UAsset asset)
+    {
         DataTableExport dtExport = (DataTableExport)asset.Exports[0];
         List<StructPropertyData> entries = dtExport.Table.Data;
         Random rndAppearance = new();

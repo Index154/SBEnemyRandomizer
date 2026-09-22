@@ -17,12 +17,10 @@
   </ItemGroup>
 
   <ItemGroup>
-  <None Include="tools\retoc\retoc.exe"
-        CopyToOutputDirectory="PreserveNewest"
-        CopyToPublishDirectory="PreserveNewest" />
-  <None Include="tools\maps\StellarBlade_1.1.0.usmap"
-        CopyToOutputDirectory="PreserveNewest"
-        CopyToPublishDirectory="PreserveNewest" />
+  <None Include="tools\retoc\retoc.exe" CopyToPublishDirectory="PreserveNewest" />
+  <None Include="tools\StellarBlade_1.1.0.usmap" CopyToPublishDirectory="PreserveNewest" />
+  <None Include="LICENSE.md" CopyToPublishDirectory="PreserveNewest" />
+  <None Include="README.md" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
