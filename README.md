@@ -54,7 +54,7 @@ Thanks to the developers of third-party software **Retoc** and **UAssetAPI** whi
 - Balancing issues:
   - NST_M_ElderPhase1_01 is not really a boss fight so he's boring to encounter. Making custom changes to his AI could be fun. Or adding a simple setting to remove him from the boss pool
   - Maelstrom is way too tanky without the gun to shoot his weak spots with. At the same time he's also kinda weird to fight when you can go behind him since he can't rotate to face you
-  - NST_M_ExoSuit_01 is impossible to beat without the gun
+  - NST_M_ExoSuit_01 and XION_M_RavenBeast_01 are impossible to beat without the gun
   - The Corrupter + tanky elite enemy duo encounter in Eidos 9 is likely to be extremely unbalanced when randomized
   - The gun-only areas are most likely very unbalanced
   - The first Belial encounter is likely unbalanced since the game doesn't expect you to reduce the boss' HP below ~70% (and I'm using the original boss' stats for the replacement)
@@ -65,10 +65,11 @@ Thanks to the developers of third-party software **Retoc** and **UAssetAPI** whi
 ## Planned features and changes
 - Cross-randomizing of enemies between different ranks (I can also change the size of enemies pretty easily as a fun addition to this)
 - A GUI and usage documentation so normal players can actually download and use the mod
-- Randomization results and seed should be saved to some kind of log
+- Extra enemy spawns in NG+ are not yet being randomized (I didn't notice that it was a separate file at first. Should be easy to include though)
 - Nikke enemy variants are not included in randomization yet. Not sure if I want to add them
 - Scarlet and Mann boss inclusion settings are unimplemented (currently included by default)
 - A DLC check should be implemented to prevent Scarlet from appearing when it isn't owned (untested / unconfirmed)
+- More sophisticated enemy scaling to preserve an appropriate level of tankiness depending on the enemy type
 
 ## Installation
 WIP
