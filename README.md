@@ -41,7 +41,7 @@ Thanks to the developers of third-party software **Retoc** and **UAssetAPI** whi
 - Current testing progress: Early Wasteland
 
 ## Known issues with my notes to self
--Some bosses are broken after randomizing:
+- Some bosses are broken after randomizing:
   - XION_M_RavenBeast_01 teleports the player out of bounds with the phase 3 transition
   - SE_M_Crawler_01 teleports outside the playable area
   - CHAL_XION_M_Mann_01 becomes invincible and unresponsive at a certain HP threshold
