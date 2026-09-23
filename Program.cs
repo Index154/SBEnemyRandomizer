@@ -23,24 +23,33 @@ public class Program{
         Directory.CreateDirectory(repackTablePath);
         Directory.CreateDirectory(unpackAIPath);
         Directory.CreateDirectory(repackAIPath);
+        Directory.Delete($"{tempPath}/modified", true);
 
         // Extract datatables from game files and convert to legacy format using retoc
         await RetocToLegacy(eventSpawnTable);
         await RetocToLegacy(characterTable);
+        await RetocToLegacy(skillActiveStepTable);
+        await RetocToLegacy(characterMoveTable);
         await RetocToLegacy(tachyAI);
         
         // Load legacy uasset files and modify them
         UAsset spawnEventsAsset = ReadUAsset($"{unpackTablePath}/{eventSpawnTable}", mapPath);
         UAsset charactersAsset = ReadUAsset($"{unpackTablePath}/{characterTable}", mapPath);
+        UAsset skillActiveStepsAsset = ReadUAsset($"{unpackTablePath}/{skillActiveStepTable}", mapPath);
+        UAsset characterMovesAsset = ReadUAsset($"{unpackTablePath}/{characterMoveTable}", mapPath);
         UAsset tachyAIAsset = ReadUAsset($"{unpackAIPath}/{tachyAI}", mapPath);
         if(randomizeNPCAppearances) ShuffleNPCAppearances(charactersAsset);
         RandomizeSpawns(spawnEventsAsset, charactersAsset);
         ModifyAI(tachyAIAsset);
+        ModifyCharacterMoves(characterMovesAsset);
+        ModifySkillActiveSteps(skillActiveStepsAsset);
         //CheckEnemies(charactersAsset);
 
         // Save modified tables
         spawnEventsAsset.Write($"{repackTablePath}/{eventSpawnTable}");
         charactersAsset.Write($"{repackTablePath}/{characterTable}");
+        skillActiveStepsAsset.Write($"{repackTablePath}/{skillActiveStepTable}");
+        characterMovesAsset.Write($"{repackTablePath}/{characterMoveTable}");
         tachyAIAsset.Write($"{repackAIPath}/{tachyAI}");
 
         // Repack modified uassets and convert to game-ready zen format using retoc
@@ -227,7 +236,7 @@ public class Program{
         // Lower stats for testing
         if(lowerEnemyHPForTesting){
             IntPropertyData maxHP = (IntPropertyData)newEnemy["MaxHP"];
-            maxHP.Value = 1000;
+            maxHP.Value = 6000;
         }
         
         // Reset spawn when loading save - Fix for testing. Enemies with SaveType Save will have their name and last position written into your save file. This prevents rerandomizing enemies mid-playthrough without softlocking the game (in many cases). Most enemies are spawned the moment you enter the zone so it's very unwieldy to test the game without ever having enemy positions saved
@@ -241,7 +250,7 @@ public class Program{
         ArrayPropertyData defaultEffectArray = (ArrayPropertyData)newEnemy["DefaultEffectArray"];
         string newEnemyName = newEnemy.Name.Value.ToString();
         // Remove immortality from certain bosses
-        if("SD_M_HedgeBoarBrute_01, SE_M_Marionette_01, DED_M_Opener_01, NST_M_ElderPhase1_01, NST_M_Raven_01, NST_M_ExoSuit_01, WLA_M_RoyalGuardFemale_01, WLB_M_RoyalGuardFemale_01, SE_M_WeaponMasterA_01, UME_M_Tachy_01, DED_M_GorillaB_01, UME_M_SkullJuggernaut_01, SE_M_WeaponMasterB_01".Contains(newEnemyName)){
+        if("SD_M_HedgeBoarBrute_01, SE_M_Marionette_01, DED_M_Opener_01, NST_M_ElderPhase1_01, NST_M_Raven_01, NST_M_ExoSuit_01, WLA_M_RoyalGuardFemale_01, WLB_M_RoyalGuardFemale_01, SE_M_WeaponMasterA_01, UME_M_Tachy_01, DED_M_GorillaB_01, UME_M_SkullJuggernaut_01, SE_M_WeaponMasterB_01, SE_M_Crawler_01".Contains(newEnemyName)){
             defaultEffectArray.Value = defaultEffectArray.Value.Where(val => val.ToString() != "Passive_Immortal").ToArray();
         }
         // Remove special stance from certain bosses (would trigger problematic cutscenes when finishing them)
@@ -273,8 +282,64 @@ public class Program{
             if(skillName == null) continue;
             foreach(StrPropertyData skill in skillName.Value)
             {
-                // Replace Tachy skills M_Tachy_BlinkStageMiddle1 and M_Tachy_BlinkStageMiddle2 so she doesn't teleport out of bounds
+                // Replace Tachy skills M_Tachy_BlinkStageMiddle1 and M_Tachy_BlinkStageMiddle2 to jump backwards instead of teleporting out of bounds
                 if(skill.Value.ToString().Contains("M_Tachy_BlinkStageMiddle")) skill.Value = FString.FromString("M_Tachy_MoveBackFar", Encoding.UTF8);
+            }
+        }
+    }
+
+    static void ModifySkillActiveSteps(UAsset asset)
+    {
+        DataTableExport skillActiveStepsTable = (DataTableExport)asset.Exports[0];
+        List<StructPropertyData> skillActiveSteps = skillActiveStepsTable.Table.Data;
+        
+        foreach(StructPropertyData row in skillActiveSteps)
+        {
+            ArrayPropertyData selfMoves = (ArrayPropertyData)row["SelfMoveAliasArray"];
+            ArrayPropertyData targetMoves = (ArrayPropertyData)row["TargetMoveAliasArray"];
+
+            // Remove RavenBeast world coordinate teleportation steps
+            if(row.Name.Value.ToString().Contains("M_RavenBeast_"))
+            {
+                /*selfMoves.Value = selfMoves.Value.Where(val =>
+                    !val.ToString().Contains("M_RavenBeast_PhaseChange3_Move2") &&
+                    !val.ToString().Contains("M_RavenBeast_ColonyDashSky_Move1") &&
+                    !val.ToString().Contains("M_RavenBeast_ColonyDashSky_Move3") &&
+                    !val.ToString().Contains("M_RavenBeast_ColonyDashSky_Move5") &&
+                    !val.ToString().Contains("M_RavenBeast_ColonyDashSky_Move7") &&
+                    !val.ToString().Contains("M_RavenBeast_FlyRoutine1_Move2")
+                ).ToArray();*/
+
+                targetMoves.Value = targetMoves.Value.Where(val => !val.ToString().Contains("M_RavenBeast_PhaseChange3_Move4")).ToArray();
+            }
+        }
+    }
+
+    static void ModifyCharacterMoves(UAsset asset)
+    {
+        DataTableExport characterMoveTable = (DataTableExport)asset.Exports[0];
+        List<StructPropertyData> characterMoves = characterMoveTable.Table.Data;
+        
+        foreach(StructPropertyData row in characterMoves)
+        {
+            // Replace M_RavenBeast world position movement with nothing-movement to prevent out of bounds teleportation
+            if("M_RavenBeast_PhaseChange3_Move2, M_RavenBeast_PhaseChange3_Move4, M_RavenBeast_ColonyDashSky_Move1, M_RavenBeast_ColonyDashSky_Move3, M_RavenBeast_ColonyDashSky_Move5, M_RavenBeast_ColonyDashSky_Move7, M_RavenBeast_FlyRoutine1_Move2".Contains(row.Name.Value.ToString()))
+            {
+                ((EnumPropertyData)row["MoveType"]).Value = FName.FromString(asset, "MoveTransformType_None");
+                ((EnumPropertyData)row["PositionType"]).Value = FName.FromString(asset, "MovePositionType_Self");
+                ((FloatPropertyData)row["ForwardValue"]).Value = 0.0F;
+                ((FloatPropertyData)row["RightValue"]).Value = 0.0F;
+                ((FloatPropertyData)row["UpValue"]).Value = 0.0F;
+            }
+
+            // Replace M_Crawler map center warp with middle-range backwards warp
+            if(row.Name.Value.ToString() == "M_Crawler_WarpMapCenter_Move1")
+            {
+                ((EnumPropertyData)row["MoveType"]).Value = FName.FromString(asset, "MoveTransformType_Static");
+                ((EnumPropertyData)row["PositionType"]).Value = FName.FromString(asset, "MovePositionType_Target");
+                ((FloatPropertyData)row["ForwardValue"]).Value = -1500.0F;
+                ((FloatPropertyData)row["RightValue"]).Value = 0.0F;
+                ((FloatPropertyData)row["UpValue"]).Value = 0.0F;
             }
         }
     }
@@ -315,5 +380,4 @@ public class Program{
             };
         }
     }
-
 }

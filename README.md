@@ -35,15 +35,15 @@ Thanks to the developers of third-party software **Retoc** and **UAssetAPI** whi
   - WLB_M_OpenerWasteland_01
   - NST_M_ElderPhase1_01
   - NST_M_Raven_01
+  - XION_M_RavenBeast_01
   - NST_M_ExoSuit_01
   - UME_M_SkullJuggernaut_01
   - UME_M_Tachy_01
+  - SE_M_Crawler_01
 - Current testing progress: Early Wasteland
 
 ## Known issues with my notes to self
 - Some bosses are broken after randomizing:
-  - XION_M_RavenBeast_01 teleports the player out of bounds with the phase 3 transition
-  - SE_M_Crawler_01 teleports outside the playable area
   - CHAL_XION_M_Mann_01 becomes invincible and unresponsive at a certain HP threshold
   - CHAL_M_Scarlet_01 becomes invincible and unresponsive at a certain HP threshold
   - Defeating the boss that replaces Tachy does not trigger the cutscene, leaving the player stuck? => Easy fix? Just give M_Tachy_Finish stance and immortality effect to the boss?
@@ -58,7 +58,8 @@ Thanks to the developers of third-party software **Retoc** and **UAssetAPI** whi
   - The Corrupter + tanky elite enemy duo encounter in Eidos 9 is likely to be extremely unbalanced when randomized
   - The gun-only areas are most likely very unbalanced
   - The first Belial encounter is likely unbalanced since the game doesn't expect you to reduce the boss' HP below ~70% (and I'm using the original boss' stats for the replacement)
-- Minor visual issues:
+- Minor issues:
+  - XION_M_RavenBeast_01 only casts its super move once per battle instead of twice
   - UME_M_Tachy_01 character model does not despawn on death => Just add the default dissolve animation to the character entry
   - SE_M_WeaponMasterB_01 has no death animation and simply disappears instantly => Just add the default dissolve animation to the character entry
 

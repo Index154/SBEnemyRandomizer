@@ -5,9 +5,10 @@ AI file references SkillTable / SkillCommandTable entry
 SkillCommandTable entry does ???
 SkillTable entry references TargetFilterTable entry
 SkillTable entry references CharacterMoveTable entry (validity check)
-SkillTable entry references SkillActiveStepTable (individual sub-motions)
-SkillActiveStepTable entry references others in same file as a chain
-SkillActiveStepTable entry determines the motion and used animation
+SkillTable entry references SkillActiveStepTable (individual sub-steps of skills)
+SkillActiveStepTable entry references others in same file as a chain of events
+SkillActiveStepTable entry references CharacterMoveTable entry (actual movement values)
+SkillActiveStepTable entry determines used animation
 SkillActiveStepTable entry can also apply effects to self (phase change)
 
 EffectTable entry references CharacterStanceTable entry

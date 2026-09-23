@@ -9,13 +9,13 @@ public class GlobalSettings
     public static string gamePath = "D:/Steam/steamapps/common/StellarBlade/SB/Content/Paks";
     public static int seed = 123456;
     public static bool randomizeNPCAppearances = true;
-    public static string forceReplacementEnemyName = "SE_M_WeaponMasterB_01";
+    public static string forceReplacementEnemyName = "SE_M_Crawler_01";
     // Testing settings
     public static bool lowerEnemyHPForTesting = true;
     public static bool resetAllEnemySpawnsOnLoad = true;
     public static string customZoneNameRestriction = "";
     public static EnemyRank? customRankRestriction = EnemyRank.Boss;
-    public static bool replaceSaveDataOnRun = false;
+    public static bool replaceSaveDataOnRun = true;
 
     // Which rank of enemy should an enemy of a given rank be changed to? (unimplemented)
     public static bool smallToSmall = true;
@@ -55,5 +55,7 @@ public class GlobalSettings
     public static readonly string repackAIPath = $"{tempPath}/modified/{aiSubdirectory}";
     public static readonly string eventSpawnTable = "EventSpawnTable.uasset";
     public static readonly string characterTable = "CharacterTable.uasset";
+    public static readonly string skillActiveStepTable = "SkillActiveStepTable.uasset";
+    public static readonly string characterMoveTable = "CharacterMoveTable.uasset";
     public static readonly string tachyAI = "M_Tachy_AI.uasset";
 }
