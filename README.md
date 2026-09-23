@@ -45,12 +45,11 @@ Thanks to the developers of third-party software **Retoc** and **UAssetAPI** whi
 ## Known issues with my notes to self
 - Some bosses are broken after randomizing:
   - CHAL_XION_M_Mann_01 becomes invincible and unresponsive at a certain HP threshold
+    - => In ZoneEventTable: Replace content of "AddEvents" in Xion_Boss_Mann_E_ActorEff_006 with "Xion_Boss_Mann_E_ActorEff_008" to hopefully skip the cutscene
+    - Problem: How to deal with the condition and leveltargetfilter if we have multiple Mann spawns?
   - CHAL_M_Scarlet_01 becomes invincible and unresponsive at a certain HP threshold
   - Defeating the boss that replaces Tachy does not trigger the cutscene, leaving the player stuck? => Easy fix? Just give M_Tachy_Finish stance and immortality effect to the boss?
   - NST_M_ElderPhase2_01 attacks mostly do not work
-- Many regular enemy encounters in the game might be broken. I haven't tested much of the game yet. Known examples:
-  - The "GrubDash" after the Abaddon arena does not spawn => Needs retesting!
-  - The secret stash where you interact with the corpse and then a glass wall shatters did not have an enemy. Is this normal? => Test in vanilla
 - Balancing issues:
   - NST_M_ElderPhase1_01 is not really a boss fight so he's boring to encounter. Making custom changes to his AI could be fun. Or adding a simple setting to remove him from the boss pool
   - Maelstrom is way too tanky without the gun to shoot his weak spots with. At the same time he's also kinda weird to fight when you can go behind him since he can't rotate to face you
@@ -60,8 +59,10 @@ Thanks to the developers of third-party software **Retoc** and **UAssetAPI** whi
   - The first Belial encounter is likely unbalanced since the game doesn't expect you to reduce the boss' HP below ~70% (and I'm using the original boss' stats for the replacement)
 - Minor issues:
   - XION_M_RavenBeast_01 only casts its super move once per battle instead of twice
-  - UME_M_Tachy_01 character model does not despawn on death => Just add the default dissolve animation to the character entry
-  - SE_M_WeaponMasterB_01 has no death animation and simply disappears instantly => Just add the default dissolve animation to the character entry
+  - SE_M_Crawler_01 has no death animation
+  - UME_M_Tachy_01 character model does not despawn on death
+  - SE_M_WeaponMasterB_01 has no death animation and simply disappears instantly
+  - The secret stash where you interact with the corpse and then a glass wall shatters did not have an enemy. Is this normal? => Test in vanilla
 
 ## Planned features and changes
 - Cross-randomizing of enemies between different ranks (I can also change the size of enemies pretty easily as a fun addition to this)

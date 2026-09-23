@@ -23,11 +23,11 @@ public class Program{
         Directory.CreateDirectory(repackTablePath);
         Directory.CreateDirectory(unpackAIPath);
         Directory.CreateDirectory(repackAIPath);
-        Directory.Delete($"{tempPath}/modified", true);
 
         // Extract datatables from game files and convert to legacy format using retoc
         await RetocToLegacy(eventSpawnTable);
         await RetocToLegacy(characterTable);
+        await RetocToLegacy(levelTargetFilterTable);
         await RetocToLegacy(skillActiveStepTable);
         await RetocToLegacy(characterMoveTable);
         await RetocToLegacy(tachyAI);
@@ -35,11 +35,12 @@ public class Program{
         // Load legacy uasset files and modify them
         UAsset spawnEventsAsset = ReadUAsset($"{unpackTablePath}/{eventSpawnTable}", mapPath);
         UAsset charactersAsset = ReadUAsset($"{unpackTablePath}/{characterTable}", mapPath);
+        UAsset levelTargetFiltersAsset = ReadUAsset($"{unpackTablePath}/{levelTargetFilterTable}", mapPath);
         UAsset skillActiveStepsAsset = ReadUAsset($"{unpackTablePath}/{skillActiveStepTable}", mapPath);
         UAsset characterMovesAsset = ReadUAsset($"{unpackTablePath}/{characterMoveTable}", mapPath);
         UAsset tachyAIAsset = ReadUAsset($"{unpackAIPath}/{tachyAI}", mapPath);
         if(randomizeNPCAppearances) ShuffleNPCAppearances(charactersAsset);
-        RandomizeSpawns(spawnEventsAsset, charactersAsset);
+        RandomizeSpawns(spawnEventsAsset, charactersAsset, levelTargetFiltersAsset);
         ModifyAI(tachyAIAsset);
         ModifyCharacterMoves(characterMovesAsset);
         ModifySkillActiveSteps(skillActiveStepsAsset);
@@ -48,6 +49,7 @@ public class Program{
         // Save modified tables
         spawnEventsAsset.Write($"{repackTablePath}/{eventSpawnTable}");
         charactersAsset.Write($"{repackTablePath}/{characterTable}");
+        levelTargetFiltersAsset.Write($"{repackTablePath}/{levelTargetFilterTable}");
         skillActiveStepsAsset.Write($"{repackTablePath}/{skillActiveStepTable}");
         characterMovesAsset.Write($"{repackTablePath}/{characterMoveTable}");
         tachyAIAsset.Write($"{repackAIPath}/{tachyAI}");
@@ -100,7 +102,7 @@ public class Program{
         return new UAsset(uAssetPath, EngineVersion.VER_UE4_26, new Usmap(mapPath));
     }
 
-    static void RandomizeSpawns(UAsset spawnEventsAsset, UAsset charactersAsset)
+    static void RandomizeSpawns(UAsset spawnEventsAsset, UAsset charactersAsset, UAsset levelTargetFiltersAsset)
     {
         DataTableExport spawnEventsTable = (DataTableExport)spawnEventsAsset.Exports[0];
         List<StructPropertyData> spawnEvents = spawnEventsTable.Table.Data;
@@ -210,7 +212,7 @@ public class Program{
             string newEntryName = Regex.Replace(replacementAlias, @".*_M_", $"_M_{rank}_{incrementalID}_");
             newEntryName = zone.Value.ToString().Replace("Zone_", "") + newEntryName;
 
-            ScaleAndFixEnemy(charactersAsset, spawnEventsAsset, row, newEnemyEntry, originalEnemyEntry, incrementalID, row.Name.Value.ToString());
+            ScaleAndFixEnemy(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, row, newEnemyEntry, originalEnemyEntry, incrementalID, row.Name.Value.ToString());
             incrementalID++;
             newEnemyEntry.Name = FName.FromString(charactersAsset, newEntryName);
             characters.Add(newEnemyEntry);
@@ -223,24 +225,27 @@ public class Program{
         Log($"Seed = {randoSeed}");
     }
 
-    static void ScaleAndFixEnemy(UAsset charactersAsset, UAsset spawnEventsAsset, StructPropertyData spawnEvent, StructPropertyData newEnemy, StructPropertyData originalEnemy, uint incrementalID, string spawnEventName)
+    static void ScaleAndFixEnemy(UAsset charactersAsset, UAsset spawnEventsAsset, UAsset levelTargetFiltersAsset, StructPropertyData spawnEvent, StructPropertyData newEnemy, StructPropertyData originalEnemy, uint incrementalID, string spawnEventName)
     {
         // Assign every new enemy a unique ID in case it matters. Also makes troubleshooting easier
         ((UInt32PropertyData)newEnemy["ID"]).Value = incrementalID;
 
         // Keep some of the data of the replaced enemy such as combat data and drop tables for balance reasons
         string[] dataToRetain = ["Rank", "MaxHP", "MaxShield", "MaxStamina", "PhysicAttackPower", "RangeAttackPower", "ShieldAttackPower", "StaminaAttackPower", "ShieldRegenPerSecond", "ShieldRegenPerSecondWhenBattle", "StaminaRegenPerSecond", "HPRegenPerSecond", "ShieldIgnorePercentage", "HitDefenseLevel", "RewardGroupAlias", "RewardSpawnBucketType", "RewardOverrideSaveType", "RewardFormationAssetPath", "TargetFilterRadius", "ProjectileTargetFilterRadius", "DefaultDetectAIAlias", "NarrowDetectAIAlias", "AIAuditorySenseRadius", "AIAuditorySenseDecibel", "AIAuditorySenseDuration"];
-        foreach(string s in dataToRetain){
+        foreach(string s in dataToRetain)
+        {
             newEnemy[s].RawValue = originalEnemy[s].RawValue;
         }
         // Lower stats for testing
-        if(lowerEnemyHPForTesting){
+        if(lowerEnemyHPForTesting)
+        {
             IntPropertyData maxHP = (IntPropertyData)newEnemy["MaxHP"];
             maxHP.Value = 6000;
         }
         
         // Reset spawn when loading save - Fix for testing. Enemies with SaveType Save will have their name and last position written into your save file. This prevents rerandomizing enemies mid-playthrough without softlocking the game (in many cases). Most enemies are spawned the moment you enter the zone so it's very unwieldy to test the game without ever having enemy positions saved
-        if(resetAllEnemySpawnsOnLoad){
+        if(resetAllEnemySpawnsOnLoad)
+        {
             EnumPropertyData saveType = (EnumPropertyData)spawnEvent["SaveType"];
             if(saveType.Value.ToString() == "ESBZoneObjSaveType_Save") saveType.Value = FName.FromString(spawnEventsAsset, "ESBZoneObjSaveType_ResetZone");
         }
@@ -250,20 +255,46 @@ public class Program{
         ArrayPropertyData defaultEffectArray = (ArrayPropertyData)newEnemy["DefaultEffectArray"];
         string newEnemyName = newEnemy.Name.Value.ToString();
         // Remove immortality from certain bosses
-        if("SD_M_HedgeBoarBrute_01, SE_M_Marionette_01, DED_M_Opener_01, NST_M_ElderPhase1_01, NST_M_Raven_01, NST_M_ExoSuit_01, WLA_M_RoyalGuardFemale_01, WLB_M_RoyalGuardFemale_01, SE_M_WeaponMasterA_01, UME_M_Tachy_01, DED_M_GorillaB_01, UME_M_SkullJuggernaut_01, SE_M_WeaponMasterB_01, SE_M_Crawler_01".Contains(newEnemyName)){
+        if("SD_M_HedgeBoarBrute_01, SE_M_Marionette_01, DED_M_Opener_01, NST_M_ElderPhase1_01, NST_M_Raven_01, NST_M_ExoSuit_01, WLA_M_RoyalGuardFemale_01, WLB_M_RoyalGuardFemale_01, SE_M_WeaponMasterA_01, UME_M_Tachy_01, DED_M_GorillaB_01, UME_M_SkullJuggernaut_01, SE_M_WeaponMasterB_01, SE_M_Crawler_01".Contains(newEnemyName))
+        {
             defaultEffectArray.Value = defaultEffectArray.Value.Where(val => val.ToString() != "Passive_Immortal").ToArray();
         }
         // Remove special stance from certain bosses (would trigger problematic cutscenes when finishing them)
-        if("UME_M_Tachy_01, DED_M_GorillaB_01, UME_M_SkullJuggernaut_01, SE_M_WeaponMasterB_01".Contains(newEnemyName)){
+        if("UME_M_Tachy_01, DED_M_GorillaB_01, UME_M_SkullJuggernaut_01, SE_M_WeaponMasterB_01".Contains(newEnemyName))
+        {
             ArrayPropertyData stanceAliasArray = (ArrayPropertyData)newEnemy["StanceAliasArray"];
             stanceAliasArray.Value = stanceAliasArray.Value.Where(val => !val.ToString().Contains("_Finish")).ToArray();
         }
+        // Add Mann condition triggers and filters from his vanilla spawn event
+        if(newEnemyName == "CHAL_XION_M_Mann_01")
+        {
+            DataTableExport levelTargetFiltersTable = (DataTableExport)levelTargetFiltersAsset.Exports[0];
+            List<StructPropertyData> levelTargetFilters = levelTargetFiltersTable.Table.Data;
+            foreach(StructPropertyData row in levelTargetFilters)
+            {
+                if(row.Name.Value.ToString() == "Xion_Boss_Mann_LevelTargetFilter_001")
+                {
+                    ((NamePropertyData)row["SpawnPointName"]).Value = FName.FromString(levelTargetFiltersAsset, spawnEventName);
+                }
+            }
+
+            ((ArrayPropertyData)spawnEvent["EventOnSpawning"]).Value = [ new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "Xion_Boss_Mann_E_ObjectC_001")} ];
+            ((ArrayPropertyData)spawnEvent["EventOnBattle"]).Value = [ new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "Xion_Boss_Mann_E_BlocVolC_001")} ];
+
+            ((ArrayPropertyData)spawnEvent["ConditionsTrigger"]).Value = [ new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "Xion_Boss_Mann_Condition_001")}, new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "Xion_Boss_Mann_Condition_002")} ];
+            ((ArrayPropertyData)spawnEvent["ConditionTriggerEvent"]).Value = [ new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "Xion_Boss_Mann_E_ActorEff_001")}, new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "Xion_Boss_Mann_E_ActorEff_006")} ];
+
+            ((ArrayPropertyData)spawnEvent["ConditionTriggerRunType"]).Value = [ new EnumPropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerRunType_Once")}, new EnumPropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerRunType_Once")} ];
+            ((ArrayPropertyData)spawnEvent["ConditionTriggerExecType"]).Value = [ new EnumPropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerExecType_RunTime")}, new EnumPropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerExecType_RunTime")} ];
+        }
         // Enable TurretLaser enemies by default (still doesn't fix their AI)
-        if(newEnemyName.Contains("TurretLaser")){
+        if(newEnemyName.Contains("TurretLaser"))
+        {
             defaultEffectArray.Value = defaultEffectArray.Value.Where(val => val.ToString() != "BlockAI_Infinite").ToArray();
         }
         // Proof of concept for adding new array values. Currently unused
-        if(spawnEventName == "BingBongBingBong"){
+        if(spawnEventName == "BingBongBingBong")
+        {
             defaultEffectArray.Value = defaultEffectArray.Value.Append(new NamePropertyData { Value = FName.FromString(charactersAsset, "M_GorillaB_Default")}).ToArray();
         }
         // "WindowBreakHydra". Most likely not actually broken but I'm keeping this here in case it comes up again

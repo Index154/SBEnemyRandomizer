@@ -9,7 +9,7 @@ public class GlobalSettings
     public static string gamePath = "D:/Steam/steamapps/common/StellarBlade/SB/Content/Paks";
     public static int seed = 123456;
     public static bool randomizeNPCAppearances = true;
-    public static string forceReplacementEnemyName = "SE_M_Crawler_01";
+    public static string forceReplacementEnemyName = "CHAL_XION_M_Mann_01";
     // Testing settings
     public static bool lowerEnemyHPForTesting = true;
     public static bool resetAllEnemySpawnsOnLoad = true;
@@ -55,6 +55,7 @@ public class GlobalSettings
     public static readonly string repackAIPath = $"{tempPath}/modified/{aiSubdirectory}";
     public static readonly string eventSpawnTable = "EventSpawnTable.uasset";
     public static readonly string characterTable = "CharacterTable.uasset";
+    public static readonly string levelTargetFilterTable = "LevelTargetFilter.uasset";
     public static readonly string skillActiveStepTable = "SkillActiveStepTable.uasset";
     public static readonly string characterMoveTable = "CharacterMoveTable.uasset";
     public static readonly string tachyAI = "M_Tachy_AI.uasset";
