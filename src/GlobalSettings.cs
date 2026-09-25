@@ -9,15 +9,15 @@ public class GlobalSettings
     public static string gamePath = "D:/Steam/steamapps/common/StellarBlade/SB/Content/Paks";
     public static int seed = 123456;
     public static bool randomizeNPCAppearances = true;
-    public static string forceReplacementEnemyName = "CHAL_XION_M_Mann_01";
+    public static string forceReplacementEnemyName = "";
+    public static bool resetAllEnemySpawnsOnLoad = true;
     // Testing settings
     public static bool lowerEnemyHPForTesting = true;
-    public static bool resetAllEnemySpawnsOnLoad = true;
     public static string customZoneNameRestriction = "";
-    public static EnemyRank? customRankRestriction = EnemyRank.Boss;
-    public static bool replaceSaveDataOnRun = true;
+    public static EnemyRank? customRankRestriction = null;
+    public static bool replaceSaveDataOnRun = false;
 
-    // Which rank of enemy should an enemy of a given rank be changed to? (unimplemented)
+    // Which rank of enemy should an enemy of a given rank be changed to? (logic unimplemented)
     public static bool smallToSmall = true;
     public static bool smallToNormal = false;
     public static bool smallToBoss = false;
@@ -28,13 +28,11 @@ public class GlobalSettings
     public static bool bossToNormal = false;
     public static bool bossToBoss = true;
 
-    // Prevent duplicate bosses (shuffle) or randomize them fully
+    // Shuffle bosses around or select them completely randomly
     public static bool onlyShuffleExistingBoss = true;
-    // Add non-story bosses to the pool (unimplemented)
+    // Add non-story bosses to the pool (logic unimplemented)
     public static bool includeMann = true;
     public static bool includeScarlet = true;
-    // Replace all non-boss enemies of the same type consistently or replace them all independently? (unimplemented)
-    public static bool consistentReplacements = false;
 
     // Constant paths
     // -------------------------------------------------------------------------
@@ -53,10 +51,12 @@ public class GlobalSettings
     public static readonly string repackTablePath = $"{tempPath}/modified/{tableSubdirectory}";
     public static readonly string unpackAIPath = $"{tempPath}/unpacked/{aiSubdirectory}";
     public static readonly string repackAIPath = $"{tempPath}/modified/{aiSubdirectory}";
-    public static readonly string eventSpawnTable = "EventSpawnTable.uasset";
     public static readonly string characterTable = "CharacterTable.uasset";
+    public static readonly string eventSpawnTable = "EventSpawnTable.uasset";
     public static readonly string levelTargetFilterTable = "LevelTargetFilter.uasset";
-    public static readonly string skillActiveStepTable = "SkillActiveStepTable.uasset";
+    public static readonly string eventActorEffectTable = "EventActorEffectTable.uasset";
     public static readonly string characterMoveTable = "CharacterMoveTable.uasset";
+    public static readonly string skillActiveStepTable = "SkillActiveStepTable.uasset";
+    public static readonly string zoneEventTable = "ZoneEventTable.uasset";
     public static readonly string tachyAI = "M_Tachy_AI.uasset";
 }

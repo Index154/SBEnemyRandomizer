@@ -9,7 +9,6 @@ using static SBEnemyRandomizer.src.GlobalSettings;
 using static SBEnemyRandomizer.src.GameData;
 using static SBEnemyRandomizer.src.Logger;
 using System.Text.RegularExpressions;
-using System.Text.Unicode;
 using System.Text;
 
 namespace SBEnemyRandomizer;
@@ -24,34 +23,41 @@ public class Program{
         Directory.CreateDirectory(unpackAIPath);
         Directory.CreateDirectory(repackAIPath);
 
-        // Extract datatables from game files and convert to legacy format using retoc
-        await RetocToLegacy(eventSpawnTable);
+        // Extract assets from game files and convert to legacy format using retoc
         await RetocToLegacy(characterTable);
+        await RetocToLegacy(eventSpawnTable);
         await RetocToLegacy(levelTargetFilterTable);
-        await RetocToLegacy(skillActiveStepTable);
+        await RetocToLegacy(eventActorEffectTable);
         await RetocToLegacy(characterMoveTable);
+        await RetocToLegacy(skillActiveStepTable);
+        await RetocToLegacy(zoneEventTable);
         await RetocToLegacy(tachyAI);
         
         // Load legacy uasset files and modify them
-        UAsset spawnEventsAsset = ReadUAsset($"{unpackTablePath}/{eventSpawnTable}", mapPath);
         UAsset charactersAsset = ReadUAsset($"{unpackTablePath}/{characterTable}", mapPath);
+        UAsset spawnEventsAsset = ReadUAsset($"{unpackTablePath}/{eventSpawnTable}", mapPath);
         UAsset levelTargetFiltersAsset = ReadUAsset($"{unpackTablePath}/{levelTargetFilterTable}", mapPath);
-        UAsset skillActiveStepsAsset = ReadUAsset($"{unpackTablePath}/{skillActiveStepTable}", mapPath);
+        UAsset eventActorEffectsAsset = ReadUAsset($"{unpackTablePath}/{eventActorEffectTable}", mapPath);
         UAsset characterMovesAsset = ReadUAsset($"{unpackTablePath}/{characterMoveTable}", mapPath);
+        UAsset skillActiveStepsAsset = ReadUAsset($"{unpackTablePath}/{skillActiveStepTable}", mapPath);
+        UAsset zoneEventsAsset = ReadUAsset($"{unpackTablePath}/{zoneEventTable}", mapPath);
         UAsset tachyAIAsset = ReadUAsset($"{unpackAIPath}/{tachyAI}", mapPath);
         if(randomizeNPCAppearances) ShuffleNPCAppearances(charactersAsset);
-        RandomizeSpawns(spawnEventsAsset, charactersAsset, levelTargetFiltersAsset);
-        ModifyAI(tachyAIAsset);
-        ModifyCharacterMoves(characterMovesAsset);
+        RandomizeSpawns(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset);
         ModifySkillActiveSteps(skillActiveStepsAsset);
+        ModifyCharacterMoves(characterMovesAsset);
+        ModifyZoneEvents(zoneEventsAsset);
+        ModifyAI(tachyAIAsset);
         //CheckEnemies(charactersAsset);
 
-        // Save modified tables
-        spawnEventsAsset.Write($"{repackTablePath}/{eventSpawnTable}");
+        // Save modified uassets
         charactersAsset.Write($"{repackTablePath}/{characterTable}");
+        spawnEventsAsset.Write($"{repackTablePath}/{eventSpawnTable}");
         levelTargetFiltersAsset.Write($"{repackTablePath}/{levelTargetFilterTable}");
-        skillActiveStepsAsset.Write($"{repackTablePath}/{skillActiveStepTable}");
+        eventActorEffectsAsset.Write($"{repackTablePath}/{eventActorEffectTable}");
         characterMovesAsset.Write($"{repackTablePath}/{characterMoveTable}");
+        skillActiveStepsAsset.Write($"{repackTablePath}/{skillActiveStepTable}");
+        zoneEventsAsset.Write($"{repackTablePath}/{zoneEventTable}");
         tachyAIAsset.Write($"{repackAIPath}/{tachyAI}");
 
         // Repack modified uassets and convert to game-ready zen format using retoc
@@ -102,14 +108,16 @@ public class Program{
         return new UAsset(uAssetPath, EngineVersion.VER_UE4_26, new Usmap(mapPath));
     }
 
-    static void RandomizeSpawns(UAsset spawnEventsAsset, UAsset charactersAsset, UAsset levelTargetFiltersAsset)
+    static void RandomizeSpawns(UAsset charactersAsset, UAsset spawnEventsAsset, UAsset levelTargetFiltersAsset, UAsset eventActorEffectsAsset)
     {
+        Log("Randomizing enemies");
         DataTableExport spawnEventsTable = (DataTableExport)spawnEventsAsset.Exports[0];
         List<StructPropertyData> spawnEvents = spawnEventsTable.Table.Data;
         DataTableExport charactersTable = (DataTableExport)charactersAsset.Exports[0];
         List<StructPropertyData> characters = charactersTable.Table.Data;
 
         uint incrementalID = 990000000;
+        uint incrementalMannID = 10000;
         Dictionary<string, string> consistentReplacements = [];
         // For challenge mode bosses - Currently unused because the zones are commented out in GameData.cs
         Dictionary<EnemyRank, Dictionary<string, string[]>> challengeBossesToPlaceOnce = new(){
@@ -212,7 +220,7 @@ public class Program{
             string newEntryName = Regex.Replace(replacementAlias, @".*_M_", $"_M_{rank}_{incrementalID}_");
             newEntryName = zone.Value.ToString().Replace("Zone_", "") + newEntryName;
 
-            ScaleAndFixEnemy(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, row, newEnemyEntry, originalEnemyEntry, incrementalID, row.Name.Value.ToString());
+            ScaleAndFixEnemy(spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, row, newEnemyEntry, originalEnemyEntry, incrementalID, row.Name.Value.ToString(), incrementalMannID);
             incrementalID++;
             newEnemyEntry.Name = FName.FromString(charactersAsset, newEntryName);
             characters.Add(newEnemyEntry);
@@ -225,7 +233,7 @@ public class Program{
         Log($"Seed = {randoSeed}");
     }
 
-    static void ScaleAndFixEnemy(UAsset charactersAsset, UAsset spawnEventsAsset, UAsset levelTargetFiltersAsset, StructPropertyData spawnEvent, StructPropertyData newEnemy, StructPropertyData originalEnemy, uint incrementalID, string spawnEventName)
+    static void ScaleAndFixEnemy(UAsset spawnEventsAsset, UAsset levelTargetFiltersAsset, UAsset eventActorEffectsAsset, StructPropertyData spawnEvent, StructPropertyData newEnemy, StructPropertyData originalEnemy, uint incrementalID, string spawnEventName, uint incrementalMannID)
     {
         // Assign every new enemy a unique ID in case it matters. Also makes troubleshooting easier
         ((UInt32PropertyData)newEnemy["ID"]).Value = incrementalID;
@@ -240,7 +248,7 @@ public class Program{
         if(lowerEnemyHPForTesting)
         {
             IntPropertyData maxHP = (IntPropertyData)newEnemy["MaxHP"];
-            maxHP.Value = 6000;
+            maxHP.Value = 5000;
         }
         
         // Reset spawn when loading save - Fix for testing. Enemies with SaveType Save will have their name and last position written into your save file. This prevents rerandomizing enemies mid-playthrough without softlocking the game (in many cases). Most enemies are spawned the moment you enter the zone so it's very unwieldy to test the game without ever having enemy positions saved
@@ -254,73 +262,79 @@ public class Program{
         // --------------------------------------------------------------------------------------
         ArrayPropertyData defaultEffectArray = (ArrayPropertyData)newEnemy["DefaultEffectArray"];
         string newEnemyName = newEnemy.Name.Value.ToString();
-        // Remove immortality from certain bosses
-        if("SD_M_HedgeBoarBrute_01, SE_M_Marionette_01, DED_M_Opener_01, NST_M_ElderPhase1_01, NST_M_Raven_01, NST_M_ExoSuit_01, WLA_M_RoyalGuardFemale_01, WLB_M_RoyalGuardFemale_01, SE_M_WeaponMasterA_01, UME_M_Tachy_01, DED_M_GorillaB_01, UME_M_SkullJuggernaut_01, SE_M_WeaponMasterB_01, SE_M_Crawler_01".Contains(newEnemyName))
+
+        // Remove immortality from certain bosses. This effect would usually be removed through a cutscene but we avoid cutscenes because they teleport you to arbitrary coordinates
+        if("SD_M_HedgeBoarBrute_01, SE_M_Marionette_01, DED_M_Opener_01, NST_M_ElderPhase1_01, NST_M_Raven_01, NST_M_ExoSuit_01, WLA_M_RoyalGuardFemale_01, WLB_M_RoyalGuardFemale_01, SE_M_WeaponMasterA_01, UME_M_Tachy_01, DED_M_GorillaB_01, UME_M_SkullJuggernaut_01, SE_M_WeaponMasterB_01, SE_M_Crawler_01, CHAL_XION_M_Mann_01".Contains(newEnemyName))
         {
             defaultEffectArray.Value = defaultEffectArray.Value.Where(val => val.ToString() != "Passive_Immortal").ToArray();
         }
+
         // Remove special stance from certain bosses (would trigger problematic cutscenes when finishing them)
         if("UME_M_Tachy_01, DED_M_GorillaB_01, UME_M_SkullJuggernaut_01, SE_M_WeaponMasterB_01".Contains(newEnemyName))
         {
             ArrayPropertyData stanceAliasArray = (ArrayPropertyData)newEnemy["StanceAliasArray"];
             stanceAliasArray.Value = stanceAliasArray.Value.Where(val => !val.ToString().Contains("_Finish")).ToArray();
         }
-        // Add Mann condition triggers and filters from his vanilla spawn event
+
+        // Fix Mann problems: Cutscenes teleport the player out of bounds and phase changes don't trigger
         if(newEnemyName == "CHAL_XION_M_Mann_01")
         {
+            // Change levelTargetFilter to target the new spawn event so the HP conditions for the phase changes are functional
             DataTableExport levelTargetFiltersTable = (DataTableExport)levelTargetFiltersAsset.Exports[0];
             List<StructPropertyData> levelTargetFilters = levelTargetFiltersTable.Table.Data;
             foreach(StructPropertyData row in levelTargetFilters)
             {
                 if(row.Name.Value.ToString() == "Xion_Boss_Mann_LevelTargetFilter_001")
                 {
-                    ((NamePropertyData)row["SpawnPointName"]).Value = FName.FromString(levelTargetFiltersAsset, spawnEventName);
+                    ((NamePropertyData)row["SpawnPointName"]).Value = FName.FromString(levelTargetFiltersAsset, "DED30_E_CharS_027");
                 }
             }
 
-            ((ArrayPropertyData)spawnEvent["EventOnSpawning"]).Value = [ new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "Xion_Boss_Mann_E_ObjectC_001")} ];
-            ((ArrayPropertyData)spawnEvent["EventOnBattle"]).Value = [ new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "Xion_Boss_Mann_E_BlocVolC_001")} ];
+            // Change the target tag of the eventActorEffects to the tag of the spawnEvent - Required for the change to phase 2 to work
+            // Modifying the tag of the spawnEvent would lead to issues with logic from the original arena (like intro cutscenes)
+            DataTableExport eventActorEffectsTable = (DataTableExport)eventActorEffectsAsset.Exports[0];
+            List<StructPropertyData> eventActorEffects = eventActorEffectsTable.Table.Data;
+            foreach(StructPropertyData row in eventActorEffects)
+            {
+                if(row.Name.Value.ToString().Contains("Xion_Boss_Mann"))
+                {
+                    NamePropertyData tagName = (NamePropertyData)row["TargetTagName"];
+                    if(tagName.Value != null && tagName.Value.ToString() == "M_Mann")
+                    {
+                        // Clone them for each Mann spawn so we can have more than one
+                        StructPropertyData eventActorClone = (StructPropertyData)row.Clone();
+                        ((UInt32PropertyData)eventActorClone["ID"]).Value = incrementalMannID;
+                        eventActorClone.Name = FName.FromString(eventActorEffectsAsset, $"{incrementalMannID}_{row.Name.Value}_{spawnEventName}");
+                        NamePropertyData newActorTag = (NamePropertyData)eventActorClone["TargetTagName"];
+                        newActorTag.Value = ((NamePropertyData)spawnEvent["TagName"]).Value;
 
-            ((ArrayPropertyData)spawnEvent["ConditionsTrigger"]).Value = [ new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "Xion_Boss_Mann_Condition_001")}, new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "Xion_Boss_Mann_Condition_002")} ];
-            ((ArrayPropertyData)spawnEvent["ConditionTriggerEvent"]).Value = [ new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "Xion_Boss_Mann_E_ActorEff_001")}, new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "Xion_Boss_Mann_E_ActorEff_006")} ];
+                        eventActorEffects.Add(eventActorClone);
+                        incrementalMannID++;
+                    }
+                }
+            }
 
-            ((ArrayPropertyData)spawnEvent["ConditionTriggerRunType"]).Value = [ new EnumPropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerRunType_Once")}, new EnumPropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerRunType_Once")} ];
-            ((ArrayPropertyData)spawnEvent["ConditionTriggerExecType"]).Value = [ new EnumPropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerExecType_RunTime")}, new EnumPropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerExecType_RunTime")} ];
+            // Add conditional trigger for phase 2 to the spawn event
+            ((ArrayPropertyData)spawnEvent["ConditionsTrigger"]).Value = [ new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "Xion_Boss_Mann_Condition_002")} ];
+            ((ArrayPropertyData)spawnEvent["ConditionTriggerEvent"]).Value = [ new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "Xion_Boss_Mann_E_ActorEff_006")} ];
+            ((ArrayPropertyData)spawnEvent["ConditionTriggerRunType"]).Value = [ new EnumPropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerRunType_Once")}];
+            ((ArrayPropertyData)spawnEvent["ConditionTriggerExecType"]).Value = [ new EnumPropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerExecType_RunTime")}];
         }
-        // Enable TurretLaser enemies by default (still doesn't fix their AI)
-        if(newEnemyName.Contains("TurretLaser"))
-        {
+
+        // Enable TurretLaser enemy AI by default (still doesn't allow them to shoot)
+        if(newEnemyName.Contains("TurretLaser")){
             defaultEffectArray.Value = defaultEffectArray.Value.Where(val => val.ToString() != "BlockAI_Infinite").ToArray();
         }
-        // Proof of concept for adding new array values. Currently unused
-        if(spawnEventName == "BingBongBingBong")
-        {
-            defaultEffectArray.Value = defaultEffectArray.Value.Append(new NamePropertyData { Value = FName.FromString(charactersAsset, "M_GorillaB_Default")}).ToArray();
-        }
+
         // "WindowBreakHydra". Most likely not actually broken but I'm keeping this here in case it comes up again
         if(spawnEventName == "DED10_E_CharS_037") {     // 990000050
             //newEnemy.RawValue = originalEnemy.RawValue;
         }
     }
 
-    static void ModifyAI(UAsset aiAsset)
-    {
-        List<Export> exports = aiAsset.Exports;
-
-        foreach(NormalExport exp in exports)
-        {
-            ArrayPropertyData skillName = (ArrayPropertyData)exp["SkillName"];
-            if(skillName == null) continue;
-            foreach(StrPropertyData skill in skillName.Value)
-            {
-                // Replace Tachy skills M_Tachy_BlinkStageMiddle1 and M_Tachy_BlinkStageMiddle2 to jump backwards instead of teleporting out of bounds
-                if(skill.Value.ToString().Contains("M_Tachy_BlinkStageMiddle")) skill.Value = FString.FromString("M_Tachy_MoveBackFar", Encoding.UTF8);
-            }
-        }
-    }
-
     static void ModifySkillActiveSteps(UAsset asset)
     {
+        Log("Modifying skillActiveSteps");
         DataTableExport skillActiveStepsTable = (DataTableExport)asset.Exports[0];
         List<StructPropertyData> skillActiveSteps = skillActiveStepsTable.Table.Data;
         
@@ -332,6 +346,7 @@ public class Program{
             // Remove RavenBeast world coordinate teleportation steps
             if(row.Name.Value.ToString().Contains("M_RavenBeast_"))
             {
+                // Old solution which caused some AI bugs - No longer necessary after altering the characterMove values
                 /*selfMoves.Value = selfMoves.Value.Where(val =>
                     !val.ToString().Contains("M_RavenBeast_PhaseChange3_Move2") &&
                     !val.ToString().Contains("M_RavenBeast_ColonyDashSky_Move1") &&
@@ -348,6 +363,7 @@ public class Program{
 
     static void ModifyCharacterMoves(UAsset asset)
     {
+        Log("Modifying character movements");
         DataTableExport characterMoveTable = (DataTableExport)asset.Exports[0];
         List<StructPropertyData> characterMoves = characterMoveTable.Table.Data;
         
@@ -363,14 +379,52 @@ public class Program{
                 ((FloatPropertyData)row["UpValue"]).Value = 0.0F;
             }
 
-            // Replace M_Crawler map center warp with middle-range backwards warp
+            // Replace M_Crawler map center warp with relative backwards warp
             if(row.Name.Value.ToString() == "M_Crawler_WarpMapCenter_Move1")
             {
                 ((EnumPropertyData)row["MoveType"]).Value = FName.FromString(asset, "MoveTransformType_Static");
                 ((EnumPropertyData)row["PositionType"]).Value = FName.FromString(asset, "MovePositionType_Target");
-                ((FloatPropertyData)row["ForwardValue"]).Value = -1500.0F;
+                ((FloatPropertyData)row["ForwardValue"]).Value = -2500.0F;
                 ((FloatPropertyData)row["RightValue"]).Value = 0.0F;
                 ((FloatPropertyData)row["UpValue"]).Value = 0.0F;
+            }
+        }
+    }
+
+    static void ModifyZoneEvents(UAsset asset)
+    {
+        Log("Modifying zoneEvents");
+        DataTableExport table = (DataTableExport)asset.Exports[0];
+        List<StructPropertyData> zoneEvents = table.Table.Data;
+        
+        foreach(StructPropertyData row in zoneEvents)
+        {
+            // Replace Mann phase 2 cutscene with the next event in the chain to prevent being teleported out of bounds
+            if(row.Name.Value.ToString() == "Xion_Boss_Mann_E_ActorEff_006")
+            {
+                ArrayPropertyData finishEventsArray = (ArrayPropertyData)row["FinishEvents"];
+                finishEventsArray.Value = finishEventsArray.Value.Append(new NamePropertyData { Value = FName.FromString(asset, "Xion_Boss_Mann_E_ActorEff_008")}).ToArray();
+
+                ArrayPropertyData addEventsArray = (ArrayPropertyData)row["AddEvents"];
+                addEventsArray.Value[0].IsZero = true;
+                addEventsArray.Value = addEventsArray.Value.Where(val => !val.ToString().Contains("Xion_Boss_Mann_E_Theater_002")).ToArray();
+            }
+        }
+    }
+
+    static void ModifyAI(UAsset aiAsset)
+    {
+        Log("Modifying AI");
+        List<Export> exports = aiAsset.Exports;
+
+        foreach(NormalExport exp in exports)
+        {
+            ArrayPropertyData skillName = (ArrayPropertyData)exp["SkillName"];
+            if(skillName == null) continue;
+            foreach(StrPropertyData skill in skillName.Value)
+            {
+                // Replace Tachy skills M_Tachy_BlinkStageMiddle1 and M_Tachy_BlinkStageMiddle2 to jump backwards instead of teleporting out of bounds
+                if(skill.Value.ToString().Contains("M_Tachy_BlinkStageMiddle")) skill.Value = FString.FromString("M_Tachy_MoveBackFar", Encoding.UTF8);
             }
         }
     }

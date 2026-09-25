@@ -40,18 +40,15 @@ Thanks to the developers of third-party software **Retoc** and **UAssetAPI** whi
   - UME_M_SkullJuggernaut_01
   - UME_M_Tachy_01
   - SE_M_Crawler_01
+  - CHAL_XION_M_Mann_01
 - Current testing progress: Early Wasteland
 
-## Known issues with my notes to self
+## Known issues
 - Some bosses are broken after randomizing:
-  - CHAL_XION_M_Mann_01 becomes invincible and unresponsive at a certain HP threshold
-    - => In ZoneEventTable: Replace content of "AddEvents" in Xion_Boss_Mann_E_ActorEff_006 with "Xion_Boss_Mann_E_ActorEff_008" to hopefully skip the cutscene
-    - Problem: How to deal with the condition and leveltargetfilter if we have multiple Mann spawns?
   - CHAL_M_Scarlet_01 becomes invincible and unresponsive at a certain HP threshold
-  - Defeating the boss that replaces Tachy does not trigger the cutscene, leaving the player stuck? => Easy fix? Just give M_Tachy_Finish stance and immortality effect to the boss?
   - NST_M_ElderPhase2_01 attacks mostly do not work
 - Balancing issues:
-  - NST_M_ElderPhase1_01 is not really a boss fight so he's boring to encounter. Making custom changes to his AI could be fun. Or adding a simple setting to remove him from the boss pool
+  - NST_M_ElderPhase1_01 is not really a boss fight so he's boring to encounter. Making custom changes to his AI could be fun
   - Maelstrom is way too tanky without the gun to shoot his weak spots with. At the same time he's also kinda weird to fight when you can go behind him since he can't rotate to face you
   - NST_M_ExoSuit_01 and XION_M_RavenBeast_01 are impossible to beat without the gun
   - The Corrupter + tanky elite enemy duo encounter in Eidos 9 is likely to be extremely unbalanced when randomized
@@ -72,6 +69,17 @@ Thanks to the developers of third-party software **Retoc** and **UAssetAPI** whi
 - Scarlet and Mann boss inclusion settings are unimplemented (currently included by default)
 - A DLC check should be implemented to prevent Scarlet from appearing when it isn't owned (untested / unconfirmed)
 - More sophisticated enemy scaling to preserve an appropriate level of tankiness depending on the enemy type
+- An option to prevent bosses that require the gun from appearing before the gun is unlocked
+- A checklist of every enemy type to be selected or unselected for the purpose of being placed by the randomizer
+- A list of integer values for every boss to determine how many of them are placed
+- Settings that go with the "shuffle bosses" setting:
+  - "Try not to place duplicate bosses in main story locations"
+- "Fill empty boss slots with random duplicates (Vanilla: 8 duplicate boss spawns)"
+- A selection setting for boss music logic:
+  - Music is based on the location
+  - Music matches the randomly placed boss
+  - Random music
+    - Note to self: SoundEventTable has the music triggers. Look for ForceEventBattle and specific EventBattleState values! These settings determine what part of the zone's BGM to actually play (which includes battle music and boss themes)
 
 ## Installation
 WIP
