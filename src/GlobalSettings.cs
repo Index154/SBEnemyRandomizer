@@ -10,9 +10,10 @@ public class GlobalSettings
     public static int seed = 123456;
     public static bool randomizeNPCAppearances = true;
     public static string forceReplacementEnemyName = "";
-    public static bool resetAllEnemySpawnsOnLoad = true;
+    public static string forceReplacementForEvent = "";
+    public static bool resetAllEnemySpawnsOnLoad = false;
     // Testing settings
-    public static bool lowerEnemyHPForTesting = true;
+    public static bool lowerEnemyHPForTesting = false;
     public static string customZoneNameRestriction = "";
     public static EnemyRank? customRankRestriction = null;
     public static bool replaceSaveDataOnRun = false;
@@ -55,6 +56,7 @@ public class GlobalSettings
     public static readonly string eventSpawnTable = "EventSpawnTable.uasset";
     public static readonly string levelTargetFilterTable = "LevelTargetFilter.uasset";
     public static readonly string eventActorEffectTable = "EventActorEffectTable.uasset";
+    public static readonly string conditionTable = "ConditionTable.uasset";
     public static readonly string characterMoveTable = "CharacterMoveTable.uasset";
     public static readonly string skillActiveStepTable = "SkillActiveStepTable.uasset";
     public static readonly string zoneEventTable = "ZoneEventTable.uasset";

@@ -28,6 +28,7 @@ public class Program{
         await RetocToLegacy(eventSpawnTable);
         await RetocToLegacy(levelTargetFilterTable);
         await RetocToLegacy(eventActorEffectTable);
+        await RetocToLegacy(conditionTable);
         await RetocToLegacy(characterMoveTable);
         await RetocToLegacy(skillActiveStepTable);
         await RetocToLegacy(zoneEventTable);
@@ -38,12 +39,13 @@ public class Program{
         UAsset spawnEventsAsset = ReadUAsset($"{unpackTablePath}/{eventSpawnTable}", mapPath);
         UAsset levelTargetFiltersAsset = ReadUAsset($"{unpackTablePath}/{levelTargetFilterTable}", mapPath);
         UAsset eventActorEffectsAsset = ReadUAsset($"{unpackTablePath}/{eventActorEffectTable}", mapPath);
+        UAsset conditionsAsset = ReadUAsset($"{unpackTablePath}/{conditionTable}", mapPath);
         UAsset characterMovesAsset = ReadUAsset($"{unpackTablePath}/{characterMoveTable}", mapPath);
         UAsset skillActiveStepsAsset = ReadUAsset($"{unpackTablePath}/{skillActiveStepTable}", mapPath);
         UAsset zoneEventsAsset = ReadUAsset($"{unpackTablePath}/{zoneEventTable}", mapPath);
         UAsset tachyAIAsset = ReadUAsset($"{unpackAIPath}/{tachyAI}", mapPath);
         if(randomizeNPCAppearances) ShuffleNPCAppearances(charactersAsset);
-        RandomizeSpawns(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset);
+        RandomizeSpawns(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset);
         ModifySkillActiveSteps(skillActiveStepsAsset);
         ModifyCharacterMoves(characterMovesAsset);
         ModifyZoneEvents(zoneEventsAsset);
@@ -55,6 +57,7 @@ public class Program{
         spawnEventsAsset.Write($"{repackTablePath}/{eventSpawnTable}");
         levelTargetFiltersAsset.Write($"{repackTablePath}/{levelTargetFilterTable}");
         eventActorEffectsAsset.Write($"{repackTablePath}/{eventActorEffectTable}");
+        conditionsAsset.Write($"{repackTablePath}/{conditionTable}");
         characterMovesAsset.Write($"{repackTablePath}/{characterMoveTable}");
         skillActiveStepsAsset.Write($"{repackTablePath}/{skillActiveStepTable}");
         zoneEventsAsset.Write($"{repackTablePath}/{zoneEventTable}");
@@ -108,7 +111,7 @@ public class Program{
         return new UAsset(uAssetPath, EngineVersion.VER_UE4_26, new Usmap(mapPath));
     }
 
-    static void RandomizeSpawns(UAsset charactersAsset, UAsset spawnEventsAsset, UAsset levelTargetFiltersAsset, UAsset eventActorEffectsAsset)
+    static void RandomizeSpawns(UAsset charactersAsset, UAsset spawnEventsAsset, UAsset levelTargetFiltersAsset, UAsset eventActorEffectsAsset, UAsset conditionsAsset)
     {
         Log("Randomizing enemies");
         DataTableExport spawnEventsTable = (DataTableExport)spawnEventsAsset.Exports[0];
@@ -117,7 +120,7 @@ public class Program{
         List<StructPropertyData> characters = charactersTable.Table.Data;
 
         uint incrementalID = 990000000;
-        uint incrementalMannID = 10000;
+        uint incrementalEventActorEffectID = 10000;
         Dictionary<string, string> consistentReplacements = [];
         // For challenge mode bosses - Currently unused because the zones are commented out in GameData.cs
         Dictionary<EnemyRank, Dictionary<string, string[]>> challengeBossesToPlaceOnce = new(){
@@ -201,7 +204,7 @@ public class Program{
             }
 
             // Force specific enemy for testing
-            if(forceReplacementEnemyName != "") replacementAlias = forceReplacementEnemyName;
+            if(forceReplacementEnemyName != "" && (forceReplacementForEvent == "" || forceReplacementForEvent == row.Name.Value.ToString())) replacementAlias = forceReplacementEnemyName;
 
             // These bosses have two spawn events each so prevent these from being randomized separately
             if(!consistentReplacements.ContainsKey(characterAlias.Value.ToString()) && (characterAlias.Value.ToString() == "NST_M_Raven_01" || characterAlias.Value.ToString() == "NST_M_ElderPhase1_01"))
@@ -220,7 +223,7 @@ public class Program{
             string newEntryName = Regex.Replace(replacementAlias, @".*_M_", $"_M_{rank}_{incrementalID}_");
             newEntryName = zone.Value.ToString().Replace("Zone_", "") + newEntryName;
 
-            ScaleAndFixEnemy(spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, row, newEnemyEntry, originalEnemyEntry, incrementalID, row.Name.Value.ToString(), incrementalMannID);
+            ScaleAndFixEnemy(spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, row, newEnemyEntry, originalEnemyEntry, incrementalID, row.Name.Value.ToString(), incrementalEventActorEffectID);
             incrementalID++;
             newEnemyEntry.Name = FName.FromString(charactersAsset, newEntryName);
             characters.Add(newEnemyEntry);
@@ -233,7 +236,7 @@ public class Program{
         Log($"Seed = {randoSeed}");
     }
 
-    static void ScaleAndFixEnemy(UAsset spawnEventsAsset, UAsset levelTargetFiltersAsset, UAsset eventActorEffectsAsset, StructPropertyData spawnEvent, StructPropertyData newEnemy, StructPropertyData originalEnemy, uint incrementalID, string spawnEventName, uint incrementalMannID)
+    static void ScaleAndFixEnemy(UAsset spawnEventsAsset, UAsset levelTargetFiltersAsset, UAsset eventActorEffectsAsset, UAsset conditionsAsset, StructPropertyData spawnEvent, StructPropertyData newEnemy, StructPropertyData originalEnemy, uint incrementalID, string spawnEventName, uint incrementalEventActorEffectID)
     {
         // Assign every new enemy a unique ID in case it matters. Also makes troubleshooting easier
         ((UInt32PropertyData)newEnemy["ID"]).Value = incrementalID;
@@ -248,7 +251,7 @@ public class Program{
         if(lowerEnemyHPForTesting)
         {
             IntPropertyData maxHP = (IntPropertyData)newEnemy["MaxHP"];
-            maxHP.Value = 5000;
+            maxHP.Value = 1000;
         }
         
         // Reset spawn when loading save - Fix for testing. Enemies with SaveType Save will have their name and last position written into your save file. This prevents rerandomizing enemies mid-playthrough without softlocking the game (in many cases). Most enemies are spawned the moment you enter the zone so it's very unwieldy to test the game without ever having enemy positions saved
@@ -263,9 +266,11 @@ public class Program{
         ArrayPropertyData defaultEffectArray = (ArrayPropertyData)newEnemy["DefaultEffectArray"];
         string newEnemyName = newEnemy.Name.Value.ToString();
 
-        // Remove immortality from certain bosses. This effect would usually be removed through a cutscene but we avoid cutscenes because they teleport you to arbitrary coordinates
-        if("SD_M_HedgeBoarBrute_01, SE_M_Marionette_01, DED_M_Opener_01, NST_M_ElderPhase1_01, NST_M_Raven_01, NST_M_ExoSuit_01, WLA_M_RoyalGuardFemale_01, WLB_M_RoyalGuardFemale_01, SE_M_WeaponMasterA_01, UME_M_Tachy_01, DED_M_GorillaB_01, UME_M_SkullJuggernaut_01, SE_M_WeaponMasterB_01, SE_M_Crawler_01, CHAL_XION_M_Mann_01".Contains(newEnemyName))
-        {
+        // Remove immortality from certain bosses UNLESS they are being placed in a spawnEvent where the original boss was also immortal. This effect would usually be removed through a cutscene but we must avoid boss-specific cutscenes because they teleport you to arbitrary coordinates
+        if(
+            "SD_M_HedgeBoarBrute_01, SE_M_Marionette_01, DED_M_Opener_01, NST_M_ElderPhase1_01, NST_M_Raven_01, NST_M_ExoSuit_01, WLA_M_RoyalGuardFemale_01, WLB_M_RoyalGuardFemale_01, SE_M_WeaponMasterA_01, UME_M_Tachy_01, DED_M_GorillaB_01, UME_M_SkullJuggernaut_01, SE_M_WeaponMasterB_01, SE_M_Crawler_01, CHAL_XION_M_Mann_01, CHAL_M_Scarlet_01".Contains(newEnemyName) && 
+            !"WLA_30_E_CharS_025".Contains(spawnEventName)
+        ){
             defaultEffectArray.Value = defaultEffectArray.Value.Where(val => val.ToString() != "Passive_Immortal").ToArray();
         }
 
@@ -286,7 +291,7 @@ public class Program{
             {
                 if(row.Name.Value.ToString() == "Xion_Boss_Mann_LevelTargetFilter_001")
                 {
-                    ((NamePropertyData)row["SpawnPointName"]).Value = FName.FromString(levelTargetFiltersAsset, "DED30_E_CharS_027");
+                    ((NamePropertyData)row["SpawnPointName"]).Value = FName.FromString(levelTargetFiltersAsset, spawnEventName);
                 }
             }
 
@@ -301,24 +306,84 @@ public class Program{
                     NamePropertyData tagName = (NamePropertyData)row["TargetTagName"];
                     if(tagName.Value != null && tagName.Value.ToString() == "M_Mann")
                     {
-                        // Clone them for each Mann spawn so we can have more than one
-                        StructPropertyData eventActorClone = (StructPropertyData)row.Clone();
-                        ((UInt32PropertyData)eventActorClone["ID"]).Value = incrementalMannID;
-                        eventActorClone.Name = FName.FromString(eventActorEffectsAsset, $"{incrementalMannID}_{row.Name.Value}_{spawnEventName}");
-                        NamePropertyData newActorTag = (NamePropertyData)eventActorClone["TargetTagName"];
-                        newActorTag.Value = ((NamePropertyData)spawnEvent["TagName"]).Value;
+                        StructPropertyData eventActorClone = row;
+                        // Clone them for each Mann spawn so we can have more than one - But there's more work to be done for that...
+                        //StructPropertyData eventActorClone = (StructPropertyData)row.Clone();
+                        //((UInt32PropertyData)eventActorClone["ID"]).Value = incrementalEventActorEffectID;
+                        //eventActorClone.Name = FName.FromString(eventActorEffectsAsset, $"{incrementalEventActorEffectID}_{row.Name.Value}_{spawnEventName}");
+                        NamePropertyData newActorTag = (NamePropertyData)row["TargetTagName"];
+                        newActorTag.Value = FName.FromString(eventActorEffectsAsset, ((NamePropertyData)spawnEvent["TagName"]).Value.ToString());
 
-                        eventActorEffects.Add(eventActorClone);
-                        incrementalMannID++;
+                        //eventActorEffects.Add(eventActorClone);
+                        incrementalEventActorEffectID++;
                     }
                 }
             }
 
             // Add conditional trigger for phase 2 to the spawn event
-            ((ArrayPropertyData)spawnEvent["ConditionsTrigger"]).Value = [ new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "Xion_Boss_Mann_Condition_002")} ];
-            ((ArrayPropertyData)spawnEvent["ConditionTriggerEvent"]).Value = [ new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "Xion_Boss_Mann_E_ActorEff_006")} ];
-            ((ArrayPropertyData)spawnEvent["ConditionTriggerRunType"]).Value = [ new EnumPropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerRunType_Once")}];
-            ((ArrayPropertyData)spawnEvent["ConditionTriggerExecType"]).Value = [ new EnumPropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerExecType_RunTime")}];
+            ArrayPropertyData ConditionsTrigger = (ArrayPropertyData)spawnEvent["ConditionsTrigger"];
+                ConditionsTrigger.Value = ConditionsTrigger.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "Xion_Boss_Mann_Condition_002")}).ToArray();
+            ArrayPropertyData ConditionTriggerEvent = (ArrayPropertyData)spawnEvent["ConditionsTrigger"];
+                ConditionTriggerEvent.Value = ConditionTriggerEvent.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "Xion_Boss_Mann_E_ActorEff_006")}).ToArray();
+            ArrayPropertyData ConditionTriggerRunType = (ArrayPropertyData)spawnEvent["ConditionTriggerRunType"];
+                ConditionTriggerRunType.Value = ConditionTriggerRunType.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerRunType_Once")}).ToArray();
+            ArrayPropertyData ConditionTriggerExecType = (ArrayPropertyData)spawnEvent["ConditionTriggerExecType"];
+                ConditionTriggerExecType.Value = ConditionTriggerExecType.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerExecType_RunTime")}).ToArray();
+        }
+
+        // Fix Scarlet problems: Cutscenes teleport the player out of bounds and phase changes don't trigger
+        if(newEnemyName == "CHAL_M_Scarlet_01")
+        {
+            // Remove levelTargetFilter from phase 2 HP condition
+            DataTableExport conditionsTable = (DataTableExport)conditionsAsset.Exports[0];
+            List<StructPropertyData> conditions = conditionsTable.Table.Data;
+            foreach(StructPropertyData row in conditions)
+            {
+                if(row.Name.Value.ToString() == "NK_Boss_Scarlet_Condition_001")
+                {
+                    ((StrPropertyData)row["CustomStr01"]).Value = FString.FromString(null, Encoding.UTF8);
+                    ((StrPropertyData)row["CustomStr01"]).IsZero = true;
+                }
+            }
+
+            // Change the target tag of the eventActorEffects to the tag of the spawnEvent - Required for the change to phase 2 to work
+            // Modifying the tag of the spawnEvent would lead to issues with logic from the original arena (like intro cutscenes)
+            DataTableExport eventActorEffectsTable = (DataTableExport)eventActorEffectsAsset.Exports[0];
+            List<StructPropertyData> eventActorEffects = eventActorEffectsTable.Table.Data;
+            foreach(StructPropertyData row in eventActorEffects)
+            {
+                if(row.Name.Value.ToString().Contains("NK_Boss_Scarlet"))
+                {
+                    NamePropertyData tagName = (NamePropertyData)row["TargetTagName"];
+                    if(tagName.Value != null && tagName.Value.ToString() == "M_Scarlet")
+                    {
+                        StructPropertyData eventActorClone = row;
+                        // Clone them for each Mann spawn so we can have more than one - But there's more work to be done for that...
+                        //StructPropertyData eventActorClone = (StructPropertyData)row.Clone();
+                        //((UInt32PropertyData)eventActorClone["ID"]).Value = incrementalEventActorEffectID;
+                        //eventActorClone.Name = FName.FromString(eventActorEffectsAsset, $"{incrementalEventActorEffectID}_{row.Name.Value}_{spawnEventName}");
+                        NamePropertyData newActorTag = (NamePropertyData)row["TargetTagName"];
+                        newActorTag.Value = FName.FromString(eventActorEffectsAsset, ((NamePropertyData)spawnEvent["TagName"]).Value.ToString());
+
+                        //eventActorEffects.Add(eventActorClone);
+                        incrementalEventActorEffectID++;
+                    }
+                }
+            }
+
+            // Add conditional triggers for phase 2 to the spawn event (no theater events)
+            ArrayPropertyData ConditionsTrigger = (ArrayPropertyData)spawnEvent["ConditionsTrigger"];
+                ConditionsTrigger.Value = ConditionsTrigger.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "NK_Boss_Scarlet_Condition_001")}).ToArray();
+                ConditionsTrigger.Value = ConditionsTrigger.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "NK_Boss_Scarlet_Condition_001")}).ToArray();
+            ArrayPropertyData ConditionTriggerEvent = (ArrayPropertyData)spawnEvent["ConditionTriggerEvent"];
+                ConditionTriggerEvent.Value = ConditionTriggerEvent.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "NK_Boss_Scarlet_E_ActorEff_003")}).ToArray();
+                ConditionTriggerEvent.Value = ConditionTriggerEvent.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "NK_Boss_Scarlet_E_ActorEff_006")}).ToArray();
+            ArrayPropertyData ConditionTriggerRunType = (ArrayPropertyData)spawnEvent["ConditionTriggerRunType"];
+                ConditionTriggerRunType.Value = ConditionTriggerRunType.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerRunType_Once")}).ToArray();
+                ConditionTriggerRunType.Value = ConditionTriggerRunType.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerRunType_Once")}).ToArray();
+            ArrayPropertyData ConditionTriggerExecType = (ArrayPropertyData)spawnEvent["ConditionTriggerExecType"];
+                ConditionTriggerExecType.Value = ConditionTriggerExecType.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerExecType_RunTime")}).ToArray();
+                ConditionTriggerExecType.Value = ConditionTriggerExecType.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerExecType_RunTime")}).ToArray();
         }
 
         // Enable TurretLaser enemy AI by default (still doesn't allow them to shoot)
