@@ -24,7 +24,7 @@ public static class GameData
     The challenge mode bosses all have their own zones. These are all named like "Zone_<Zonecode>_Boss_<Bossname>"
     There are a lot of other zones but I'm pretty sure they don't have any enemy spawns in them or they're simply inaccessible
     */
-    public static readonly List<string> RelevantZones = new List<string>{
+    public static readonly List<string> RelevantZones = [
         "Zone_SD_10",
         "Zone_DED10",
         "Zone_DED20",
@@ -108,7 +108,7 @@ public static class GameData
         //"Zone_Nest_Boss_ExoSuit",
         //"Zone_Nest_Boss_Elder",
         //"Zone_NK_Boss_Scarlet"
-    };
+    ];
     
     public enum EnemyRank{
         Animal,
@@ -117,7 +117,7 @@ public static class GameData
         Boss
     };
 
-    public static List<string> EnemyAppearances = new List<string>{
+    public static readonly List<string> EnemyAppearances = [
         "M_GorillaB",
         "M_GorillaBrokenHead",
         "M_Tachy",
@@ -207,9 +207,9 @@ public static class GameData
         "M_BodyBag",
         "M_LesserLurker",
         "M_ThornHead"
-    };
+    ];
 
-    public static readonly List<string> EnemyCategories = new List<string>{
+    public static readonly List<string> EnemyCategories = [
         "Antlion_0",
         "AntlionB",
         "AntlionC",
@@ -299,21 +299,21 @@ public static class GameData
         "VipGuard",
         "WeaponMasterA",
         "WeaponMasterB"
-    };
+    ];
 
-    public static readonly Dictionary<EnemyRank, string[]> EnemiesToReplace = new Dictionary<EnemyRank, string[]>{
+    public static readonly Dictionary<EnemyRank, string[]> EnemiesToReplace = new(){
 
         // Notes:
-        // M_Enemyname seems to be the base form of an enemy. These are NOT actually spawned in any of the playable areas. Therefore I would rather avoid using these for randomization. I haven't checked whether these share the same animations and other specific data with the actual enemies that the game spawns
-        // The enemies that are actually spawned in the game are "variants" of the base forms with longer names including the codename for the area they are supposed to spawn in. These variants often have different stats when compared to each other
+        // M_<Enemyname> seems to be the base form / template variant of an enemy. These are NOT actually spawned in any of the playable areas
+            // The enemies that are actually spawned in the game are variants of the base forms with longer names including the codename for the area they are supposed to spawn in. These variants often have different stats when compared to each other
         // Some enemy variants have _Seq in the name. These do spawn in game but they appear to only be used for cutscenes. Examples: UME_M_SkullGunner_01_Seq, SD_M_RavenBeast_01_Seq
-        // It's probably best to not randomize these for now since they shouldn't influence the actual battle encounters (unconfirmed)
+            // It's probably best to not randomize these for now since they shouldn't influence the actual battle encounters (unconfirmed)
         // The game differentiates between "Elite" and "Boss" but we might want to just put them all into the same category for the purpose of randomizing
-        // The "Normal" rank is actually split into "Normal1", "Normal2" and "Normal3" but I don't think this matters to us
+        // The "Normal" enemy rank is actually split into "Normal1", "Normal2" and "Normal3" but I don't think this matters
 
         {EnemyRank.Boss, new[]{
-            "ATL_M_Maelstrom_01",
-            "AYL_M_Maelstrom_01",
+            //"ATL_M_Maelstrom_01",     // Replacement bosses are not feasible to beat with limited ammo
+            //"AYL_M_Maelstrom_01",
             "CHAL_M_Scarlet_01",
             "CHAL_XION_M_Mann_01",
             "DEDA_M_GrubShooterElite_01",       
@@ -495,6 +495,11 @@ public static class GameData
             "WLB_M_LurkerB_01",
             "WLB_M_LurkerBUnderGround_01",
             "WLA_M_MiteD_01",
+            //"ATL_M_RoadBlockA_01",    // Will likely cause issues because they don't always have solid ground under them
+            //"ATL_M_RoadBlockA_02",
+            //"SE_M_RoadBlockBWhite_01",
+            //"UME_M_RoadBlockA_01",
+            //"UME_M_RoadBlockA_02",
             "UME_M_SkullGunner_01",
             "UME_M_SkullGunner_01_Seq",
             "UME_M_SkullGunnerAlone_01",
@@ -630,11 +635,11 @@ public static class GameData
 
     };
 
-    public static readonly Dictionary<EnemyRank, string[]> EnemiesToPlace = new Dictionary<EnemyRank, string[]>{
+    public static readonly Dictionary<EnemyRank, string[]> EnemiesToPlace = new(){
 
         {EnemyRank.Boss, new[]{
-            "ATL_M_Maelstrom_01",
-            "AYL_M_Maelstrom_01",
+            //"ATL_M_Maelstrom_01",     // Not replaced so don't place them either
+            //"AYL_M_Maelstrom_01",
             "CHAL_M_Scarlet_01",
             "CHAL_XION_M_Mann_01",
             "DEDA_M_GrubShooterElite_01",
@@ -667,7 +672,7 @@ public static class GameData
 
         {EnemyRank.Normal, new[]{
             "DED_M_AntlionC_01",
-            "DEDN_M_AntlionC_01",
+            //"DEDN_M_AntlionC_01",     // DEDN is unused?
             "WLA_M_AntlionC_01",
             "DED_M_AntlionC_02",
             "WLA_M_AntlionC_02",
@@ -677,7 +682,7 @@ public static class GameData
             "DED_M_BarnacleA_01",
             "DEDA_M_BarnacleA_01",
             "UME_M_BarnacleA_01",
-            "WLAN_M_BarnacleA_01",
+            //"WLAN_M_BarnacleA_01",    // WLAN is unused?
             "AYL_M_BarnacleA_02",
             "DEDA_M_BarnacleA_02",
             "DEDA_M_BarnacleA_03",
@@ -712,21 +717,21 @@ public static class GameData
             "DED_M_ClriketB_04",
             "DED_M_ClriketBBlitz_01",
             "DEDA_M_ClriketBBlitz_01",
-            "DEDN_M_ClriketBBlitz_01",
+            //"DEDN_M_ClriketBBlitz_01",    // DEDN is unused?
             "DED_M_ClriketBChain_01",
             "DEDA_M_ClriketBChain_01",
-            "DEDN_M_ClriketBChain_01",
+            //"DEDN_M_ClriketBChain_01",    // DEDN is unused?
             "UME_M_ClriketBChain_01",
             "DED_M_ClriketBGround_01",
             "DEDA_M_ClriketBGround_01",
             //"DED_M_ClriketBTutorial_01",      // Exclude it because it triggers some sort of tutorial
             "DED_M_ClriketCFear_01",
             "DEDA_M_ClriketCFear_01",
-            "DEDN_M_ClriketCFear_01",
+            //"DEDN_M_ClriketCFear_01",    // DEDN is unused?
             "UME_M_ClriketCFear_01",
             "DED_M_ClriketCGrab_01",
             "DEDA_M_ClriketCGrab_01",
-            "DEDN_M_ClriketCGrab_01",
+            //"DEDN_M_ClriketCGrab_01",    // DEDN is unused?
             "UME_M_ClriketCGrab_01",
             "DEDA_M_Cocoon_01",
             "WLA_M_DroidOld_01",
@@ -742,20 +747,20 @@ public static class GameData
             "WLA_M_GrubDashB_01",
             "DEDA_M_GrubDashWithBoss_01",
             "WLA_M_HedgeBoarA_01",
-            "WLAN_M_HedgeBoarA_01",
+            //"WLAN_M_HedgeBoarA_01",    // WLAN is unused?
             "WLA_M_HedgeBoarB_01",
-            "WLAN_M_HedgeBoarB_01",
+            //"WLAN_M_HedgeBoarB_01",    // WLAN is unused?
             "ATL_M_HunchbackA_01",
             "AYL_M_HunchbackA_01",
             "WLA_M_HunchbackA_01",
-            "WLAN_M_HunchbackA_01",
+            //"WLAN_M_HunchbackA_01",    // WLAN is unused?
             "WLB_M_HunchbackA_01",
             "ATL_M_HunchbackASitting_01",
             "AYL_M_HunchbackASitting_01",
             "ATL_M_HunchbackB_01",
             "AYL_M_HunchbackB_01",
             "WLA_M_HunchbackB_01",
-            "WLAN_M_HunchbackB_01",
+            //"WLAN_M_HunchbackB_01",    // WLAN is unused?
             "WLB_M_HunchbackB_01",
             "AYL_M_HunchbackB_02",
             "AYL_M_HunchbackBRangeOnly_01",
@@ -766,7 +771,7 @@ public static class GameData
             "DEDA_M_Hydra_02",
             "DED_M_HydraB_01",
             "DEDA_M_HydraB_01",
-            "DEDN_M_HydraB_01",
+            //"DEDN_M_HydraB_01",    // DEDN is unused?
             "DEDA_M_HydraB_02",
             "DEDA_M_HydraB_03",
             "WLB_M_HydraC_01",
@@ -774,7 +779,7 @@ public static class GameData
             "ATL_M_LabMutant_01",
             "AYL_M_LabMutant_01",
             "WLA_M_LabMutant_01",
-            "WLAN_M_LabMutant_01",
+            //"WLAN_M_LabMutant_01",    // WLAN is unused?
             "WLB_M_LabMutant_01",
             "ATL_M_LabMutant_02",
             "AYL_M_LabMutant_02",
@@ -786,7 +791,7 @@ public static class GameData
             "AYL_M_LabMutantSitting_01",
             "AYL_M_LabMutantSitting_02",
             "AYL_M_LabMutantSitting_03",
-            "WLAN_M_LesserBehemoth_01",
+            //"WLAN_M_LesserBehemoth_01",    // WLAN is unused?
             "WLB_M_LesserBehemoth_01",
             "WLA_M_LumpB_01",
             "SE_M_LumpWhite_01",
@@ -817,26 +822,26 @@ public static class GameData
             //"UME_M_SkullSwordLieDown_01",     // Never becomes active / hittable
             //"UME_M_SkullSwordSitting_01",     // Never becomes active / hittable
             "DED_M_StatueA_01",
-            "DEDN_M_StatueA_01",
+            //"DEDN_M_StatueA_01",    // DEDN is unused?
             "DED_M_StatueA_02",
             "DED_M_StatueAStanbyToAttack_01",
-            "DEDN_M_StatueAStanbyToAttack_01",
+            //"DEDN_M_StatueAStanbyToAttack_01",    // DEDN is unused?
             "DED_M_StatueAStanbyToGrab_01",
-            "DEDN_M_StatueAStanbyToGrab_01",
+            //"DEDN_M_StatueAStanbyToGrab_01",    // DEDN is unused?
             "DED_M_StatueAStanbyToGrab_02",
             "DED_M_StatueAStanbyToNormal_01",
-            "DEDN_M_StatueAStanbyToNormal_01",
+            //"DEDN_M_StatueAStanbyToNormal_01",    // DEDN is unused?
             "DED_M_StatueAStanbyToNormal_02",
             "DED_M_StatueAStanbyToNormal2_01",
-            "DEDN_M_StatueAStanbyToNormal2_01",
+            //"DEDN_M_StatueAStanbyToNormal2_01",    // DEDN is unused?
             "DED_M_StatueAStanbyToNormal3_01",
-            "DEDN_M_StatueAStanbyToNormal3_01",
+            //"DEDN_M_StatueAStanbyToNormal3_01",    // DEDN is unused?
             "DED_M_StatueB_01",
-            "DEDN_M_StatueB_01",
+            //"DEDN_M_StatueB_01",    // DEDN is unused?
             "DED_M_StatueBStanbyToAttack_01",
-            "DEDN_M_StatueBStanbyToAttack_01",
+            //"DEDN_M_StatueBStanbyToAttack_01",    // DEDN is unused?
             "DED_M_StatueBStanbyToNormal_01",
-            "DEDN_M_StatueBStanbyToNormal_01",
+            //"DEDN_M_StatueBStanbyToNormal_01",    // DEDN is unused?
             "DED_M_StatueC_01",
             "DEDA_M_StatueC_01",
             "WLB_M_StatueD_01",
@@ -861,22 +866,22 @@ public static class GameData
         }},
 
         {EnemyRank.Animal, new[]{
-            "ATL_M_Antlion_01",
-            "AYL_M_Antlion_01",
+            //"ATL_M_Antlion_01",   // Has extra effects we don't want
+            //"AYL_M_Antlion_01",
             "DED_M_Antlion_01",
             "DEDA_M_Antlion_01",
-            "ATL_M_Antlion_02",
-            "AYL_M_Antlion_02",
+            //"ATL_M_Antlion_02",   // Has extra effects we don't want
+            //"AYL_M_Antlion_02",
             "DED_M_Antlion_02",
             "DEDA_M_Antlion_02",
-            "AYL_M_Antlion_03",
+            //"AYL_M_Antlion_03",   // Has extra effects we don't want
             "DED_M_Antlion_03",
             "DEDA_M_Antlion_03",
-            "AYL_M_Antlion_04",
-            "AYL_M_AntlionB_01",
+            //"AYL_M_Antlion_04",   // Has extra effects we don't want
+            //"AYL_M_AntlionB_01",
             "DED_M_AntlionB_01",
-            "DEDN_M_AntlionB_01",
-            "AYL_M_AntlionB_02",
+            //"DEDN_M_AntlionB_01",    // DEDN is unused?
+            //"AYL_M_AntlionB_02",   // Has extra effects we don't want
             "WLA_M_AntlionE_01",
             "WLB_M_AntlionE_01",
             "WLA_M_AntlionE_02",
@@ -887,11 +892,11 @@ public static class GameData
             "WLA_M_AntlionF_02",
             "WLB_M_AntlionF_02",
             "SE_M_AntlionWhite_01",
-            "ATL_M_BodyBag_01",     // Got softlocked once in ambush event in Eidos 7 which had a bodybag that killed itself
-            "AYL_M_BodyBag_01",        // But maybe something else caused it so idk
-            "WLAN_M_BodyBag_01",
+            "ATL_M_BodyBag_01",
+            "AYL_M_BodyBag_01",
+            //"WLAN_M_BodyBag_01",    // WLAN is unused?
             "AYL_M_BodyBag_02",
-            //"AYL_M_BodyBagDead_01",
+            //"AYL_M_BodyBagDead_01",     // Got softlocked once in ambush event in Eidos 7 which had a bodybag
             //"ATL_M_BodyBagSummonedByHunchback_01",
             //"AYL_M_BodyBagSummonedByHunchback_01",
             //"WLA_M_BodyBagSummonedByHunchback_01",
@@ -904,7 +909,7 @@ public static class GameData
             "SE_M_DollHead_01",
             "SE_M_DollHead_02",
             "WLB_M_LesserLurker_01",
-            "WLB_M_LesserLurkerDetect_01",
+            //"WLB_M_LesserLurkerDetect_01",    // Inactive until some event triggers or you get extremely close
             //"WLB_M_LesserLurkerDig_01",       // Spawns out of reach and never surfaces
             "DEDA_M_MiteA_01",
             "UME_M_MiteA_01",
@@ -930,7 +935,7 @@ public static class GameData
     
     };
 
-    public static readonly Dictionary<EnemyRank, string[]> EnemyCategoriesToPlace = new Dictionary<EnemyRank, string[]>{
+    public static readonly Dictionary<EnemyRank, string[]> EnemyCategoriesToPlace = new(){
 
         {EnemyRank.Boss, new[]{
             "Behemoth",
@@ -1026,7 +1031,7 @@ public static class GameData
     };
 
     public static Dictionary<EnemyRank, Dictionary<string, string[]>> EnemiesToPlaceOnce = new(){
-
+        
         [EnemyRank.Boss] = new(){
             ["Behemoth"] = ["WLB_M_Behemoth_01"],
             ["Crawler"] = ["SE_M_Crawler_01"],
@@ -1049,7 +1054,50 @@ public static class GameData
             ["Tachy"] = ["UME_M_Tachy_01"],
             ["WeaponMaster"] = ["SE_M_WeaponMasterA_01", "SE_M_WeaponMasterB_01"]
         }
-        
+    };
+
+    public static Dictionary<string, int> RelevantSummonEffectIndices = new(){
+        {"M_HunchbackA_SummonBodyBag_ATL", 0},
+        {"M_HunchbackA_SummonBodyBag_AYL", 0},
+        {"M_HunchbackA_SummonBodyBag_WLAN", 0},
+        {"M_HunchbackA_SummonBodyBag_WLA", 0},
+        {"M_HunchbackA_SummonBodyBag_WLB", 0},
+        {"M_HunchbackA_SummonBodyBag_ATL_Sitting", 0},
+        {"M_HunchbackA_SummonBodyBag_AYL_Sitting", 0},
+        {"M_HunchbackB_SummonBodyBag_ATL", 0},
+        {"M_HunchbackB_SummonBodyBag_AYL", 0},
+        {"M_HunchbackB_SummonBodyBag_WLAN", 0},
+        {"M_HunchbackB_SummonBodyBag_Dead", 0},
+        {"M_HunchbackB_SummonBodyBag_WLA", 0},
+        {"M_HunchbackB_SummonBodyBag_WLB", 0},
+        {"M_HunchbackB_SummonBodyBag_ATL_Sitting", 0},
+        {"M_HunchbackB_SummonBodyBag_AYL_Sitting", 0},
+        {"M_SkullHammer_SummonSkulling", 0},
+        {"M_SkullHammer_SummonSkulling_BySpawn", 0},
+        {"M_SkullSword_SummonSkulling", 0},
+        {"M_SkullSpear_SummonSkulling", 0},
+        {"M_SkullGunner_SummonSkulling", 0},
+        {"M_Skulling_SummonHammer", 0},
+        {"M_Skulling_SummonHammer2", 0},
+        {"M_Skulling_SummonSword", 0},
+        {"M_Skulling_SummonGunner", 0},
+        {"M_Skulling_SummonSpear", 0},
+        {"M_RoadBlockA_SummonSkulling", 0},
+        {"M_RoadBlockB_SummonDollHead", 0},
+        {"M_Marionette_SummonDollHead1", 0},
+        {"M_Marionette_SummonDollHead2", 0},
+        {"M_Marionette_SummonDollHead3", 0},
+        {"M_Marionette_SummonDollHead4", 0},
+        {"M_Marionette_SummonDollHead5", 0},
+        {"M_Marionette_SummonDollHead6", 0},
+        {"M_Marionette_SummonDollHead7", 0},
+        {"M_Marionette_SummonDollHead8", 0},
+        {"M_Marionette_SummonDollHead9", 0},
+        {"M_Maelstrom_SummonSingle", 0},
+        {"M_Maelstrom_SummonSingle_AYL", 0},
+        {"M_Maelstrom_SummonProjectile_Summon", 0},
+        {"M_Maelstrom_SummonProjectile_Summon_AYL", 0},
+        {"M_Bot_SummonBotUpperBody", 0}
     };
 
 }
