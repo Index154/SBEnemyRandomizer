@@ -312,7 +312,7 @@ public static class GameData
         // The "Normal" enemy rank is actually split into "Normal1", "Normal2" and "Normal3" but I don't think this matters
 
         {EnemyRank.Boss, new[]{
-            //"ATL_M_Maelstrom_01",     // Replacement bosses are not feasible to beat with limited ammo
+            "ATL_M_Maelstrom_01",     // Replacement bosses are not feasible to beat with limited ammo
             //"AYL_M_Maelstrom_01",
             "CHAL_M_Scarlet_01",
             "CHAL_XION_M_Mann_01",
@@ -1056,6 +1056,81 @@ public static class GameData
         }
     };
 
+    public static List<string> EnemyPropertiesToRetain = [
+        "Rank",
+        "MaxHP",
+        "MaxShield",
+        "MaxStamina",
+        "PhysicAttackPower",
+        "RangeAttackPower",
+        "ShieldAttackPower",
+        "StaminaAttackPower",
+        "ShieldRegenPerSecond",
+        "ShieldRegenPerSecondWhenBattle",
+        "StaminaRegenPerSecond",
+        "HPRegenPerSecond",
+        "ShieldIgnorePercentage",
+        "HitDefenseLevel",
+        "RewardGroupAlias",
+        "RewardSpawnBucketType",
+        "RewardOverrideSaveType",
+        "RewardFormationAssetPath",
+        "TargetFilterRadius",
+        "ProjectileTargetFilterRadius",
+        "DefaultDetectAIAlias",
+        "NarrowDetectAIAlias",
+        "AIAuditorySenseRadius",
+        "AIAuditorySenseDecibel",
+        "AIAuditorySenseDuration"
+    ];
+
+    public static List<string> BossesWithFinishStance = [
+        "UME_M_Tachy_01",
+        "DED_M_GorillaB_01",
+        "UME_M_SkullJuggernaut_01",
+        "SE_M_WeaponMasterB_01"
+    ];
+
+    public static Dictionary<string, string> SpawnsRequiringStances = new(){
+        //{"ME_05_E_CharS_017", "M_SkullJuggernaut_Finish"},
+        {"ME_06_E_CharS_001", "M_Tachy_Finish"},
+        //{"SE_04_E_CharS_001", "M_WeaponMasterB_Finish"}
+    };
+
+    public static List<string> BossesWithImmortality = [
+        "SD_M_HedgeBoarBrute_01",
+        "DED_M_Opener_01",
+        "DED_M_GorillaB_01",
+        "WLA_M_RoyalGuardFemale_01",
+        "UME_M_SkullJuggernaut_01",
+        "UME_M_Tachy_01",
+        "WLB_M_RoyalGuardFemale_01",
+        "SE_M_WeaponMasterB_01",
+        "SE_M_WeaponMasterA_01",
+        "SE_M_Marionette_01",
+        "SE_M_Crawler_01",
+        "NST_M_Raven_01",
+        "NST_M_ElderPhase1_01",
+        "NST_M_ExoSuit_01",
+        "CHAL_XION_M_Mann_01",
+        "CHAL_M_Scarlet_01"
+    ];
+
+    public static List<string> SpawnsRequiringImmortality = [
+        //"DED30_E_CharS_027",
+        "WLA_30_E_CharS_025",
+        //"ME_03_E_CharS_018",
+        //"ME_05_E_CharS_017",
+        "ME_06_E_CharS_001",
+        //"SE_04_E_CharS_001"
+    ];
+
+    public static Dictionary<string, string[]> SpawnsWithEffects = new(){
+        {"ME_03_E_CharS_018", new[]{"M_Sawshark_Matrix"}},
+        {"ATL_03_E_CharS_014", new[]{"M_Maelstrom_HPDamageReductionRate", "M_Maelstrom_ShieldDamageReductionRate"}},
+        {"AYL_06_E_CharS_002", new[]{"M_Maelstrom_HPDamageReductionRate", "M_Maelstrom_ShieldDamageReductionRate"}}
+    };
+
     public static Dictionary<string, int> RelevantSummonEffectIndices = new(){
         {"M_HunchbackA_SummonBodyBag_ATL", 0},
         {"M_HunchbackA_SummonBodyBag_AYL", 0},
@@ -1082,8 +1157,8 @@ public static class GameData
         {"M_Skulling_SummonSword", 0},
         {"M_Skulling_SummonGunner", 0},
         {"M_Skulling_SummonSpear", 0},
-        {"M_RoadBlockA_SummonSkulling", 0},
-        {"M_RoadBlockB_SummonDollHead", 0},
+        {"M_RoadBlockA_SummonSkulling", 0},     // Currently not working because the script ignores these enemies
+        {"M_RoadBlockB_SummonDollHead", 0},     // Currently not working because the script ignores these enemies
         {"M_Marionette_SummonDollHead1", 0},
         {"M_Marionette_SummonDollHead2", 0},
         {"M_Marionette_SummonDollHead3", 0},
@@ -1097,7 +1172,7 @@ public static class GameData
         {"M_Maelstrom_SummonSingle_AYL", 0},
         {"M_Maelstrom_SummonProjectile_Summon", 0},
         {"M_Maelstrom_SummonProjectile_Summon_AYL", 0},
-        {"M_Bot_SummonBotUpperBody", 0}
+        {"M_Bot_SummonBotUpperBody", 0}        // Currently not working because the effect that summons the enemy is triggered indirectly through this one
     };
 
 }

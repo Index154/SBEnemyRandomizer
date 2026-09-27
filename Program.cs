@@ -40,6 +40,7 @@ public class Program{
         int randoSeed = seedGenerator.Next(int.MinValue, int.MaxValue);
         Random rndCategory = new(randoSeed);
         Random rndAlias = new(randoSeed);
+        Log($"Seed = {seed}");
         
         // Load legacy uasset files and modify them
         UAsset charactersAsset = ReadUAsset($"{unpackTablePath}/{characterTable}", mapPath);
@@ -53,7 +54,7 @@ public class Program{
         UAsset zoneEventsAsset = ReadUAsset($"{unpackTablePath}/{zoneEventTable}", mapPath);
         UAsset tachyAIAsset = ReadUAsset($"{unpackAIPath}/{tachyAI}", mapPath);
         if(randomizeNPCAppearances) ShuffleNPCAppearances(charactersAsset);
-        FindAndModifyEffects(effectsAsset, rndCategory, rndAlias);
+        FindAndModifyEffects(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, rndCategory, rndAlias);
         RandomizeSpawns(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, rndCategory, rndAlias);
         ModifySkillActiveSteps(skillActiveStepsAsset);
         ModifyCharacterMoves(characterMovesAsset);
@@ -202,127 +203,117 @@ public class Program{
                 consistentReplacements.Add(characterAlias.Value.ToString(), replacementAlias);
             }
 
-            // Clone the replacement charactertable entry and modify it. This is necessary so we can have different scaling for each copy of an enemy. We could add some more checks to reduce some of the duplicate entries this produces but I don't think that's worth the effort
-            StructPropertyData originalEnemyEntry = new();
-            StructPropertyData replacementEnemyEntry = new();
-            foreach(StructPropertyData ch in characters){
-                if(ch.Name.Value.ToString() == characterAlias.Value.ToString()) originalEnemyEntry = ch;
-                if(ch.Name.Value.ToString() == replacementAlias) replacementEnemyEntry = ch;
-            }
-            StructPropertyData newEnemyEntry = (StructPropertyData)replacementEnemyEntry.Clone();
-            string newEntryName = Regex.Replace(replacementAlias, @".*_M_", $"_M_{rank}_{incrementalID}_");
-            newEntryName = zone.Value.ToString().Replace("Zone_", "") + newEntryName;
+            // Clone and modify the replacement charactertable entry. This is necessary so we can have different scaling for each copy of an enemy. We could add some more checks to reduce some of the duplicate entries this produces but I don't think that's worth the effort
+            string newEnemyName = ModifyEnemy(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, characterAlias.Value.ToString(), replacementAlias, characters, row, rndCategory, rndAlias, zone.Value.ToString());
 
-            ScaleAndFixEnemy(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, row, newEnemyEntry, originalEnemyEntry, row.Name.Value.ToString(), rndCategory, rndAlias);
-            incrementalID++;
-            newEnemyEntry.Name = FName.FromString(charactersAsset, newEntryName);
-            characters.Add(newEnemyEntry);
-
-            // Modify the spawn event to spawn the new custom charactertable entry instead
+            // Modify the spawn event to spawn the new custom character instead
+            characterAlias.Value = FName.FromString(spawnEventsAsset, newEnemyName);
             //Log($"{incrementalID - 1} | {row.Name.Value}: {characterAlias.Value} => {replacementAlias}");
-            characterAlias.Value = FName.FromString(spawnEventsAsset, newEntryName);
         }
-        
-        Log($"Seed = {seed}");
     }
 
-    static void ScaleAndFixEnemy(UAsset charactersAsset, UAsset spawnEventsAsset, UAsset levelTargetFiltersAsset, UAsset eventActorEffectsAsset, UAsset conditionsAsset, UAsset effectsAsset, StructPropertyData spawnEvent, StructPropertyData newEnemy, StructPropertyData originalEnemy, string spawnEventName, Random rndCategory, Random rndAlias)
+    static string ModifyEnemy(UAsset charactersAsset, UAsset spawnEventsAsset, UAsset levelTargetFiltersAsset, UAsset eventActorEffectsAsset, UAsset conditionsAsset, UAsset effectsAsset, string characterAlias, string replacementAlias, List<StructPropertyData> characters, StructPropertyData spawnEvent, Random rndCategory, Random rndAlias, string zoneName)
     {
-        string newEnemyName = newEnemy.Name.Value.ToString();
+        // Clone the enemy before modifying it
+        StructPropertyData originalEnemy = new();
+        StructPropertyData replacementEnemy = new();
+        foreach(StructPropertyData ch in characters){
+            if(ch.Name.Value.ToString() == characterAlias) originalEnemy = ch;
+            if(ch.Name.Value.ToString() == replacementAlias) replacementEnemy = ch;
+        }
 
-        // Assign every new enemy a unique ID in case it matters. Also makes troubleshooting easier
+        // Assign the new enemy a new name and a unique ID
+        StructPropertyData newEnemy = (StructPropertyData)replacementEnemy.Clone();
+        string vanillaEnemyName = newEnemy.Name.Value.ToString();
+        string spawnEventName = spawnEvent.Name.Value.ToString();
+        string newEnemyName = Regex.Replace(replacementAlias, @".*_M_", $"_M_{incrementalID}_");
+        newEnemyName = zoneName.Replace("Zone_", "") + newEnemyName;
         ((UInt32PropertyData)newEnemy["ID"]).Value = incrementalID;
 
-        // Keep some of the data of the replaced enemy such as combat data and drop tables for balance reasons
-        string[] dataToRetain = ["Rank", "MaxHP", "MaxShield", "MaxStamina", "PhysicAttackPower", "RangeAttackPower", "ShieldAttackPower", "StaminaAttackPower", "ShieldRegenPerSecond", "ShieldRegenPerSecondWhenBattle", "StaminaRegenPerSecond", "HPRegenPerSecond", "ShieldIgnorePercentage", "HitDefenseLevel", "RewardGroupAlias", "RewardSpawnBucketType", "RewardOverrideSaveType", "RewardFormationAssetPath", "TargetFilterRadius", "ProjectileTargetFilterRadius", "DefaultDetectAIAlias", "NarrowDetectAIAlias", "AIAuditorySenseRadius", "AIAuditorySenseDecibel", "AIAuditorySenseDuration"];
-        foreach(string s in dataToRetain)
+        // Keep some of the properties of the replaced enemy such as combat data and drop tables for balance reasons
+        foreach(string property in EnemyPropertiesToRetain)
         {
-            newEnemy[s].RawValue = originalEnemy[s].RawValue;
+            newEnemy[property].RawValue = originalEnemy[property].RawValue;
         }
-        // Lower stats for testing
+        // Lower HP for testing
         if(enemyHPForTesting > 0) ((IntPropertyData)newEnemy["MaxHP"]).Value = enemyHPForTesting;
         
-        // Reset spawn when loading save - Fix for testing. Enemies with SaveType Save will have their name and last position written into your save file. This prevents rerandomizing enemies mid-playthrough without softlocking the game (in many cases). Most enemies are spawned the moment you enter the zone so it's very unwieldy to test the game without ever having enemy positions saved
-        if(resetAllEnemySpawnsOnLoad)
+        // Add ranged damage multipliers to enemies in ATL and AYL. Also check for Projectile2_Summon and M_Maelstrom for the function call from FindAndModifyEffects()
+        ArrayPropertyData defaultEffectArray = (ArrayPropertyData)newEnemy["DefaultEffectArray"];
+        if(spawnEventName.Contains("AYL_") || spawnEventName.Contains("Projectile2_Summon")){
+            defaultEffectArray.Value = defaultEffectArray.Value.Append(new NamePropertyData { Value = FName.FromString(charactersAsset, "RangeAttackDamageReductionRate_AYL")}).ToArray();
+        }
+        else if(spawnEventName.Contains("ATL_") || spawnEventName.Contains("M_Maelstrom")){
+            defaultEffectArray.Value = defaultEffectArray.Value.Append(new NamePropertyData { Value = FName.FromString(charactersAsset, "RangeAttackDamageReductionRate_ATL")}).ToArray();
+        }
+
+        // Randomize enemies summoned by other enemies
+        ArrayPropertyData effectWhenZeroHPArray = (ArrayPropertyData)newEnemy["EffectWhenZeroHPArray"];
+        if(defaultEffectArray.Value.Any(val => ((NamePropertyData)val).Value.ToString().Contains("Summon")))
+        {
+            ReplaceSummonEffect(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, characters, spawnEvent, rndCategory, rndAlias, zoneName, defaultEffectArray);
+        }
+        else if(effectWhenZeroHPArray != null && effectWhenZeroHPArray.Value.Any(val => ((NamePropertyData)val).Value != null && ((NamePropertyData)val).Value.ToString().Contains("Summon")))
+        {
+            ReplaceSummonEffect(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, characters, spawnEvent, rndCategory, rndAlias, zoneName, effectWhenZeroHPArray);
+        }
+
+        // Reset spawn when loading save - For testing. Enemies with SaveType Save will have their name and last position (?) written into your save file. This prevents rerandomizing enemies mid-playthrough without softlocking the game (in many cases). Most enemies are spawned the moment you enter the zone so it's very unwieldy to test the game without changing the SaveType. (Exlude spawnEventname M_Maelstrom for the call from FindAndModifyEffects())
+        if(resetAllEnemySpawnsOnLoad && !spawnEventName.Contains("M_Maelstrom"))
         {
             EnumPropertyData saveType = (EnumPropertyData)spawnEvent["SaveType"];
             if(saveType.Value.ToString() == "ESBZoneObjSaveType_Save") saveType.Value = FName.FromString(spawnEventsAsset, "ESBZoneObjSaveType_ResetZone");
         }
 
-        // Randomize enemies summoned by other enemies
-        ArrayPropertyData defaultEffectArray = (ArrayPropertyData)newEnemy["DefaultEffectArray"];
-        ArrayPropertyData effectWhenZeroHPArray = (ArrayPropertyData)newEnemy["EffectWhenZeroHPArray"];
-        if(defaultEffectArray.Value.Any(val => ((NamePropertyData)val).Value.ToString().Contains("Summon")))
-        {
-            ReplaceSummonEffect(charactersAsset, effectsAsset, defaultEffectArray, rndAlias, rndCategory);
-        }
-        else if(effectWhenZeroHPArray != null && effectWhenZeroHPArray.Value.Any(val => ((NamePropertyData)val).Value != null && ((NamePropertyData)val).Value.ToString().Contains("Summon")))
-        {
-            ReplaceSummonEffect(charactersAsset, effectsAsset, defaultEffectArray, rndAlias, rndCategory);
-        }
-
-        // Conditional fixes for specific enemies
+        // Conditional fixes
         // --------------------------------------------------------------------------------------
 
         // Add immortality if required for a location-based cutscene. Otherwise remove immortality from certain bosses. This effect would usually be removed through a cutscene but we avoid most boss-specific cutscenes because they teleport you to arbitrary coordinates
-        if("WLA_30_E_CharS_025".Contains(spawnEventName)){
+        if(SpawnsRequiringImmortality.Contains(spawnEventName)){
             if(!defaultEffectArray.Value.Any(val => ((NamePropertyData)val).Value.ToString() == "Passive_Immortal"))
             {
                 defaultEffectArray.Value = defaultEffectArray.Value.Append(new NamePropertyData { Value = FName.FromString(charactersAsset, "Passive_Immortal")}).ToArray();
             }
         }
-        else if("SD_M_HedgeBoarBrute_01, SE_M_Marionette_01, DED_M_Opener_01, NST_M_ElderPhase1_01, NST_M_Raven_01, NST_M_ExoSuit_01, WLA_M_RoyalGuardFemale_01, WLB_M_RoyalGuardFemale_01, SE_M_WeaponMasterA_01, UME_M_Tachy_01, DED_M_GorillaB_01, UME_M_SkullJuggernaut_01, SE_M_WeaponMasterB_01, SE_M_Crawler_01, CHAL_XION_M_Mann_01, CHAL_M_Scarlet_01".Contains(newEnemyName))
+        else if(BossesWithImmortality.Contains(vanillaEnemyName))
         {
             defaultEffectArray.Value = defaultEffectArray.Value.Where(val => val.ToString() != "Passive_Immortal").ToArray();
         }
 
-        // Remove special stance from certain bosses (would trigger problematic cutscenes upon defeat)
-        if("UME_M_Tachy_01, DED_M_GorillaB_01, UME_M_SkullJuggernaut_01, SE_M_WeaponMasterB_01".Contains(newEnemyName))
+        // Remove special finisher stances from bosses (triggers a specific cutscene on defeat)
+        ArrayPropertyData stanceAliasArray = (ArrayPropertyData)newEnemy["StanceAliasArray"];
+        if(BossesWithFinishStance.Contains(vanillaEnemyName))
         {
-            ArrayPropertyData stanceAliasArray = (ArrayPropertyData)newEnemy["StanceAliasArray"];
             stanceAliasArray.Value = stanceAliasArray.Value.Where(val => !val.ToString().Contains("_Finish")).ToArray();
         }
-
-        // Add ranged damage multipliers to enemies in ATL and AYL
-        if(spawnEventName.Contains("ATL_")){
-            defaultEffectArray.Value = defaultEffectArray.Value.Append(new NamePropertyData { Value = FName.FromString(charactersAsset, "RangeAttackDamageReductionRate_ATL")}).ToArray();
-        }
-        if(spawnEventName.Contains("AYL_")){
-            defaultEffectArray.Value = defaultEffectArray.Value.Append(new NamePropertyData { Value = FName.FromString(charactersAsset, "RangeAttackDamageReductionRate_AYL")}).ToArray();
-        }
-
-        // Add damage taken multiplier effects to Maelstrom replacements
-        if("ATL_03_E_CharS_014, AYL_06_E_CharS_002".Contains(spawnEventName))
+        // Add special finisher stances to bosses in locations that normally have them
+        if(SpawnsRequiringStances.ContainsKey(spawnEventName))
         {
-            defaultEffectArray.Value = defaultEffectArray.Value.Append(new NamePropertyData { Value = FName.FromString(charactersAsset, "M_Maelstrom_HPDamageReductionRate")}).ToArray();
-            defaultEffectArray.Value = defaultEffectArray.Value.Append(new NamePropertyData { Value = FName.FromString(charactersAsset, "M_Maelstrom_ShieldDamageReductionRate")}).ToArray();
+            stanceAliasArray.Value = stanceAliasArray.Value.Append(new NamePropertyData { Value = FName.FromString(charactersAsset, SpawnsRequiringStances[spawnEventName])}).ToArray();
+        }
+
+        // Add other default effects to enemies in specific spawn locations
+        if(SpawnsWithEffects.ContainsKey(spawnEventName))
+        {
+            foreach(string effect in SpawnsWithEffects[spawnEventName])
+            {
+                defaultEffectArray.Value = defaultEffectArray.Value.Append(new NamePropertyData { Value = FName.FromString(charactersAsset, effect)}).ToArray();
+            }
         }
 
         // Fix Mann problems: Cutscenes teleport the player out of bounds and phase changes don't trigger
-        if(newEnemyName == "CHAL_XION_M_Mann_01")
+        if(vanillaEnemyName == "CHAL_XION_M_Mann_01")
         {
-            // Remove levelTargetFilter from phase change HP conditions
-            DataTableExport conditionsTable = (DataTableExport)conditionsAsset.Exports[0];
-            List<StructPropertyData> conditions = conditionsTable.Table.Data;
-            foreach(StructPropertyData row in conditions)
+            // Change levelTargetFilter to target the new spawn event so the HP conditions for the phase changes are functional
+            DataTableExport levelTargetFiltersTable = (DataTableExport)levelTargetFiltersAsset.Exports[0];
+            List<StructPropertyData> levelTargetFilters = levelTargetFiltersTable.Table.Data;
+            foreach(StructPropertyData row in levelTargetFilters)
             {
-                if(row.Name.Value.ToString().Contains("Xion_Boss_Mann_Condition"))
+                if(row.Name.Value.ToString() == "Xion_Boss_Mann_LevelTargetFilter_001")
                 {
-                    ((StrPropertyData)row["CustomStr01"]).Value = FString.FromString(null, Encoding.UTF8);
-                    ((StrPropertyData)row["CustomStr01"]).IsZero = true;
+                    ((NamePropertyData)row["SpawnPointName"]).Value = FName.FromString(levelTargetFiltersAsset, spawnEventName);
                 }
             }
-            // Old solution: Keep it here for now in case we need it again. But editing the conditions themselves would be better since we need to do that for Scarlet anyway. Loading an extra uasset just for Mann would be inefficient
-                // Change levelTargetFilter to target the new spawn event so the HP conditions for the phase changes are functional
-                /*DataTableExport levelTargetFiltersTable = (DataTableExport)levelTargetFiltersAsset.Exports[0];
-                List<StructPropertyData> levelTargetFilters = levelTargetFiltersTable.Table.Data;
-                foreach(StructPropertyData row in levelTargetFilters)
-                {
-                    if(row.Name.Value.ToString() == "Xion_Boss_Mann_LevelTargetFilter_001")
-                    {
-                        ((NamePropertyData)row["SpawnPointName"]).Value = FName.FromString(levelTargetFiltersAsset, spawnEventName);
-                    }
-                }*/
 
             // Change the target tag of the eventActorEffects to the tag of the spawnEvent - Required for the change to phase 2 to work
             // Modifying the tag of the spawnEvent would lead to issues with logic from the original arena (like intro cutscenes)
@@ -352,7 +343,7 @@ public class Program{
             // Add conditional trigger for phase 2 to the spawn event
             ArrayPropertyData ConditionsTrigger = (ArrayPropertyData)spawnEvent["ConditionsTrigger"];
                 ConditionsTrigger.Value = ConditionsTrigger.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "Xion_Boss_Mann_Condition_002")}).ToArray();
-            ArrayPropertyData ConditionTriggerEvent = (ArrayPropertyData)spawnEvent["ConditionsTrigger"];
+            ArrayPropertyData ConditionTriggerEvent = (ArrayPropertyData)spawnEvent["ConditionTriggerEvent"];
                 ConditionTriggerEvent.Value = ConditionTriggerEvent.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "Xion_Boss_Mann_E_ActorEff_006")}).ToArray();
             ArrayPropertyData ConditionTriggerRunType = (ArrayPropertyData)spawnEvent["ConditionTriggerRunType"];
                 ConditionTriggerRunType.Value = ConditionTriggerRunType.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerRunType_Once")}).ToArray();
@@ -361,7 +352,7 @@ public class Program{
         }
 
         // Fix Scarlet problems: Cutscenes teleport the player out of bounds and phase changes don't trigger
-        if(newEnemyName == "CHAL_M_Scarlet_01")
+        if(vanillaEnemyName == "CHAL_M_Scarlet_01")
         {
             // Remove levelTargetFilter from phase 2 HP condition
             DataTableExport conditionsTable = (DataTableExport)conditionsAsset.Exports[0];
@@ -415,15 +406,11 @@ public class Program{
                 ConditionTriggerExecType.Value = ConditionTriggerExecType.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerExecType_RunTime")}).ToArray();
         }
 
-        // Enable TurretLaser enemy AI by default (still doesn't allow them to shoot)
-        if(newEnemyName.Contains("TurretLaser")){
-            defaultEffectArray.Value = defaultEffectArray.Value.Where(val => val.ToString() != "BlockAI_Infinite").ToArray();
-        }
-
-        // "WindowBreakHydra". Most likely not actually broken but I'm keeping this here in case it comes up again
-        if(spawnEventName == "DED10_E_CharS_037") {     // 990000050
-            //newEnemy.RawValue = originalEnemy.RawValue;
-        }
+        // Save cloned enemy under new name
+        newEnemy.Name = FName.FromString(charactersAsset, newEnemyName);
+        characters.Add(newEnemy);
+        incrementalID++;
+        return newEnemyName;
     }
 
     static void ModifySkillActiveSteps(UAsset asset)
@@ -546,7 +533,7 @@ public class Program{
         }
     }
 
-    static void ReplaceSummonEffect(UAsset charactersAsset, UAsset effectsAsset, ArrayPropertyData characterEffectArray, Random rndCategory, Random rndAlias)
+    static void ReplaceSummonEffect(UAsset charactersAsset, UAsset spawnEventsAsset, UAsset levelTargetFiltersAsset, UAsset eventActorEffectsAsset, UAsset conditionsAsset, UAsset effectsAsset, List<StructPropertyData> characters, StructPropertyData spawnEvent, Random rndCategory, Random rndAlias, string zoneName, ArrayPropertyData characterEffectArray)
     {
         DataTableExport table = (DataTableExport)effectsAsset.Exports[0];
         List<StructPropertyData> effects = table.Table.Data;
@@ -574,24 +561,25 @@ public class Program{
             EnemyRank rank = effectName.Contains("Skulling_Summon") ? EnemyRank.Normal : EnemyRank.Animal;
             string previousAlias = Regex.Replace(actionValueStr.Split("{\"CharacterAlias\":\"")[1], "\".*", $"");
             string replacementAlias = PickDiffCategoryEnemy(previousAlias, rank, rndCategory, rndAlias);
-            string newAction1Value = actionValueStr.Replace(previousAlias, replacementAlias);
+            string newEnemyName = ModifyEnemy(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, previousAlias, replacementAlias, characters, spawnEvent, rndCategory, rndAlias, zoneName);
+
+            string newAction1Value = actionValueStr.Replace(previousAlias, newEnemyName);
             actionValue1.Value = FString.FromString(newAction1Value, Encoding.UTF8);
-
-            // TODO: Scale the summoned enemy (requires another characterTable entry clone...)
-
             effects.Add(newEffect);
             incrementalEffectID++;
         }
     }
 
-    static void FindAndModifyEffects(UAsset asset, Random rndCategory, Random rndAlias)
+    static void FindAndModifyEffects(UAsset charactersAsset, UAsset spawnEventsAsset, UAsset levelTargetFiltersAsset, UAsset eventActorEffectsAsset, UAsset conditionsAsset, UAsset effectsAsset, Random rndCategory, Random rndAlias)
     {
         Log("Parsing summon effects...");
-        DataTableExport table = (DataTableExport)asset.Exports[0];
-        List<StructPropertyData> data = table.Table.Data;
+        DataTableExport charactersTable = (DataTableExport)charactersAsset.Exports[0];
+        List<StructPropertyData> characters = charactersTable.Table.Data;
+        DataTableExport table = (DataTableExport)effectsAsset.Exports[0];
+        List<StructPropertyData> effects = table.Table.Data;
 
         int x = -1;
-        foreach(StructPropertyData row in data)
+        foreach(StructPropertyData row in effects)
         {
             // Save the index of relevant summon effects for later so we don't have to loop through all effects countless times
             x++;
@@ -600,12 +588,16 @@ public class Program{
             if(RelevantSummonEffectIndices.ContainsKey(effectName)) RelevantSummonEffectIndices[effectName] = x;
 
             // Randomize Maelstrom summons (consistent)
-            if(!"M_Maelstrom_SummonSingle, M_Maelstrom_SummonSingle_AYL, M_Maelstrom_SummonProjectile_Summon, M_Maelstrom_SummonProjectile_Summon_AYL".Contains(effectName)) continue;
+            if(!"M_Maelstrom_SummonSingle, M_Maelstrom_SummonSingle_AYL, M_Maelstrom_SummonProjectile_Summon, M_Maelstrom_SummonProjectile2_Summon".Contains(effectName)) continue;
+            string zoneName = "Zone_ATL_03_MaelstromSummon";
+            if(effectName.Contains("AYL") || effectName.Contains("Projectile2")) zoneName = "Zone_AYL_06_MaelstromSummon";
             StrPropertyData actionValue1 = (StrPropertyData)row["ActionValue1"];
             string actionValueStr = actionValue1.Value.ToString();
             string previousAlias = Regex.Replace(actionValueStr.Split("{\"CharacterAlias\":\"")[1], "\".*", $"");
             string replacementAlias = PickDiffCategoryEnemy(previousAlias, EnemyRank.Animal, rndCategory, rndAlias);
-            string newAction1Value = actionValueStr.Replace(previousAlias, replacementAlias);
+            // Knowlingly pass the effect instead of a spawnEvent since we don't have access to one here. Only the name is used in the function anyway so it doesn't matter
+            string newEnemyName = ModifyEnemy(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, previousAlias, replacementAlias, characters, row, rndCategory, rndAlias, zoneName);
+            string newAction1Value = actionValueStr.Replace(previousAlias, newEnemyName);
             actionValue1.Value = FString.FromString(newAction1Value, Encoding.UTF8);
         }
     }
@@ -636,7 +628,8 @@ public class Program{
         foreach(StructPropertyData row in entries){
             NamePropertyData refAppearance = (NamePropertyData)row["RefAppearance"];
             string apr = refAppearance.Value.ToString();
-            if(refAppearance.Value != null && apr.StartsWith("N_") && !apr.Contains("Drone") && !apr.Contains("Roxa")) {
+            // Avoid replacing the Drone, Roxanne and Raven as they break parts of the game or have no effect
+            if(refAppearance.Value != null && apr.StartsWith("N_") && !apr.Contains("Drone") && !apr.Contains("Roxa") && !apr.Contains("Raven")) {
                 string replacementAppearance = EnemyAppearances[rndAppearance.Next(EnemyAppearances.Count)];
                 refAppearance.Value = FName.FromString(asset, replacementAppearance);
                 //NamePropertyData defaultStanceAlias = (NamePropertyData)row["DefaultStanceAlias"];

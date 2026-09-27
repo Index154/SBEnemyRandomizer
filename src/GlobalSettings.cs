@@ -11,7 +11,7 @@ public class GlobalSettings
     public static bool randomizeNPCAppearances = true;
     public static string forceReplacementEnemyName = "";
     public static string forceReplacementForEvent = "";
-    public static bool resetAllEnemySpawnsOnLoad = false;
+    public static bool resetAllEnemySpawnsOnLoad = true;
     // Testing settings
     public static int enemyHPForTesting = 0;
     public static string customZoneNameRestriction = "";
