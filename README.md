@@ -17,7 +17,7 @@ Thanks to the developers of third-party software **Retoc** and **UAssetAPI** whi
 ## Known issues
 - Major issues:
   - The game has not been tested beyond the second Royal Guard fight. Some softlocks probably still remain
-  - NST_M_ElderPhase2_01 and XION_M_RavenBeast_01 certain-kill moves can spawn their destroyable projectiles out of bounds. In most arenas the chance of this happening is low. But it is likely to happen in some spawn locations: ME_03_E_CharS_018 (Stalker), ME_05_E_CharS_017 (Juggernaut)
+  - NST_M_ElderPhase2_01 and XION_M_RavenBeast_01 certain-kill moves can spawn their destroyable projectiles out of bounds. In most arenas the chance of this happening is low. But it is likely to happen in some spawn locations: ME_03_E_CharS_018 (Stalker), ME_05_E_CharS_017 (Juggernaut) => Add a setting that prevents them from being placed there that is on by default
   - Double-check if Hedgeboar Brute phase 2 is triggering
   - Double-check if Abaddon phase 2 is triggering (for both variants)
   - Go through all bosses and check for important condition triggers and event actor effects dependent on the spawn event tag
