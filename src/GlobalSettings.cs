@@ -8,12 +8,13 @@ public class GlobalSettings
     // -------------------------------------------------------------------------
     public static string gamePath = "D:/Steam/steamapps/common/StellarBlade";   // Tell user: Select the folder with SB.exe
     public static int seed = 123456;
-    public static bool randomizeNPCAppearances = true;
+    public static bool randomizeNPCAppearances = false;
     public static string forceReplacementEnemyName = "";
     public static string forceReplacementForEvent = "";
     public static bool resetAllEnemySpawnsOnLoad = true;
     // Testing settings
     public static int enemyHPForTesting = 0;
+    public static float enemyDMGForTesting = 0;
     public static string customZoneNameRestriction = "";
     public static EnemyRank? customRankRestriction = null;
     public static bool replaceSaveDataOnRun = false;
@@ -70,5 +71,6 @@ public class GlobalSettings
     public static readonly string characterMoveTable = "CharacterMoveTable.uasset";
     public static readonly string skillActiveStepTable = "SkillActiveStepTable.uasset";
     public static readonly string zoneEventTable = "ZoneEventTable.uasset";
+    public static readonly string eventTheaterTable = "EventTheaterTable.uasset";
     public static readonly string tachyAI = "M_Tachy_AI.uasset";
 }

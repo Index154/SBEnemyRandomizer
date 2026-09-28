@@ -1041,7 +1041,7 @@ public static class GameData
             ["Gorilla"] = ["DED_M_GorillaB_01", "WLA_M_GorillaBBrokenHead_01"],
             ["GrubShooterElite"] = ["DED_M_GrubShooterElite_01", "DEDA_M_GrubShooterElite_01", "WLA_M_GrubShooterEliteB_01"],
             ["HedgeBoarBrute"] = ["SD_M_HedgeBoarBrute_01", "WLA_M_HedgeBoarBrute_01"],
-            ["Maelstrom"] = ["ATL_M_Maelstrom_01", "AYL_M_Maelstrom_01"],
+            //["Maelstrom"] = ["ATL_M_Maelstrom_01", "AYL_M_Maelstrom_01"],
             ["Mann"] = ["CHAL_XION_M_Mann_01"],
             ["Marionette"] = ["SE_M_Marionette_01"],
             ["Opener"] = ["DED_M_Opener_01", "WLB_M_OpenerWasteland_01"],
@@ -1092,8 +1092,6 @@ public static class GameData
     ];
 
     public static Dictionary<string, string> SpawnsRequiringStances = new(){
-        //{"ME_05_E_CharS_017", "M_SkullJuggernaut_Finish"},
-        {"ME_06_E_CharS_001", "M_Tachy_Finish"},
         //{"SE_04_E_CharS_001", "M_WeaponMasterB_Finish"}
     };
 
@@ -1111,17 +1109,14 @@ public static class GameData
         "SE_M_Crawler_01",
         "NST_M_Raven_01",
         "NST_M_ElderPhase1_01",
+        "NST_M_ElderPhase2_01",
         "NST_M_ExoSuit_01",
         "CHAL_XION_M_Mann_01",
         "CHAL_M_Scarlet_01"
     ];
 
     public static List<string> SpawnsRequiringImmortality = [
-        //"DED30_E_CharS_027",
         "WLA_30_E_CharS_025",
-        //"ME_03_E_CharS_018",
-        //"ME_05_E_CharS_017",
-        "ME_06_E_CharS_001",
         //"SE_04_E_CharS_001"
     ];
 

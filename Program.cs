@@ -23,7 +23,7 @@ public class Program{
         Directory.CreateDirectory(unpackAIPath);
         Directory.CreateDirectory(repackAIPath);
 
-        // Extract assets from game files and convert to legacy format using retoc
+        // Extract uassets from the game files and convert to legacy format using retoc
         await RetocToLegacy(characterTable);
         await RetocToLegacy(eventSpawnTable);
         await RetocToLegacy(levelTargetFilterTable);
@@ -33,6 +33,7 @@ public class Program{
         await RetocToLegacy(characterMoveTable);
         await RetocToLegacy(skillActiveStepTable);
         await RetocToLegacy(zoneEventTable);
+        await RetocToLegacy(eventTheaterTable);
         await RetocToLegacy(tachyAI);
 
         // Random seeds
@@ -42,7 +43,7 @@ public class Program{
         Random rndAlias = new(randoSeed);
         Log($"Seed = {seed}");
         
-        // Load legacy uasset files and modify them
+        // Load legacy uassets
         UAsset charactersAsset = ReadUAsset($"{unpackTablePath}/{characterTable}", mapPath);
         UAsset spawnEventsAsset = ReadUAsset($"{unpackTablePath}/{eventSpawnTable}", mapPath);
         UAsset levelTargetFiltersAsset = ReadUAsset($"{unpackTablePath}/{levelTargetFilterTable}", mapPath);
@@ -52,13 +53,17 @@ public class Program{
         UAsset characterMovesAsset = ReadUAsset($"{unpackTablePath}/{characterMoveTable}", mapPath);
         UAsset skillActiveStepsAsset = ReadUAsset($"{unpackTablePath}/{skillActiveStepTable}", mapPath);
         UAsset zoneEventsAsset = ReadUAsset($"{unpackTablePath}/{zoneEventTable}", mapPath);
+        UAsset eventTheatersAsset = ReadUAsset($"{unpackTablePath}/{eventTheaterTable}", mapPath);
         UAsset tachyAIAsset = ReadUAsset($"{unpackAIPath}/{tachyAI}", mapPath);
+
+        // Make modifications
         if(randomizeNPCAppearances) ShuffleNPCAppearances(charactersAsset);
         FindAndModifyEffects(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, rndCategory, rndAlias);
         RandomizeSpawns(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, rndCategory, rndAlias);
         ModifySkillActiveSteps(skillActiveStepsAsset);
         ModifyCharacterMoves(characterMovesAsset);
         ModifyZoneEvents(zoneEventsAsset);
+        ModifyEventTheaters(eventTheatersAsset);
         ModifyAI(tachyAIAsset);
         Check(effectsAsset);
 
@@ -73,9 +78,10 @@ public class Program{
         characterMovesAsset.Write($"{repackTablePath}/{characterMoveTable}");
         skillActiveStepsAsset.Write($"{repackTablePath}/{skillActiveStepTable}");
         zoneEventsAsset.Write($"{repackTablePath}/{zoneEventTable}");
+        eventTheatersAsset.Write($"{repackTablePath}/{eventTheaterTable}");
         tachyAIAsset.Write($"{repackAIPath}/{tachyAI}");
 
-        // Repack modified uassets, convert to game-ready zen format using retoc and move them to the mods folder
+        // Repack modified uassets, convert to game-ready zen format using retoc and move the resulting mod files to the mods folder
         await RetocToZen();
 
         // Save file reset for testing
@@ -157,7 +163,6 @@ public class Program{
             else if(EnemiesToReplace[EnemyRank.Normal].Any(characterAlias.Value.ToString().Contains)) rank = EnemyRank.Normal;
             else if(EnemiesToReplace[EnemyRank.Boss].Any(characterAlias.Value.ToString().Contains)) rank = EnemyRank.Boss;
             else continue;
-            if(customRankRestriction != null && rank != customRankRestriction) continue;
 
             // Determine replacement enemy
             string replacementAlias = "";
@@ -196,6 +201,8 @@ public class Program{
 
             // Force specific enemy for testing
             if(forceReplacementEnemyName != "" && (forceReplacementForEvent == "" || forceReplacementForEvent == row.Name.Value.ToString())) replacementAlias = forceReplacementEnemyName;
+            // Only replace enemies of specific rank for testing (edit all the other events anyway so the enemies can still spawn on a save file where they have been randomized, through resetAllEnemySpawnsOnLoad)
+            if(customRankRestriction != null && rank != customRankRestriction) replacementAlias = characterAlias.Value.ToString();
 
             // These bosses have two spawn events each so prevent these from being randomized separately
             if(!consistentReplacements.ContainsKey(characterAlias.Value.ToString()) && (characterAlias.Value.ToString() == "NST_M_Raven_01" || characterAlias.Value.ToString() == "NST_M_ElderPhase1_01"))
@@ -235,8 +242,10 @@ public class Program{
         {
             newEnemy[property].RawValue = originalEnemy[property].RawValue;
         }
-        // Lower HP for testing
+        // Lower HP / DMG for testing
         if(enemyHPForTesting > 0) ((IntPropertyData)newEnemy["MaxHP"]).Value = enemyHPForTesting;
+        if(enemyDMGForTesting > 0) ((FloatPropertyData)newEnemy["PhysicAttackPower"]).Value = enemyDMGForTesting;
+        if(enemyDMGForTesting > 0) ((FloatPropertyData)newEnemy["RangeAttackPower"]).Value = enemyDMGForTesting;
         
         // Add ranged damage multipliers to enemies in ATL and AYL. Also check for Projectile2_Summon and M_Maelstrom for the function call from FindAndModifyEffects()
         ArrayPropertyData defaultEffectArray = (ArrayPropertyData)newEnemy["DefaultEffectArray"];
@@ -301,6 +310,92 @@ public class Program{
             }
         }
 
+        // Remove BlockAI and special effect from Abaddon 2 spawn event
+        if(spawnEventName == "WLB_50_E_CharS_001")
+        {
+            ArrayPropertyData spawnEffectList = (ArrayPropertyData)spawnEvent["SpawnEffectList"];
+            spawnEffectList.Value = spawnEffectList.Value.Where(val => !val.ToString().Contains("BlockAI_Infinite") && !val.ToString().Contains("M_OpenerWasteland_Phase1Dispel")).ToArray();
+        }
+
+        // Modify eventActorEffect targets for Abaddon 2
+        if(vanillaEnemyName == "WLB_M_OpenerWasteland_01")
+        {
+            DataTableExport eventActorEffectsTable = (DataTableExport)eventActorEffectsAsset.Exports[0];
+            List<StructPropertyData> eventActorEffects = eventActorEffectsTable.Table.Data;
+            foreach(StructPropertyData row in eventActorEffects)
+            {
+                if(row.Name.Value.ToString().Contains("WLB_50"))
+                {
+                    NamePropertyData tagName = (NamePropertyData)row["TargetTagName"];
+                    if(tagName.Value != null && tagName.Value.ToString() == "WLB_M_OpenerWasteland")
+                    {
+                        StructPropertyData eventActorClone = row;
+                        // Clone them for each Mann spawn so we can have more than one - But there's more work to be done for that...
+                        //StructPropertyData eventActorClone = (StructPropertyData)row.Clone();
+                        //((UInt32PropertyData)eventActorClone["ID"]).Value = incrementalEventActorEffectID;
+                        //eventActorClone.Name = FName.FromString(eventActorEffectsAsset, $"{incrementalEventActorEffectID}_{row.Name.Value}_{spawnEventName}");
+                        NamePropertyData newActorTag = (NamePropertyData)eventActorClone["TargetTagName"];
+                        newActorTag.Value = FName.FromString(eventActorEffectsAsset, ((NamePropertyData)spawnEvent["TagName"]).Value.ToString());
+
+                        //eventActorEffects.Add(eventActorClone);
+                        incrementalEventActorEffectID++;
+                    }
+                }
+            }
+        }
+
+        // Fix Tachy replacement problems: The death cutscene does not trigger and the quest does not complete
+        if(spawnEventName == "ME_06_E_CharS_001")
+        {
+            // Add Tachy on-death cutscene trigger to the spawn because it's normally tied to a finisher move that doesn't work with replacement bosses
+            ArrayPropertyData eventOnDead = (ArrayPropertyData)spawnEvent["EventOnDead"];
+            eventOnDead.Value = eventOnDead.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "CUSTOM_Tachy_Die")}).ToArray();
+
+            // Replace the target of the quest filter so the kill quest can be completed
+            DataTableExport levelTargetFiltersTable = (DataTableExport)levelTargetFiltersAsset.Exports[0];
+            List<StructPropertyData> levelTargetFilters = levelTargetFiltersTable.Table.Data;
+            foreach(StructPropertyData row in levelTargetFilters)
+            {
+                if(row.Name.Value.ToString() == "Epic_06_LevelTargetFilter_001")
+                {
+                    ((NamePropertyData)row["TargetAlias"]).Value = FName.FromString(levelTargetFiltersAsset, newEnemyName);
+                }
+            }
+        }
+
+        // Fix Elder Phase 2 problems: Phase changes don't trigger
+        if(vanillaEnemyName == "NST_M_ElderPhase2_01")
+        {
+            // Change levelTargetFilter to target the new spawn event so the phase change conditions are functional
+            DataTableExport levelTargetFiltersTable = (DataTableExport)levelTargetFiltersAsset.Exports[0];
+            List<StructPropertyData> levelTargetFilters = levelTargetFiltersTable.Table.Data;
+            foreach(StructPropertyData row in levelTargetFilters)
+            {
+                if(row.Name.Value.ToString() == "Nest_10_LevelTargetFilter_004")
+                {
+                    ((NamePropertyData)row["EventSpawnAlias"]).Value = FName.FromString(levelTargetFiltersAsset, spawnEventName);
+                }
+            }
+
+            // Add conditional triggers to spawn event
+            ArrayPropertyData ConditionsTrigger = (ArrayPropertyData)spawnEvent["ConditionsTrigger"];
+                ConditionsTrigger.Value = ConditionsTrigger.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "Nest_10_Condition_020")}).ToArray();
+                ConditionsTrigger.Value = ConditionsTrigger.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "Nest_10_Condition_020")}).ToArray();
+                ConditionsTrigger.Value = ConditionsTrigger.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "Nest_10_Condition_025")}).ToArray();
+            ArrayPropertyData ConditionTriggerEvent = (ArrayPropertyData)spawnEvent["ConditionTriggerEvent"];
+                ConditionTriggerEvent.Value = ConditionTriggerEvent.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "Nest_10_E_EnvC_009")}).ToArray();
+                ConditionTriggerEvent.Value = ConditionTriggerEvent.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "Nest_10_E_Seq_003")}).ToArray();
+                ConditionTriggerEvent.Value = ConditionTriggerEvent.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "Nest_10_E_Seq_004")}).ToArray();
+            ArrayPropertyData ConditionTriggerRunType = (ArrayPropertyData)spawnEvent["ConditionTriggerRunType"];
+                ConditionTriggerRunType.Value = ConditionTriggerRunType.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerRunType_Once")}).ToArray();
+                ConditionTriggerRunType.Value = ConditionTriggerRunType.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerRunType_Once")}).ToArray();
+                ConditionTriggerRunType.Value = ConditionTriggerRunType.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerRunType_Repeat")}).ToArray();
+            ArrayPropertyData ConditionTriggerExecType = (ArrayPropertyData)spawnEvent["ConditionTriggerExecType"];
+                ConditionTriggerExecType.Value = ConditionTriggerExecType.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerExecType_RunTime")}).ToArray();
+                ConditionTriggerExecType.Value = ConditionTriggerExecType.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerExecType_RunTime")}).ToArray();
+                ConditionTriggerExecType.Value = ConditionTriggerExecType.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerExecType_ToTrue")}).ToArray();
+        }
+
         // Fix Mann problems: Cutscenes teleport the player out of bounds and phase changes don't trigger
         if(vanillaEnemyName == "CHAL_XION_M_Mann_01")
         {
@@ -331,7 +426,7 @@ public class Program{
                         //StructPropertyData eventActorClone = (StructPropertyData)row.Clone();
                         //((UInt32PropertyData)eventActorClone["ID"]).Value = incrementalEventActorEffectID;
                         //eventActorClone.Name = FName.FromString(eventActorEffectsAsset, $"{incrementalEventActorEffectID}_{row.Name.Value}_{spawnEventName}");
-                        NamePropertyData newActorTag = (NamePropertyData)row["TargetTagName"];
+                        NamePropertyData newActorTag = (NamePropertyData)eventActorClone["TargetTagName"];
                         newActorTag.Value = FName.FromString(eventActorEffectsAsset, ((NamePropertyData)spawnEvent["TagName"]).Value.ToString());
 
                         //eventActorEffects.Add(eventActorClone);
@@ -450,24 +545,52 @@ public class Program{
         
         foreach(StructPropertyData row in characterMoves)
         {
+            string moveName = row.Name.Value.ToString();
+
             // Replace M_RavenBeast world position movement with nothing-movement to prevent out of bounds teleportation
-            if("M_RavenBeast_PhaseChange3_Move2, M_RavenBeast_PhaseChange3_Move4, M_RavenBeast_ColonyDashSky_Move1, M_RavenBeast_ColonyDashSky_Move3, M_RavenBeast_ColonyDashSky_Move5, M_RavenBeast_ColonyDashSky_Move7, M_RavenBeast_FlyRoutine1_Move2".Contains(row.Name.Value.ToString()))
+            if("M_RavenBeast_PhaseChange3_Move2, M_RavenBeast_PhaseChange3_Move4, M_RavenBeast_ColonyDashSky_Move1, M_RavenBeast_ColonyDashSky_Move3, M_RavenBeast_ColonyDashSky_Move5, M_RavenBeast_ColonyDashSky_Move7, M_RavenBeast_FlyRoutine1_Move2".Contains(moveName))
             {
-                ((EnumPropertyData)row["MoveType"]).Value = FName.FromString(asset, "MoveTransformType_None");
+                ((EnumPropertyData)row["MoveType"]).Value = FName.FromString(asset, "MoveTransformType_Static");
                 ((EnumPropertyData)row["PositionType"]).Value = FName.FromString(asset, "MovePositionType_Self");
+                ((EnumPropertyData)row["PositionDirectionAxis"]).Value = FName.FromString(asset, "MoveDirectionAxis_Self");
+                ((BoolPropertyData)row["bCheckRuleMoveBlockArea"]).Value = true;
                 ((FloatPropertyData)row["ForwardValue"]).Value = 0.0F;
                 ((FloatPropertyData)row["RightValue"]).Value = 0.0F;
-                ((FloatPropertyData)row["UpValue"]).Value = 0.0F;
+
+                // Different up values for each move
+                if("M_RavenBeast_ColonyDashSky_Move7".Contains(moveName)) ((FloatPropertyData)row["UpValue"]).Value = -612.0F;
+                else if("M_RavenBeast_PhaseChange3_Move2".Contains(moveName)) ((FloatPropertyData)row["UpValue"]).Value = 400.0F;
+                else if("M_RavenBeast_PhaseChange3_Move4".Contains(moveName)) ((FloatPropertyData)row["UpValue"]).Value = 145.0F;
+                else if("M_RavenBeast_FlyRoutine1_Move2".Contains(moveName)) ((FloatPropertyData)row["UpValue"]).Value = 579.0F;
+                else if("M_RavenBeast_ColonyDashSky_Move1".Contains(moveName)) ((FloatPropertyData)row["UpValue"]).Value = 1091.0F;
+                else ((FloatPropertyData)row["UpValue"]).Value = 0.0F;
             }
 
             // Replace M_Crawler map center warp with relative backwards warp
-            if(row.Name.Value.ToString() == "M_Crawler_WarpMapCenter_Move1")
+            if(moveName == "M_Crawler_WarpMapCenter_Move1")
             {
                 ((EnumPropertyData)row["MoveType"]).Value = FName.FromString(asset, "MoveTransformType_Static");
                 ((EnumPropertyData)row["PositionType"]).Value = FName.FromString(asset, "MovePositionType_Target");
                 ((FloatPropertyData)row["ForwardValue"]).Value = -2500.0F;
                 ((FloatPropertyData)row["RightValue"]).Value = 0.0F;
                 ((FloatPropertyData)row["UpValue"]).Value = 0.0F;
+            }
+
+            // Replace Elder Phase 2 world position movement with relative movement to prevent out of bounds teleportation
+            if("M_ElderPhase2_KillRoutine_Move1, M_ElderPhase2_KillRoutine2_Move1, M_ElderPhase2_BlinkCenterShot_Move2, M_ElderPhase2_PhaseChange3_Move2, M_ElderPhase2_PhaseChange3_Move5".Contains(moveName))
+            {
+                ((EnumPropertyData)row["MoveType"]).Value = FName.FromString(asset, "MoveTransformType_Static");
+                ((EnumPropertyData)row["PositionType"]).Value = FName.FromString(asset, "MovePositionType_Self");
+                ((EnumPropertyData)row["PositionDirectionAxis"]).Value = FName.FromString(asset, "MoveDirectionAxis_Self");
+                //((EnumPropertyData)row["RotationType"]).Value = FName.FromString(asset, "MoveRotationType_Target");
+                ((BoolPropertyData)row["bCheckRuleMoveBlockArea"]).Value = true;
+                ((FloatPropertyData)row["ForwardValue"]).Value = 0.0F;
+                ((FloatPropertyData)row["RightValue"]).Value = 0.0F;
+
+                // Different upwards values for each move
+                if("M_ElderPhase2_KillRoutine2_Move1, M_ElderPhase2_BlinkCenterShot_Move2, M_ElderPhase2_PhaseChange3_Move5".Contains(moveName)) ((FloatPropertyData)row["UpValue"]).Value = 400.0F;
+                else if("M_ElderPhase2_PhaseChange3_Move2".Contains(moveName)) ((FloatPropertyData)row["UpValue"]).Value = 487.0F;
+                else ((FloatPropertyData)row["UpValue"]).Value = 861.0F;
             }
         }
     }
@@ -477,6 +600,7 @@ public class Program{
         Log("Modifying zoneEvents...");
         DataTableExport table = (DataTableExport)asset.Exports[0];
         List<StructPropertyData> zoneEvents = table.Table.Data;
+        List<StructPropertyData> newEvents = [];
         
         foreach(StructPropertyData row in zoneEvents)
         {
@@ -490,7 +614,42 @@ public class Program{
                 addEventsArray.Value[0].IsZero = true;
                 addEventsArray.Value = addEventsArray.Value.Where(val => !val.ToString().Contains("Xion_Boss_Mann_E_Theater_002")).ToArray();
             }
+
+            // Clone a theater trigger event and modify it
+            if(row.Name.Value.ToString() == "Xion_Boss_Mann_E_Theater_003")
+            {
+                // A way to trigger the Tachy death theater event because it's normally tied to a finisher move that doesn't work with replacement bosses
+                StructPropertyData newEvent = (StructPropertyData)row.Clone();
+                newEvent.Name.Value = FString.FromString("CUSTOM_Tachy_Die", Encoding.UTF8);
+                ((NamePropertyData)newEvent["EventAlias"]).Value = FName.FromString(asset, "CUSTOM_Tachy_Die_Theater");
+                ((UInt32PropertyData)newEvent["ID"]).Value = 9000;
+                newEvents.Add(newEvent);
+            }
         }
+        foreach(StructPropertyData s in newEvents){ zoneEvents.Add(s); }
+    }
+
+    static void ModifyEventTheaters(UAsset asset)
+    {
+        Log("Modifying eventTheaters...");
+        DataTableExport table = (DataTableExport)asset.Exports[0];
+        List<StructPropertyData> eventTheaters = table.Table.Data;
+        List<StructPropertyData> newTheaters = [];
+
+        // Find and clone a regular theater event to modify
+        foreach(StructPropertyData row in eventTheaters)
+        {
+            if(row.Name.Value.ToString() == "Xion_Boss_Mann_E_Theater_003")
+            {
+                // Create Tachy death theater event because it's normally tied to a finisher move that doesn't work with replacement bosses
+                StructPropertyData newTheater = (StructPropertyData)row.Clone();
+                newTheater.Name.Value = FString.FromString("CUSTOM_Tachy_Die_Theater", Encoding.UTF8);
+                ((NamePropertyData)newTheater["TheaterAlias"]).Value = FName.FromString(asset, "CUSTOM_Tachy_Die_Theater");
+                ((StrPropertyData)newTheater["TheaterAssetPath"]).Value = FString.FromString("/Game/GameDesign/Level/Theater/Matrix/MatrixXI/ME06/Theaters/MV_ME06_Tachy_Die_Theater.MV_ME06_Tachy_Die_Theater", Encoding.UTF8);
+                newTheaters.Add(newTheater);
+            }
+        }
+        foreach(StructPropertyData s in newTheaters){ eventTheaters.Add(s); }
     }
 
     static void ModifyAI(UAsset aiAsset)
@@ -628,8 +787,8 @@ public class Program{
         foreach(StructPropertyData row in entries){
             NamePropertyData refAppearance = (NamePropertyData)row["RefAppearance"];
             string apr = refAppearance.Value.ToString();
-            // Avoid replacing the Drone, Roxanne and Raven as they break parts of the game or have no effect
-            if(refAppearance.Value != null && apr.StartsWith("N_") && !apr.Contains("Drone") && !apr.Contains("Roxa") && !apr.Contains("Raven")) {
+            // Avoid replacing some stuff as they cause crashes or other issues
+            if(refAppearance.Value != null && apr.StartsWith("N_") && !apr.Contains("Dummy") && !apr.Contains("Camera") && !apr.Contains("Roxa") && !apr.Contains("Drone") && !apr.Contains("Raven")) {
                 string replacementAppearance = EnemyAppearances[rndAppearance.Next(EnemyAppearances.Count)];
                 refAppearance.Value = FName.FromString(asset, replacementAppearance);
                 //NamePropertyData defaultStanceAlias = (NamePropertyData)row["DefaultStanceAlias"];
