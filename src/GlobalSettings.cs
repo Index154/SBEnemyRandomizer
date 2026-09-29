@@ -8,7 +8,7 @@ public class GlobalSettings
     // -------------------------------------------------------------------------
     public static string gamePath = "D:/Steam/steamapps/common/StellarBlade";   // Tell user: Select the folder with SB.exe
     public static int seed = 123456;
-    public static bool randomizeNPCAppearances = false;
+    public static bool randomizeNPCAppearances = true;
     public static string forceReplacementEnemyName = "";
     public static string forceReplacementForEvent = "";
     public static bool resetAllEnemySpawnsOnLoad = true;
@@ -54,7 +54,7 @@ public class GlobalSettings
     // Paths dependent on the basePath
     public static readonly string tempPath = Path.Combine(basePath, "temp");
     public static readonly string retocPath = Path.Combine(basePath, "tools/retoc/retoc.exe");
-    public static readonly string mapPath = Path.Combine(basePath, "tools/StellarBlade_1.1.0.usmap");
+    public static readonly string mapPath = Path.Combine(basePath, "tools/StellarBlade_1.4.1.usmap");
     public static readonly string logPath = Path.Combine(basePath, "logs");
     // Temp folders. The subdirectory of the modified assets must match how they were extracted
     public static readonly string unpackTablePath = $"{tempPath}/unpacked/{tableSubdirectory}";

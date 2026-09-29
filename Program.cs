@@ -788,7 +788,7 @@ public class Program{
             NamePropertyData refAppearance = (NamePropertyData)row["RefAppearance"];
             string apr = refAppearance.Value.ToString();
             // Avoid replacing some stuff as they cause crashes or other issues
-            if(refAppearance.Value != null && apr.StartsWith("N_") && !apr.Contains("Dummy") && !apr.Contains("Camera") && !apr.Contains("Roxa") && !apr.Contains("Drone") && !apr.Contains("Raven")) {
+            if(refAppearance.Value != null && apr.StartsWith("N_") && !apr.Contains("Dummy") && !apr.Contains("Camera") && !apr.Contains("Roxa") && !apr.Contains("Drone") && !apr.Contains("Raven") && !apr.Contains("Adam") && !apr.Contains("Lily")) {
                 string replacementAppearance = EnemyAppearances[rndAppearance.Next(EnemyAppearances.Count)];
                 refAppearance.Value = FName.FromString(asset, replacementAppearance);
                 //NamePropertyData defaultStanceAlias = (NamePropertyData)row["DefaultStanceAlias"];
