@@ -201,6 +201,7 @@ public class Program{
 
             // Force specific enemy for testing
             if(forceReplacementEnemyName != "" && (forceReplacementForEvent == "" || forceReplacementForEvent == row.Name.Value.ToString())) replacementAlias = forceReplacementEnemyName;
+            if(forceReplacementBossName != "" && rank == EnemyRank.Boss && (forceReplacementForEvent == "" || forceReplacementForEvent == row.Name.Value.ToString())) replacementAlias = forceReplacementBossName;
             // Only replace enemies of specific rank for testing (edit all the other events anyway so the enemies can still spawn on a save file where they have been randomized, through resetAllEnemySpawnsOnLoad)
             if(customRankRestriction != null && rank != customRankRestriction) replacementAlias = characterAlias.Value.ToString();
 

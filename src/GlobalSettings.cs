@@ -9,6 +9,7 @@ public class GlobalSettings
     public static string gamePath = "D:/Steam/steamapps/common/StellarBlade";   // Tell user: Select the folder with SB.exe
     public static int seed = 123456;
     public static bool randomizeNPCAppearances = true;
+    public static string forceReplacementBossName = "";
     public static string forceReplacementEnemyName = "";
     public static string forceReplacementForEvent = "";
     public static bool resetAllEnemySpawnsOnLoad = true;
