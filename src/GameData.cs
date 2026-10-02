@@ -12,7 +12,7 @@ public static class GameData
     WLAN = Wasteland A Night (idk)
     ATL = Altess Levoire
     ME / UME = Matrix Eleven
-    FA = "Forbidden Area" (may be a subsection of ME?)
+    FA = Forbidden Area (might be unused)
     DLC02 = "DLCMatrix13" (idk)
     WLB = Wasteland B / Great Desert
     AYL = Abyss Levoire
@@ -86,28 +86,7 @@ public static class GameData
         "Zone_SYJ_02",
         "Zone_SYJ_P",
         "Zone_LYC02GO",
-        "Zone_Xion_21",
-        //"Zone_DED_Boss_Opener",       // There's no real need to randomize these. They also break in unique ways
-        //"Zone_DED_Boss_GrubShooter",
-        //"Zone_DED_Boss_Gorilla",
-        //"Zone_WLA_Boss_GorillaBrokenHead",
-        //"Zone_WLA_Boss_HedgeBoarBrute",
-        //"Zone_WLA_Boss_Raven",
-        //"Zone_ME_Boss_Sawshark",
-        //"Zone_ME_Boss_SkullJuggernaut",
-        //"Zone_ME_Boss_Tachy",
-        //"Zone_WLB_Boss_OpenerWasteland",
-        //"Zone_WLB_Boss_SawsharkWasteland",
-        //"Zone_WLB_Boss_Behemoth",
-        //"Zone_DEDA_Boss_DoubleBoss",
-        //"Zone_SE_Boss_WeaponMaster",
-        //"Zone_SE_Boss_Marionette",
-        //"Zone_SE_Boss_Crawler",
-        //"Zone_Xion_Boss_Mann",
-        //"Zone_Xion_Boss_RavenBeast",
-        //"Zone_Nest_Boss_ExoSuit",
-        //"Zone_Nest_Boss_Elder",
-        //"Zone_NK_Boss_Scarlet"
+        "Zone_Xion_21"
     ];
     
     public enum EnemyRank{
@@ -309,10 +288,8 @@ public static class GameData
         // The "Normal" enemy rank is actually split into "Normal1", "Normal2" and "Normal3" but I don't think this matters
 
         {EnemyRank.Boss, new[]{
-            "ATL_M_Maelstrom_01",     // Replacement bosses are not feasible to beat with limited ammo
+            //"ATL_M_Maelstrom_01",     // Replacement bosses are not feasible to beat with limited ammo
             //"AYL_M_Maelstrom_01",
-            "CHAL_M_Scarlet_01",
-            "CHAL_XION_M_Mann_01",
             "DEDA_M_GrubShooterElite_01",       
             "DED_M_GorillaB_01",
             "DED_M_GrubShooterElite_01",
@@ -338,28 +315,7 @@ public static class GameData
             "WLB_M_OpenerWasteland_01",
             "WLB_M_RoyalGuardFemale_01",
             "WLB_M_SawsharkWasteland_01",
-            "XION_M_RavenBeast_01",
-            "CHAL_DED_M_GorillaB_01",
-            "CHAL_UME_M_Tachy_01",
-            "CHAL_SE_M_Crawler_01",
-            "CHAL_WLA_M_GorillaBBrokenHead_01",
-            "CHAL_XION_M_RavenBeast_01",
-            "CHAL_NST_M_ElderPhase2_01",
-            "CHAL_NST_M_Raven_01",
-            "CHAL_NST_M_ExoSuit_01",
-            "CHAL_DED_M_GrubShooterElite_01",
-            "CHAL_DED_M_Opener_01",
-            "CHAL_UME_M_Sawshark_01",
-            "CHAL_UME_M_SkullJuggernaut_01",
-            "CHAL_SE_M_Marionette_01",
-            "CHAL_SE_M_WeaponMasterA_01",
-            "CHAL_WLA_M_HedgeBoarBrute_01",
-            "CHAL_WLB_M_SawsharkWasteland_01",
-            "CHAL_WLB_M_OpenerWasteland_01",
-            "CHAL_WLB_M_Behemoth_01",
-            "CHAL_DEDA_M_GrubShooterElite_01",
-            "CHAL_XION_M_Mann_01",
-            "CHAL_M_Scarlet_01"
+            "XION_M_RavenBeast_01"
         }},
 
         {EnemyRank.Normal, new[]{
@@ -643,7 +599,7 @@ public static class GameData
             "DED_M_GorillaB_01",
             "DED_M_GrubShooterElite_01",
             "DED_M_Opener_01",
-            "NST_M_ElderPhase1_01",
+            //"NST_M_ElderPhase1_01",   // Not a real boss fight, exclude him for now
             "NST_M_ElderPhase2_01",
             "NST_M_ExoSuit_01",
             "NST_M_Raven_01",
@@ -937,7 +893,7 @@ public static class GameData
         {EnemyRank.Boss, new[]{
             "Behemoth",
             "Crawler",      // Democrawler
-            "ElderPhase1",
+            //"ElderPhase1",
             "ElderPhase2",
             "ExoSuit",
             "Gorilla",      // Gigas
@@ -1032,7 +988,7 @@ public static class GameData
         [EnemyRank.Boss] = new(){
             ["Behemoth"] = ["WLB_M_Behemoth_01"],
             ["Crawler"] = ["SE_M_Crawler_01"],
-            ["ElderPhase1"] = ["NST_M_ElderPhase1_01"],     // 2 spawns, one is for the cutscene after the fight
+            //["ElderPhase1"] = ["NST_M_ElderPhase1_01"],
             ["ElderPhase2"] = ["NST_M_ElderPhase2_01"],
             ["ExoSuit"] = ["NST_M_ExoSuit_01"],
             ["Gorilla"] = ["DED_M_GorillaB_01", "WLA_M_GorillaBBrokenHead_01"],
@@ -1043,7 +999,7 @@ public static class GameData
             ["Marionette"] = ["SE_M_Marionette_01"],
             ["Opener"] = ["DED_M_Opener_01", "WLB_M_OpenerWasteland_01"],
             ["RavenBeast"] = ["XION_M_RavenBeast_01"],
-            ["Raven_"] = ["NST_M_Raven_01"],    // 2 spawns, one is probably for a cutscene
+            ["Raven_"] = ["NST_M_Raven_01"],
             ["RoyalGuardFemale"] = ["WLA_M_RoyalGuardFemale_01", "WLB_M_RoyalGuardFemale_01"],
             ["Sawshark"] = ["UME_M_Sawshark_01", "WLB_M_SawsharkWasteland_01"],
             ["Scarlet"] = ["CHAL_M_Scarlet_01"],
@@ -1051,6 +1007,18 @@ public static class GameData
             ["Tachy"] = ["UME_M_Tachy_01"],
             ["WeaponMaster"] = ["SE_M_WeaponMasterA_01", "SE_M_WeaponMasterB_01"]
         }
+    };
+
+    public static readonly Dictionary<string, string[]> BossRequirements = new(){
+        ["GunRequired"] = ["Maelstrom", "RavenBeast", "ElderPhase2", "ExoSuit"],
+        ["LargeArena"] = ["RavenBeast", "ElderPhase2"],
+        ["Duplicate"] = ["WLA_M_GorillaBBrokenHead_01", "DEDA_M_GrubShooterElite_01", "WLA_M_GrubShooterEliteB_01", "SD_M_HedgeBoarBrute_01", "AYL_M_Maelstrom_01", "DED_M_Opener_01", "WLA_M_RoyalGuardFemale_01", "SE_M_WeaponMasterB_01"]
+    };
+
+    public static readonly Dictionary<string, string[]> spawnEventCategories = new(){
+        ["BeforeGun"] = ["SD_10_E_CharS_026", "DED10_E_CharS_003", "DED20_E_CharS_015", "DED30_E_CharS_027"],
+        ["SmallArena"] = ["ME_03_E_CharS_018", "ME_05_E_CharS_017"],
+        ["AvoidableFight"] = ["SD_10_E_CharS_026", "WLB_30_E_CharS_002", "WLA_40_E_CharS_073", "DED40_E_CharS_055", "WLA_40_E_CharS_098", "WLB_50_E_CharS_001"]
     };
 
     public static List<string> EnemyPropertiesToRetain = [
@@ -1116,9 +1084,9 @@ public static class GameData
     ];
 
     public static Dictionary<string, string[]> SpawnsWithEffects = new(){
-        {"ME_03_E_CharS_018", new[]{"M_Sawshark_Matrix"}},
-        {"ATL_03_E_CharS_014", new[]{"M_Maelstrom_HPDamageReductionRate", "M_Maelstrom_ShieldDamageReductionRate"}},
-        {"AYL_06_E_CharS_002", new[]{"M_Maelstrom_HPDamageReductionRate", "M_Maelstrom_ShieldDamageReductionRate"}}
+        ["ME_03_E_CharS_018"] = ["M_Sawshark_Matrix"],
+        ["ATL_03_E_CharS_014"] = ["M_Maelstrom_HPDamageReductionRate", "M_Maelstrom_ShieldDamageReductionRate"],
+        ["AYL_06_E_CharS_002"] = ["M_Maelstrom_HPDamageReductionRate", "M_Maelstrom_ShieldDamageReductionRate"]
     };
 
     public static Dictionary<string, int> RelevantSummonEffectIndices = new(){
@@ -1164,5 +1132,8 @@ public static class GameData
         {"M_Maelstrom_SummonProjectile_Summon_AYL", 0},
         {"M_Bot_SummonBotUpperBody", 0}        // Currently not working because the effect that summons the enemy is triggered indirectly through this one
     };
+
+    // Lists to modify at runtime for persistent data
+    public static List<string> usedBossCategories = [];
 
 }

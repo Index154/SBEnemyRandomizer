@@ -41,7 +41,6 @@ public class Program{
         int randoSeed = seedGenerator.Next(int.MinValue, int.MaxValue);
         Random rndCategory = new(randoSeed);
         Random rndAlias = new(randoSeed);
-        Log($"Seed = {seed}");
         
         // Load legacy uassets
         UAsset charactersAsset = ReadUAsset($"{unpackTablePath}/{characterTable}", mapPath);
@@ -57,7 +56,7 @@ public class Program{
         UAsset tachyAIAsset = ReadUAsset($"{unpackAIPath}/{tachyAI}", mapPath);
 
         // Make modifications
-        if(randomizeNPCAppearances) ShuffleNPCAppearances(charactersAsset);
+        if(shuffleNPCAppearances) ShuffleNPCAppearances(charactersAsset);
         FindAndModifyEffects(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, rndCategory, rndAlias);
         RandomizeSpawns(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, rndCategory, rndAlias);
         ModifySkillActiveSteps(skillActiveStepsAsset);
@@ -65,9 +64,11 @@ public class Program{
         ModifyZoneEvents(zoneEventsAsset);
         ModifyEventTheaters(eventTheatersAsset);
         ModifyAI(tachyAIAsset);
+        ModifyPlayer(charactersAsset);
         Check(effectsAsset);
 
         // Save modified uassets
+        Log($"Seed = {seed}");
         Log("Saving files...");
         charactersAsset.Write($"{repackTablePath}/{characterTable}");
         spawnEventsAsset.Write($"{repackTablePath}/{eventSpawnTable}");
@@ -139,10 +140,6 @@ public class Program{
         List<StructPropertyData> characters = charactersTable.Table.Data;
 
         Dictionary<string, string> consistentReplacements = [];
-        // For challenge mode bosses - Currently unused because the zones are commented out in GameData.cs
-        Dictionary<EnemyRank, Dictionary<string, string[]>> challengeBossesToPlaceOnce = new(){
-            [EnemyRank.Boss] = EnemiesToPlaceOnce[EnemyRank.Boss].ToDictionary(pair => pair.Key, pair => pair.Value.ToArray())
-        };
 
         // Go through spawn events and modify all that are relevant
         foreach(StructPropertyData row in spawnEvents)
@@ -172,31 +169,11 @@ public class Program{
             }
             else if(onlyShuffleExistingBoss && rank == EnemyRank.Boss)
             {
-                Dictionary<string, string[]> enemyShuffleDict = EnemiesToPlaceOnce[rank];
-                if(rank == EnemyRank.Boss && zone.Value.ToString().Contains("_Boss_")) enemyShuffleDict = challengeBossesToPlaceOnce[EnemyRank.Boss];
-                
-                // Pick random category and enemy
-                string keyToRemoveFrom = "";
-                while(replacementAlias == "")
-                {
-                    KeyValuePair<string, string[]> randomKVP = enemyShuffleDict.ElementAt(rndCategory.Next(enemyShuffleDict.Count));
-                    string[] replacementCategory = randomKVP.Value;
-                    if(!characterAlias.Value.ToString().Contains(randomKVP.Key))
-                    {
-                        keyToRemoveFrom = randomKVP.Key;
-                        replacementAlias = replacementCategory[rndAlias.Next(replacementCategory.Length)];
-                    }
-                }
-
-                // Remove selected enemy from the list and remove category if it's empty
-                List<string> tempList = enemyShuffleDict[keyToRemoveFrom].ToList();
-                tempList.Remove(replacementAlias);
-                enemyShuffleDict[keyToRemoveFrom] = tempList.ToArray();
-                if(enemyShuffleDict[keyToRemoveFrom].Length < 1) enemyShuffleDict.Remove(keyToRemoveFrom);
+                replacementAlias = PickShuffleBoss(characterAlias.Value.ToString(), row.Name.Value.ToString(), rndCategory, rndAlias);
 
             }else{
                 // Select random enemy from different category
-                replacementAlias = PickDiffCategoryEnemy(characterAlias.Value.ToString(), rank, rndCategory, rndAlias);
+                replacementAlias = PickRandomEnemy(characterAlias.Value.ToString(), rank, rndCategory, rndAlias);
             }
 
             // Force specific enemy for testing
@@ -215,8 +192,8 @@ public class Program{
             string newEnemyName = ModifyEnemy(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, characterAlias.Value.ToString(), replacementAlias, characters, row, rndCategory, rndAlias, zone.Value.ToString());
 
             // Modify the spawn event to spawn the new custom character instead
+            if(rank == EnemyRank.Boss) Log($"{incrementalID - 1} | {row.Name.Value}: {characterAlias.Value} => {newEnemyName}");
             characterAlias.Value = FName.FromString(spawnEventsAsset, newEnemyName);
-            //Log($"{incrementalID - 1} | {row.Name.Value}: {characterAlias.Value} => {replacementAlias}");
         }
     }
 
@@ -247,7 +224,7 @@ public class Program{
         if(enemyHPForTesting > 0) ((IntPropertyData)newEnemy["MaxHP"]).Value = enemyHPForTesting;
         if(enemyDMGForTesting > 0) ((FloatPropertyData)newEnemy["PhysicAttackPower"]).Value = enemyDMGForTesting;
         if(enemyDMGForTesting > 0) ((FloatPropertyData)newEnemy["RangeAttackPower"]).Value = enemyDMGForTesting;
-        
+
         // Add ranged damage multipliers to enemies in ATL and AYL. Also check for Projectile2_Summon and M_Maelstrom for the function call from FindAndModifyEffects()
         ArrayPropertyData defaultEffectArray = (ArrayPropertyData)newEnemy["DefaultEffectArray"];
         if(spawnEventName.Contains("AYL_") || spawnEventName.Contains("Projectile2_Summon")){
@@ -502,6 +479,36 @@ public class Program{
                 ConditionTriggerExecType.Value = ConditionTriggerExecType.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerExecType_RunTime")}).ToArray();
         }
 
+        // Elder phase 1 AI change (experimental)
+        if(vanillaEnemyName == "NST_M_ElderPhase1_01")
+        {
+            // Modifying the elder's stance and AI allows him to perform attacks but without animations or hitboxes (mostly). Getting it to work would probably require editing the characterStanceTable. Instead try to take another enemy and replace the appearance with his
+            // Need to randomly pick a valid enemy to clone
+            newEnemy = (StructPropertyData)originalEnemy.Clone();
+            ((NamePropertyData)newEnemy["RefAppearance"]).Value = FName.FromString(charactersAsset, "M_ElderPhase1");
+            //ArrayPropertyData defaultEquipmentAliasArray = (ArrayPropertyData)newEnemy["DefaultEquipmentAliasArray"];
+            //defaultEquipmentAliasArray.Value = [ new NamePropertyData {Value = FName.FromString(charactersAsset, "Raven_Blade")} ];
+            //stanceAliasArray.Value = [ new NamePropertyData {Value = FName.FromString(charactersAsset, "M_Raven_Phase2")} ];
+            //((NamePropertyData)newEnemy["DefaultStanceAlias"]).Value = FName.FromString(charactersAsset, "M_Raven_Default");
+            //((StrPropertyData)newEnemy["BehaviorTreeRes"]).Value = FString.FromString("/Game/GameDesign/Combat/BehaviorTree/Monster/M_Raven_AI", Encoding.UTF8);
+        }
+
+        // Set meshscale to 1.0 for SkullJuggernaut replacement
+        if(spawnEventName == "ME_05_E_CharS_017") ((FloatPropertyData)newEnemy["MeshScale"]).Value = 1.0F;
+        // Set meshscale to 1.3 for SkullJuggernaut
+        if(vanillaEnemyName == "UME_M_SkullJuggernaut_01") ((FloatPropertyData)newEnemy["MeshScale"]).Value = 1.3F;
+
+        // Alter Hive HP
+        if(lowerHiveHP && enemyHPForTesting < 1) ((IntPropertyData)newEnemy["MaxHP"]).Value *= (int)0.4F;
+
+        // Block AI for testing
+        if(blockAIForTesting && !spawnEventName.Contains("M_Maelstrom"))
+        {
+            ArrayPropertyData spawnEffectList = (ArrayPropertyData)spawnEvent["SpawnEffectList"];
+            if(spawnEffectList.Value == null) spawnEffectList.Value = [];
+            spawnEffectList.Value = spawnEffectList.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "BlockAI_Infinite")}).ToArray();
+        }
+
         // Save cloned enemy under new name
         newEnemy.Name = FName.FromString(charactersAsset, newEnemyName);
         characters.Add(newEnemy);
@@ -670,6 +677,61 @@ public class Program{
         }
     }
 
+    static void ModifyPlayer(UAsset asset)
+    {
+        DataTableExport charactersTable = (DataTableExport)asset.Exports[0];
+        List<StructPropertyData> characters = charactersTable.Table.Data;
+
+        int counter = 0;
+        foreach(StructPropertyData row in characters)
+        {
+            if(row.Name.Value.ToString().Contains("Player"))
+            {
+                ((FloatPropertyData)row["FishingAttackPower"]).Value *= fishingPowerMultiplier;
+                counter++;
+            }
+            else if(counter == 3) break;
+        }
+    }
+
+    static string PickShuffleBoss(string enemyName, string spawnEventName, Random rndCategory, Random rndAlias)
+    {
+        Dictionary<string, string[]> enemyShuffleDict = EnemiesToPlaceOnce[EnemyRank.Boss];
+        
+        // Make temporary list of categories to pick from
+        List<string> tempBossCategories = [];
+        foreach(KeyValuePair<string, string[]> kvp in enemyShuffleDict)
+        {
+            // Filter out the category of the enemy being replaced
+            if(enemyName.Contains(kvp.Key)) continue;
+
+            // Filter out bosses requiring the gun for spawnEvents before the gun unlock
+            if(placeBossesRequiringGunAfterGunUnlock && BossRequirements["GunRequired"].Any(kvp.Key.Contains) && spawnEventCategories["BeforeGun"].Any(spawnEventName.Contains)) continue;
+
+            // Filter out bosses that spawn destroyable projectiles for spawnEvents where they are likely to spawn out of bounds
+            if(reduceDestroyableProjectileSoftlocks && BossRequirements["LargeArena"].Any(kvp.Key.Contains) && spawnEventCategories["SmallArena"].Any(spawnEventName.Contains)) continue;
+
+            //Log($"{spawnEventName} + {enemyName} => {kvp.Key} / {BossRequirements["GunRequired"].Any(kvp.Key.Contains)}");
+            tempBossCategories.Add(kvp.Key);
+        }
+        // Fail-safe in case there were no valid categories remaining after filtering them
+        if(tempBossCategories.Count < 1) tempBossCategories = enemyShuffleDict.Keys.ToList();
+
+        string replacementCategoryName = tempBossCategories.ElementAt(rndCategory.Next(tempBossCategories.Count));
+        string[] replacementCategory = enemyShuffleDict[replacementCategoryName];
+        string replacementAlias = replacementCategory[rndAlias.Next(replacementCategory.Length)];
+
+        // TODO: Make a list of boss spawn event indices and modify them in a custom order where optional boss encounters are LAST so usedBossCategories can actually be used to put duplicates in those locations! For now it has no purpose
+        usedBossCategories.Add(replacementCategoryName);
+
+        // Remove selected enemy from the list and remove category if it's empty
+        List<string> tempList = enemyShuffleDict[replacementCategoryName].ToList();
+        tempList.Remove(replacementAlias);
+        enemyShuffleDict[replacementCategoryName] = tempList.ToArray();
+        if(enemyShuffleDict[replacementCategoryName].Length < 1) enemyShuffleDict.Remove(replacementCategoryName);
+        return replacementAlias;
+    }
+
     static void Check(UAsset asset)
     {
         DataTableExport dtExport = (DataTableExport)asset.Exports[0];
@@ -720,7 +782,7 @@ public class Program{
             string actionValueStr = actionValue1.Value.ToString();
             EnemyRank rank = effectName.Contains("Skulling_Summon") ? EnemyRank.Normal : EnemyRank.Animal;
             string previousAlias = Regex.Replace(actionValueStr.Split("{\"CharacterAlias\":\"")[1], "\".*", $"");
-            string replacementAlias = PickDiffCategoryEnemy(previousAlias, rank, rndCategory, rndAlias);
+            string replacementAlias = PickRandomEnemy(previousAlias, rank, rndCategory, rndAlias);
             string newEnemyName = ModifyEnemy(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, previousAlias, replacementAlias, characters, spawnEvent, rndCategory, rndAlias, zoneName);
 
             string newAction1Value = actionValueStr.Replace(previousAlias, newEnemyName);
@@ -754,7 +816,7 @@ public class Program{
             StrPropertyData actionValue1 = (StrPropertyData)row["ActionValue1"];
             string actionValueStr = actionValue1.Value.ToString();
             string previousAlias = Regex.Replace(actionValueStr.Split("{\"CharacterAlias\":\"")[1], "\".*", $"");
-            string replacementAlias = PickDiffCategoryEnemy(previousAlias, EnemyRank.Animal, rndCategory, rndAlias);
+            string replacementAlias = PickRandomEnemy(previousAlias, EnemyRank.Animal, rndCategory, rndAlias);
             // Knowlingly pass the effect instead of a spawnEvent since we don't have access to one here. Only the name is used in the function anyway so it doesn't matter
             string newEnemyName = ModifyEnemy(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, previousAlias, replacementAlias, characters, row, rndCategory, rndAlias, zoneName);
             string newAction1Value = actionValueStr.Replace(previousAlias, newEnemyName);
@@ -762,7 +824,7 @@ public class Program{
         }
     }
 
-    static string PickDiffCategoryEnemy(string originalName, EnemyRank rank, Random rndCategory, Random rndAlias)
+    static string PickRandomEnemy(string originalName, EnemyRank rank, Random rndCategory, Random rndAlias)
     {
         // Pick a different enemy category
         string replacementCategory = originalName;

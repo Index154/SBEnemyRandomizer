@@ -7,18 +7,23 @@ public class GlobalSettings
     // Settings provided by the user
     // -------------------------------------------------------------------------
     public static string gamePath = "D:/Steam/steamapps/common/StellarBlade";   // Tell user: Select the folder with SB.exe
-    public static int seed = 123456;
-    public static bool randomizeNPCAppearances = true;
+    public static int seed = 123;
+    public static bool shuffleNPCAppearances = false;
+    public static bool resetAllEnemySpawnsOnLoad = true;
     public static string forceReplacementBossName = "";
     public static string forceReplacementEnemyName = "";
-    public static string forceReplacementForEvent = "";
-    public static bool resetAllEnemySpawnsOnLoad = true;
     // Testing settings
-    public static int enemyHPForTesting = 0;
-    public static float enemyDMGForTesting = 0;
+    public static string forceReplacementForEvent = "";
+    public static bool blockAIForTesting = true;
+    public static int enemyHPForTesting = 100;
+    public static float enemyDMGForTesting = 1;
     public static string customZoneNameRestriction = "";
     public static EnemyRank? customRankRestriction = null;
     public static bool replaceSaveDataOnRun = false;
+    // Unrelated QoL settings
+    public static float fishingPowerMultiplier = 6.0F;
+    public static bool lowerHiveHP = true;
+
 
     // Which rank of enemy should an enemy of a given rank be changed to? (logic unimplemented)
     public static bool smallToSmall = true;
@@ -33,6 +38,9 @@ public class GlobalSettings
 
     // Shuffle bosses around or select them completely randomly
     public static bool onlyShuffleExistingBoss = true;
+    public static bool placeBossesRequiringGunAfterGunUnlock = true;
+    public static bool reduceDestroyableProjectileSoftlocks = true;
+    public static bool tryPlaceDuplicatesForAvoidableFights = true;
     // Add non-story bosses to the pool (logic unimplemented)
     public static bool includeMann = true;
     public static bool includeScarlet = true;
