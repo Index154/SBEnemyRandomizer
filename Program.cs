@@ -498,8 +498,26 @@ public class Program{
         // Set meshscale to 1.3 for SkullJuggernaut
         if(vanillaEnemyName == "UME_M_SkullJuggernaut_01") ((FloatPropertyData)newEnemy["MeshScale"]).Value = 1.3F;
 
+        // Modify Belial 1 replacement
+        if(spawnEventName == "SE_04_E_CharS_001")
+        {
+            // Reduce HP a bit since Belial normally escapes at 70% (but don't recude it that much)
+            ((IntPropertyData)newEnemy["MaxHP"]).Value = (int)Math.Round(((IntPropertyData)newEnemy["MaxHP"]).Value * 0.8F, 0);
+        }
+
+        // Fix Belial 2 replacement
+        if(spawnEventName == "SE_06_E_CharS_001")
+        {
+            ((ArrayPropertyData)spawnEvent["ConditionsTrigger"]).Value = [];
+            ((ArrayPropertyData)spawnEvent["ConditionTriggerEvent"]).Value = [];
+            ((ArrayPropertyData)spawnEvent["ConditionTriggerRunType"]).Value = [];
+            ((ArrayPropertyData)spawnEvent["ConditionTriggerExecType"]).Value = [];
+            ((ArrayPropertyData)spawnEvent["EventOnSpawning"]).Value = [];
+            ((BoolPropertyData)spawnEvent["bHidden"]).Value = false;
+        }
+
         // Alter Hive HP
-        if(lowerHiveHP && enemyHPForTesting < 1) ((IntPropertyData)newEnemy["MaxHP"]).Value *= (int)0.4F;
+        if(vanillaEnemyName.Contains("RoadBlock") && lowerHiveHP && enemyHPForTesting < 1) ((IntPropertyData)newEnemy["MaxHP"]).Value = (int)Math.Round(((IntPropertyData)newEnemy["MaxHP"]).Value * 0.4F, 0);
 
         // Block AI for testing
         if(blockAIForTesting && !spawnEventName.Contains("M_Maelstrom"))
@@ -612,8 +630,10 @@ public class Program{
         
         foreach(StructPropertyData row in zoneEvents)
         {
+            string eventName = row.Name.Value.ToString();
+
             // Replace Mann phase 2 cutscene with the next event in the chain to prevent being teleported out of bounds
-            if(row.Name.Value.ToString() == "Xion_Boss_Mann_E_ActorEff_006")
+            if(eventName == "Xion_Boss_Mann_E_ActorEff_006")
             {
                 ArrayPropertyData finishEventsArray = (ArrayPropertyData)row["FinishEvents"];
                 finishEventsArray.Value = finishEventsArray.Value.Append(new NamePropertyData { Value = FName.FromString(asset, "Xion_Boss_Mann_E_ActorEff_008")}).ToArray();
@@ -623,8 +643,8 @@ public class Program{
                 addEventsArray.Value = addEventsArray.Value.Where(val => !val.ToString().Contains("Xion_Boss_Mann_E_Theater_002")).ToArray();
             }
 
-            // Clone a theater trigger event and modify it
-            if(row.Name.Value.ToString() == "Xion_Boss_Mann_E_Theater_003")
+            // Clone a theater trigger event and modify it for the Tachy arena
+            if(eventName == "Xion_Boss_Mann_E_Theater_003")
             {
                 // A way to trigger the Tachy death theater event because it's normally tied to a finisher move that doesn't work with replacement bosses
                 StructPropertyData newEvent = (StructPropertyData)row.Clone();

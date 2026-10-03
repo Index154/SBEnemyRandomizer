@@ -1017,7 +1017,7 @@ public static class GameData
 
     public static readonly Dictionary<string, string[]> spawnEventCategories = new(){
         ["BeforeGun"] = ["SD_10_E_CharS_026", "DED10_E_CharS_003", "DED20_E_CharS_015", "DED30_E_CharS_027"],
-        ["SmallArena"] = ["ME_03_E_CharS_018", "ME_05_E_CharS_017"],
+        ["SmallArena"] = ["ME_03_E_CharS_018", "ME_05_E_CharS_017", "SE_04_E_CharS_001"],
         ["AvoidableFight"] = ["SD_10_E_CharS_026", "WLB_30_E_CharS_002", "WLA_40_E_CharS_073", "DED40_E_CharS_055", "WLA_40_E_CharS_098", "WLB_50_E_CharS_001"]
     };
 
@@ -1055,7 +1055,7 @@ public static class GameData
     ];
 
     public static Dictionary<string, string> SpawnsRequiringStances = new(){
-        //{"SE_04_E_CharS_001", "M_WeaponMasterB_Finish"}
+        {"SE_04_E_CharS_001", "M_WeaponMasterB_Finish"}
     };
 
     public static List<string> BossesWithImmortality = [

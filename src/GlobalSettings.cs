@@ -7,16 +7,16 @@ public class GlobalSettings
     // Settings provided by the user
     // -------------------------------------------------------------------------
     public static string gamePath = "D:/Steam/steamapps/common/StellarBlade";   // Tell user: Select the folder with SB.exe
-    public static int seed = 123;
+    public static int seed = 1234;
     public static bool shuffleNPCAppearances = false;
     public static bool resetAllEnemySpawnsOnLoad = true;
     public static string forceReplacementBossName = "";
     public static string forceReplacementEnemyName = "";
     // Testing settings
     public static string forceReplacementForEvent = "";
-    public static bool blockAIForTesting = true;
-    public static int enemyHPForTesting = 100;
-    public static float enemyDMGForTesting = 1;
+    public static bool blockAIForTesting = false;
+    public static int enemyHPForTesting = 0;
+    public static float enemyDMGForTesting = 0;
     public static string customZoneNameRestriction = "";
     public static EnemyRank? customRankRestriction = null;
     public static bool replaceSaveDataOnRun = false;
