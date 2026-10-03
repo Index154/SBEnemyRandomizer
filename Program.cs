@@ -170,8 +170,8 @@ public class Program{
             else if(onlyShuffleExistingBoss && rank == EnemyRank.Boss)
             {
                 replacementAlias = PickShuffleBoss(characterAlias.Value.ToString(), row.Name.Value.ToString(), rndCategory, rndAlias);
-
-            }else{
+            }
+            else{
                 // Select random enemy from different category
                 replacementAlias = PickRandomEnemy(characterAlias.Value.ToString(), rank, rndCategory, rndAlias);
             }
