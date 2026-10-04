@@ -22,7 +22,7 @@ public class GlobalSettings
     public static bool replaceSaveDataOnRun = false;
     // Unrelated QoL settings
     public static float fishingPowerMultiplier = 6.0F;
-    public static bool lowerHiveHP = true;
+    public static float hiveHPMultiplier = 0.4F;
 
 
     // Which rank of enemy should an enemy of a given rank be changed to? (disabled ones are currently unimplemented)
@@ -37,7 +37,7 @@ public class GlobalSettings
     public static bool bossToBoss = true;
 
     // Shuffle bosses around or select them completely randomly
-    public static bool onlyShuffleExistingBoss = true;
+    public static bool shuffleBosses = true;
     public static bool reduceDestroyableProjectileSoftlocks = true;
     public static bool tryPlaceDuplicatesForAvoidableFights = true;
     // Add non-story bosses to the pool

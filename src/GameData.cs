@@ -901,7 +901,7 @@ public static class GameData
             "Gorilla",      // Gigas
             "GrubShooterElite",     // Corrupter
             "HedgeBoarBrute",
-            "Maelstrom",
+            //"Maelstrom",
             "Marionette",       // Karakuri
             "Opener",       // Abaddon
             "RavenBeast",

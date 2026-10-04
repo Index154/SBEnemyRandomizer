@@ -17,6 +17,13 @@ public class Program{
 
     async static Task Main()
     {
+        // Add GUI stuff here
+
+        await Run();
+    }
+
+    async static Task Run()
+    {
         // Create folders
         Directory.CreateDirectory(unpackTablePath);
         Directory.CreateDirectory(repackTablePath);
@@ -77,7 +84,7 @@ public class Program{
         ModifyZoneTriggers(zoneTriggersAsset);
         ModifyEventTheaters(eventTheatersAsset);
         ModifyAI(tachyAIAsset);
-        ModifyPlayer(charactersAsset);
+        ModifyVanillaCharacters(charactersAsset);
         Check(effectsAsset);
 
         // Save modified uassets
@@ -101,48 +108,6 @@ public class Program{
 
         // Save file reset for testing
         if(replaceSaveDataOnRun) File.Copy(Environment.ExpandEnvironmentVariables("%userprofile%/Downloads/StellarBladeSave03.sav"), Environment.ExpandEnvironmentVariables("%userprofile%/AppData/Local/SB/Saved/SaveGames/76561198169967897/StellarBladeSave03.sav"), overwrite: true);
-    }
-
-    async static Task RunRetoc(string arguments)
-    {
-        var psi = new ProcessStartInfo
-        {
-            FileName = retocPath,
-            Arguments = arguments,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false
-        };
-        using var process = Process.Start(psi)!;
-        string output = await process.StandardOutput.ReadToEndAsync();
-        await process.WaitForExitAsync();
-    }
-
-    async static Task RetocToLegacy(string uAssetName)
-    {
-        if(File.Exists($"{unpackTablePath}/{uAssetName}") || File.Exists($"{unpackAIPath}/{uAssetName}"))
-        {
-            Log($"[{uAssetName}] has already been unpacked");
-            return;
-        }
-        await RunRetoc($"to-legacy \"{gamePakPath}\" \"{tempPath}/unpacked\" -f \"{uAssetName}\"");
-        Log($"Unpacked [{uAssetName}]!");
-    }
-
-    async static Task RetocToZen()
-    {
-        string modName = "SBEnemyRandomizer_P";
-        await RunRetoc($"to-zen \"{tempPath}/modified\" \"{tempPath}/{modName}.utoc\" --version UE4_26");
-
-        Directory.CreateDirectory(gamePakPath + "/~mods");
-        File.Move($"{tempPath}/{modName}.pak", gamePakPath + $"/~mods/{modName}.pak", overwrite: true);
-        File.Move($"{tempPath}/{modName}.ucas", gamePakPath + $"/~mods/{modName}.ucas", overwrite: true);
-        File.Move($"{tempPath}/{modName}.utoc", gamePakPath + $"/~mods/{modName}.utoc", overwrite: true);
-        Log("Mod files moved to game directory!");
-    }
-
-    static UAsset ReadUAsset(string uAssetPath, string mapPath){
-        return new UAsset(uAssetPath, EngineVersion.VER_UE4_26, new Usmap(mapPath));
     }
 
     static void RandomizeSpawns(UAsset charactersAsset, UAsset spawnEventsAsset, UAsset levelTargetFiltersAsset, UAsset eventActorEffectsAsset, UAsset conditionsAsset, UAsset effectsAsset, Random rndCategory, Random rndAlias)
@@ -188,7 +153,7 @@ public class Program{
             {
                 replacementAlias = consistentReplacements[characterAlias.Value.ToString()];
             }
-            else if(onlyShuffleExistingBoss && rank == EnemyRank.Boss)
+            else if(shuffleBosses && rank == EnemyRank.Boss)
             {
                 replacementAlias = PickShuffleBoss(characterAlias.Value.ToString(), row.Name.Value.ToString(), rndCategory, rndAlias);
             }
@@ -216,6 +181,62 @@ public class Program{
             if(rank == EnemyRank.Boss) Log($"{incrementalID - 1} | {row.Name.Value}: {characterAlias.Value} => {replacementAlias}");
             characterAlias.Value = FName.FromString(spawnEventsAsset, newEnemyName);
         }
+    }
+
+    static string PickShuffleBoss(string enemyName, string spawnEventName, Random rndCategory, Random rndAlias)
+    {
+        Dictionary<string, string[]> enemyShuffleDict = EnemiesToPlaceOnce[EnemyRank.Boss];
+        
+        // Make temporary list of categories to pick from
+        List<string> tempBossCategories = [];
+        foreach(KeyValuePair<string, string[]> kvp in enemyShuffleDict)
+        {
+            // Filter out the category of the enemy being replaced
+            if(enemyName.Contains(kvp.Key)) continue;
+
+            // Filter out bosses requiring the gun for spawnEvents before the gun unlock
+            if(BossRequirements["GunRequired"].Any(kvp.Key.Contains) && spawnEventCategories["NoGun"].Any(spawnEventName.Contains)) continue;
+
+            // Filter out bosses that spawn destroyable projectiles for spawnEvents where they are likely to spawn out of bounds
+            if(reduceDestroyableProjectileSoftlocks && BossRequirements["LargeArena"].Any(kvp.Key.Contains) && spawnEventCategories["SmallArena"].Any(spawnEventName.Contains)) continue;
+
+            //Log($"{spawnEventName} + {enemyName} => {kvp.Key} / {BossRequirements["GunRequired"].Any(kvp.Key.Contains)}");
+            tempBossCategories.Add(kvp.Key);
+        }
+        // Fail-safe in case there were no valid categories remaining after filtering them
+        if(tempBossCategories.Count < 1) tempBossCategories = enemyShuffleDict.Keys.ToList();
+
+        string replacementCategoryName = tempBossCategories.ElementAt(rndCategory.Next(tempBossCategories.Count));
+        string[] replacementCategory = enemyShuffleDict[replacementCategoryName];
+        string replacementAlias = replacementCategory[rndAlias.Next(replacementCategory.Length)];
+
+        // TODO: Make a list of boss spawn event indices and modify them in a custom order where optional boss encounters are LAST so usedBossCategories can actually be used to put duplicates in those locations! For now it has no purpose
+        usedBossCategories.Add(replacementCategoryName);
+
+        // Remove selected enemy from the list and remove category if it's empty
+        List<string> tempList = enemyShuffleDict[replacementCategoryName].ToList();
+        tempList.Remove(replacementAlias);
+        enemyShuffleDict[replacementCategoryName] = tempList.ToArray();
+        if(enemyShuffleDict[replacementCategoryName].Length < 1) enemyShuffleDict.Remove(replacementCategoryName);
+        return replacementAlias;
+    }
+    
+    static string PickRandomEnemy(string originalName, EnemyRank rank, Random rndCategory, Random rndAlias)
+    {
+        // Pick a different enemy category
+        string replacementCategory = originalName;
+        // Change this approach later by using a temporary list...
+        while(originalName.Contains(replacementCategory)){
+            replacementCategory = EnemyCategoriesToPlace[rank][rndCategory.Next(EnemyCategoriesToPlace[rank].Length)];
+        }
+
+        // Pick a random enemy from the category
+        List<string> tempEnemyList = [];
+        foreach(string enemyAlias in EnemiesToPlace[rank]){
+            if(enemyAlias.Contains(replacementCategory)) tempEnemyList.Add(enemyAlias);
+        }
+        int index = rndAlias.Next(tempEnemyList.Count);
+        return tempEnemyList[index];
     }
 
     static string ModifyEnemy(UAsset charactersAsset, UAsset spawnEventsAsset, UAsset levelTargetFiltersAsset, UAsset eventActorEffectsAsset, UAsset conditionsAsset, UAsset effectsAsset, string characterAlias, string replacementAlias, List<StructPropertyData> characters, StructPropertyData spawnEvent, Random rndCategory, Random rndAlias, string zoneName)
@@ -550,9 +571,6 @@ public class Program{
                 ConditionTriggerExecType.Value = [ new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerExecType_RunTime")} ];
         }
 
-        // Alter Hive HP
-        if(vanillaEnemyName.Contains("RoadBlock") && lowerHiveHP && enemyHPForTesting < 1) ((IntPropertyData)newEnemy["MaxHP"]).Value = (int)Math.Round(((IntPropertyData)newEnemy["MaxHP"]).Value * 0.4F, 0);
-
         // Block AI for testing
         if(blockAIForTesting && !spawnEventName.Contains("M_Maelstrom"))
         {
@@ -566,6 +584,75 @@ public class Program{
         characters.Add(newEnemy);
         incrementalID++;
         return newEnemyName;
+    }
+
+    static void ReplaceSummonEffect(UAsset charactersAsset, UAsset spawnEventsAsset, UAsset levelTargetFiltersAsset, UAsset eventActorEffectsAsset, UAsset conditionsAsset, UAsset effectsAsset, List<StructPropertyData> characters, StructPropertyData spawnEvent, Random rndCategory, Random rndAlias, string zoneName, ArrayPropertyData characterEffectArray)
+    {
+        DataTableExport table = (DataTableExport)effectsAsset.Exports[0];
+        List<StructPropertyData> effects = table.Table.Data;
+
+        foreach(NamePropertyData effect in characterEffectArray.Value)
+        {
+            string effectName = effect.Value.ToString();
+            if(!effectName.Contains("Summon")) continue;
+            if(!RelevantSummonEffectIndices.ContainsKey(effectName)) continue;
+
+            string newEffectName = $"{incrementalEffectID}_{effectName}";
+            NamePropertyData newArrayEffect = (NamePropertyData)effect.Clone();
+            newArrayEffect.Value = FName.FromString(charactersAsset, newEffectName);
+
+            // Clone original summon effect
+            StructPropertyData originalEffect = effects[RelevantSummonEffectIndices[effectName]];
+            StructPropertyData newEffect = (StructPropertyData)originalEffect.Clone();
+            newEffect.Name = FName.FromString(effectsAsset, newEffectName);
+            ((UInt32PropertyData)newEffect["ID"]).Value = incrementalEffectID;
+
+            // Randomize the summoned enemy
+            StrPropertyData actionValue1 = (StrPropertyData)newEffect["ActionValue1"];
+            if(actionValue1.Value == null) continue;
+            string actionValueStr = actionValue1.Value.ToString();
+            EnemyRank rank = effectName.Contains("Skulling_Summon") ? EnemyRank.Normal : EnemyRank.Animal;
+            string previousAlias = Regex.Replace(actionValueStr.Split("{\"CharacterAlias\":\"")[1], "\".*", $"");
+            string replacementAlias = PickRandomEnemy(previousAlias, rank, rndCategory, rndAlias);
+            string newEnemyName = ModifyEnemy(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, previousAlias, replacementAlias, characters, spawnEvent, rndCategory, rndAlias, zoneName);
+
+            string newAction1Value = actionValueStr.Replace(previousAlias, newEnemyName);
+            actionValue1.Value = FString.FromString(newAction1Value, Encoding.UTF8);
+            effects.Add(newEffect);
+            incrementalEffectID++;
+        }
+    }
+
+    static void FindAndModifyEffects(UAsset charactersAsset, UAsset spawnEventsAsset, UAsset levelTargetFiltersAsset, UAsset eventActorEffectsAsset, UAsset conditionsAsset, UAsset effectsAsset, Random rndCategory, Random rndAlias)
+    {
+        Log("Parsing summon effects...");
+        DataTableExport charactersTable = (DataTableExport)charactersAsset.Exports[0];
+        List<StructPropertyData> characters = charactersTable.Table.Data;
+        DataTableExport table = (DataTableExport)effectsAsset.Exports[0];
+        List<StructPropertyData> effects = table.Table.Data;
+
+        int x = -1;
+        foreach(StructPropertyData row in effects)
+        {
+            // Save the index of relevant summon effects for later so we don't have to loop through all effects countless times
+            x++;
+            string effectName = row.Name.Value.ToString();
+            if(!effectName.Contains("Summon")) continue;
+            if(RelevantSummonEffectIndices.ContainsKey(effectName)) RelevantSummonEffectIndices[effectName] = x;
+
+            // Randomize Maelstrom summons (consistent)
+            if(!"M_Maelstrom_SummonSingle, M_Maelstrom_SummonSingle_AYL, M_Maelstrom_SummonProjectile_Summon, M_Maelstrom_SummonProjectile2_Summon".Contains(effectName)) continue;
+            string zoneName = "Zone_ATL_03_MaelstromSummon";
+            if(effectName.Contains("AYL") || effectName.Contains("Projectile2")) zoneName = "Zone_AYL_06_MaelstromSummon";
+            StrPropertyData actionValue1 = (StrPropertyData)row["ActionValue1"];
+            string actionValueStr = actionValue1.Value.ToString();
+            string previousAlias = Regex.Replace(actionValueStr.Split("{\"CharacterAlias\":\"")[1], "\".*", $"");
+            string replacementAlias = PickRandomEnemy(previousAlias, EnemyRank.Animal, rndCategory, rndAlias);
+            // Knowlingly pass the effect instead of a spawnEvent since we don't have access to one here. Only the name is used in the function anyway so it doesn't matter
+            string newEnemyName = ModifyEnemy(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, previousAlias, replacementAlias, characters, row, rndCategory, rndAlias, zoneName);
+            string newAction1Value = actionValueStr.Replace(previousAlias, newEnemyName);
+            actionValue1.Value = FString.FromString(newAction1Value, Encoding.UTF8);
+        }
     }
 
     static void ModifySkillActiveSteps(UAsset asset)
@@ -749,59 +836,46 @@ public class Program{
         }
     }
 
-    static void ModifyPlayer(UAsset asset)
+    static void ModifyVanillaCharacters(UAsset asset)
     {
         DataTableExport charactersTable = (DataTableExport)asset.Exports[0];
         List<StructPropertyData> characters = charactersTable.Table.Data;
 
-        int counter = 0;
         foreach(StructPropertyData row in characters)
         {
-            if(row.Name.Value.ToString().Contains("Player"))
+            string charName = row.Name.Value.ToString();
+
+            // Increase fishing power
+            if(charName.Contains("Player"))
             {
                 ((FloatPropertyData)row["FishingAttackPower"]).Value *= fishingPowerMultiplier;
-                counter++;
             }
-            else if(counter == 3) break;
+            // Lower Hive HP
+            else if(charName.Contains("RoadBlock"))
+            {
+                ((IntPropertyData)row["MaxHP"]).Value = (int)Math.Round(((IntPropertyData)row["MaxHP"]).Value * hiveHPMultiplier, 0);
+            }
         }
     }
 
-    static string PickShuffleBoss(string enemyName, string spawnEventName, Random rndCategory, Random rndAlias)
+    static void ShuffleNPCAppearances(UAsset asset)
     {
-        Dictionary<string, string[]> enemyShuffleDict = EnemiesToPlaceOnce[EnemyRank.Boss];
-        
-        // Make temporary list of categories to pick from
-        List<string> tempBossCategories = [];
-        foreach(KeyValuePair<string, string[]> kvp in enemyShuffleDict)
-        {
-            // Filter out the category of the enemy being replaced
-            if(enemyName.Contains(kvp.Key)) continue;
+        DataTableExport dtExport = (DataTableExport)asset.Exports[0];
+        List<StructPropertyData> entries = dtExport.Table.Data;
+        Random rndAppearance = new();
 
-            // Filter out bosses requiring the gun for spawnEvents before the gun unlock
-            if(BossRequirements["GunRequired"].Any(kvp.Key.Contains) && spawnEventCategories["NoGun"].Any(spawnEventName.Contains)) continue;
-
-            // Filter out bosses that spawn destroyable projectiles for spawnEvents where they are likely to spawn out of bounds
-            if(reduceDestroyableProjectileSoftlocks && BossRequirements["LargeArena"].Any(kvp.Key.Contains) && spawnEventCategories["SmallArena"].Any(spawnEventName.Contains)) continue;
-
-            //Log($"{spawnEventName} + {enemyName} => {kvp.Key} / {BossRequirements["GunRequired"].Any(kvp.Key.Contains)}");
-            tempBossCategories.Add(kvp.Key);
+        foreach(StructPropertyData row in entries){
+            NamePropertyData refAppearance = (NamePropertyData)row["RefAppearance"];
+            string apr = refAppearance.Value.ToString();
+            // Avoid replacing some stuff as they cause crashes or other issues
+            if(refAppearance.Value != null && apr.StartsWith("N_") && !apr.Contains("Dummy") && !apr.Contains("Camera") && !apr.Contains("Roxa") && !apr.Contains("Drone") && !apr.Contains("Raven") && !apr.Contains("Adam") && !apr.Contains("Lily")) {
+                string replacementAppearance = EnemyAppearances[rndAppearance.Next(EnemyAppearances.Count)];
+                refAppearance.Value = FName.FromString(asset, replacementAppearance);
+                //NamePropertyData defaultStanceAlias = (NamePropertyData)row["DefaultStanceAlias"];
+                //defaultStanceAlias.Value = FName.FromString(asset, replacementAppearance + "_Default");
+                //Log($"{row.Name.Value}: {refAppearance.Value} => {replacementAppearance}");
+            };
         }
-        // Fail-safe in case there were no valid categories remaining after filtering them
-        if(tempBossCategories.Count < 1) tempBossCategories = enemyShuffleDict.Keys.ToList();
-
-        string replacementCategoryName = tempBossCategories.ElementAt(rndCategory.Next(tempBossCategories.Count));
-        string[] replacementCategory = enemyShuffleDict[replacementCategoryName];
-        string replacementAlias = replacementCategory[rndAlias.Next(replacementCategory.Length)];
-
-        // TODO: Make a list of boss spawn event indices and modify them in a custom order where optional boss encounters are LAST so usedBossCategories can actually be used to put duplicates in those locations! For now it has no purpose
-        usedBossCategories.Add(replacementCategoryName);
-
-        // Remove selected enemy from the list and remove category if it's empty
-        List<string> tempList = enemyShuffleDict[replacementCategoryName].ToList();
-        tempList.Remove(replacementAlias);
-        enemyShuffleDict[replacementCategoryName] = tempList.ToArray();
-        if(enemyShuffleDict[replacementCategoryName].Length < 1) enemyShuffleDict.Remove(replacementCategoryName);
-        return replacementAlias;
     }
 
     static void Check(UAsset asset)
@@ -827,92 +901,6 @@ public class Program{
         }
     }
 
-    static void ReplaceSummonEffect(UAsset charactersAsset, UAsset spawnEventsAsset, UAsset levelTargetFiltersAsset, UAsset eventActorEffectsAsset, UAsset conditionsAsset, UAsset effectsAsset, List<StructPropertyData> characters, StructPropertyData spawnEvent, Random rndCategory, Random rndAlias, string zoneName, ArrayPropertyData characterEffectArray)
-    {
-        DataTableExport table = (DataTableExport)effectsAsset.Exports[0];
-        List<StructPropertyData> effects = table.Table.Data;
-
-        foreach(NamePropertyData effect in characterEffectArray.Value)
-        {
-            string effectName = effect.Value.ToString();
-            if(!effectName.Contains("Summon")) continue;
-            if(!RelevantSummonEffectIndices.ContainsKey(effectName)) continue;
-
-            string newEffectName = $"{incrementalEffectID}_{effectName}";
-            NamePropertyData newArrayEffect = (NamePropertyData)effect.Clone();
-            newArrayEffect.Value = FName.FromString(charactersAsset, newEffectName);
-
-            // Clone original summon effect
-            StructPropertyData originalEffect = effects[RelevantSummonEffectIndices[effectName]];
-            StructPropertyData newEffect = (StructPropertyData)originalEffect.Clone();
-            newEffect.Name = FName.FromString(effectsAsset, newEffectName);
-            ((UInt32PropertyData)newEffect["ID"]).Value = incrementalEffectID;
-
-            // Randomize the summoned enemy
-            StrPropertyData actionValue1 = (StrPropertyData)newEffect["ActionValue1"];
-            if(actionValue1.Value == null) continue;
-            string actionValueStr = actionValue1.Value.ToString();
-            EnemyRank rank = effectName.Contains("Skulling_Summon") ? EnemyRank.Normal : EnemyRank.Animal;
-            string previousAlias = Regex.Replace(actionValueStr.Split("{\"CharacterAlias\":\"")[1], "\".*", $"");
-            string replacementAlias = PickRandomEnemy(previousAlias, rank, rndCategory, rndAlias);
-            string newEnemyName = ModifyEnemy(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, previousAlias, replacementAlias, characters, spawnEvent, rndCategory, rndAlias, zoneName);
-
-            string newAction1Value = actionValueStr.Replace(previousAlias, newEnemyName);
-            actionValue1.Value = FString.FromString(newAction1Value, Encoding.UTF8);
-            effects.Add(newEffect);
-            incrementalEffectID++;
-        }
-    }
-
-    static void FindAndModifyEffects(UAsset charactersAsset, UAsset spawnEventsAsset, UAsset levelTargetFiltersAsset, UAsset eventActorEffectsAsset, UAsset conditionsAsset, UAsset effectsAsset, Random rndCategory, Random rndAlias)
-    {
-        Log("Parsing summon effects...");
-        DataTableExport charactersTable = (DataTableExport)charactersAsset.Exports[0];
-        List<StructPropertyData> characters = charactersTable.Table.Data;
-        DataTableExport table = (DataTableExport)effectsAsset.Exports[0];
-        List<StructPropertyData> effects = table.Table.Data;
-
-        int x = -1;
-        foreach(StructPropertyData row in effects)
-        {
-            // Save the index of relevant summon effects for later so we don't have to loop through all effects countless times
-            x++;
-            string effectName = row.Name.Value.ToString();
-            if(!effectName.Contains("Summon")) continue;
-            if(RelevantSummonEffectIndices.ContainsKey(effectName)) RelevantSummonEffectIndices[effectName] = x;
-
-            // Randomize Maelstrom summons (consistent)
-            if(!"M_Maelstrom_SummonSingle, M_Maelstrom_SummonSingle_AYL, M_Maelstrom_SummonProjectile_Summon, M_Maelstrom_SummonProjectile2_Summon".Contains(effectName)) continue;
-            string zoneName = "Zone_ATL_03_MaelstromSummon";
-            if(effectName.Contains("AYL") || effectName.Contains("Projectile2")) zoneName = "Zone_AYL_06_MaelstromSummon";
-            StrPropertyData actionValue1 = (StrPropertyData)row["ActionValue1"];
-            string actionValueStr = actionValue1.Value.ToString();
-            string previousAlias = Regex.Replace(actionValueStr.Split("{\"CharacterAlias\":\"")[1], "\".*", $"");
-            string replacementAlias = PickRandomEnemy(previousAlias, EnemyRank.Animal, rndCategory, rndAlias);
-            // Knowlingly pass the effect instead of a spawnEvent since we don't have access to one here. Only the name is used in the function anyway so it doesn't matter
-            string newEnemyName = ModifyEnemy(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, previousAlias, replacementAlias, characters, row, rndCategory, rndAlias, zoneName);
-            string newAction1Value = actionValueStr.Replace(previousAlias, newEnemyName);
-            actionValue1.Value = FString.FromString(newAction1Value, Encoding.UTF8);
-        }
-    }
-
-    static string PickRandomEnemy(string originalName, EnemyRank rank, Random rndCategory, Random rndAlias)
-    {
-        // Pick a different enemy category
-        string replacementCategory = originalName;
-        while(originalName.Contains(replacementCategory)){
-            replacementCategory = EnemyCategoriesToPlace[rank][rndCategory.Next(EnemyCategoriesToPlace[rank].Length)];
-        }
-
-        // Pick a random enemy from the category
-        List<string> tempEnemyList = [];
-        foreach(string enemyAlias in EnemiesToPlace[rank]){
-            if(enemyAlias.Contains(replacementCategory)) tempEnemyList.Add(enemyAlias);
-        }
-        int index = rndAlias.Next(tempEnemyList.Count);
-        return tempEnemyList[index];
-    }
-
     static void RemoveFromDict(Dictionary<string, string[]> dict, string key, string name)
     {
         List<string> tempList = dict[key].ToList();
@@ -928,23 +916,46 @@ public class Program{
 
     }
 
-    static void ShuffleNPCAppearances(UAsset asset)
+    async static Task RunRetoc(string arguments)
     {
-        DataTableExport dtExport = (DataTableExport)asset.Exports[0];
-        List<StructPropertyData> entries = dtExport.Table.Data;
-        Random rndAppearance = new();
-
-        foreach(StructPropertyData row in entries){
-            NamePropertyData refAppearance = (NamePropertyData)row["RefAppearance"];
-            string apr = refAppearance.Value.ToString();
-            // Avoid replacing some stuff as they cause crashes or other issues
-            if(refAppearance.Value != null && apr.StartsWith("N_") && !apr.Contains("Dummy") && !apr.Contains("Camera") && !apr.Contains("Roxa") && !apr.Contains("Drone") && !apr.Contains("Raven") && !apr.Contains("Adam") && !apr.Contains("Lily")) {
-                string replacementAppearance = EnemyAppearances[rndAppearance.Next(EnemyAppearances.Count)];
-                refAppearance.Value = FName.FromString(asset, replacementAppearance);
-                //NamePropertyData defaultStanceAlias = (NamePropertyData)row["DefaultStanceAlias"];
-                //defaultStanceAlias.Value = FName.FromString(asset, replacementAppearance + "_Default");
-                //Log($"{row.Name.Value}: {refAppearance.Value} => {replacementAppearance}");
-            };
-        }
+        var psi = new ProcessStartInfo
+        {
+            FileName = retocPath,
+            Arguments = arguments,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        };
+        using var process = Process.Start(psi)!;
+        string output = await process.StandardOutput.ReadToEndAsync();
+        await process.WaitForExitAsync();
     }
+
+    async static Task RetocToLegacy(string uAssetName)
+    {
+        if(File.Exists($"{unpackTablePath}/{uAssetName}") || File.Exists($"{unpackAIPath}/{uAssetName}"))
+        {
+            Log($"[{uAssetName}] has already been unpacked");
+            return;
+        }
+        await RunRetoc($"to-legacy \"{gamePakPath}\" \"{tempPath}/unpacked\" -f \"{uAssetName}\"");
+        Log($"Unpacked [{uAssetName}]!");
+    }
+
+    async static Task RetocToZen()
+    {
+        string modName = "SBEnemyRandomizer_P";
+        await RunRetoc($"to-zen \"{tempPath}/modified\" \"{tempPath}/{modName}.utoc\" --version UE4_26");
+
+        Directory.CreateDirectory(gamePakPath + "/~mods");
+        File.Move($"{tempPath}/{modName}.pak", gamePakPath + $"/~mods/{modName}.pak", overwrite: true);
+        File.Move($"{tempPath}/{modName}.ucas", gamePakPath + $"/~mods/{modName}.ucas", overwrite: true);
+        File.Move($"{tempPath}/{modName}.utoc", gamePakPath + $"/~mods/{modName}.utoc", overwrite: true);
+        Log("Mod files moved to game directory!");
+    }
+
+    static UAsset ReadUAsset(string uAssetPath, string mapPath){
+        return new UAsset(uAssetPath, EngineVersion.VER_UE4_26, new Usmap(mapPath));
+    }
+
 }

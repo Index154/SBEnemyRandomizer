@@ -7,22 +7,42 @@ Thanks to the developers of third-party software **Retoc** and **UAssetAPI** whi
 
 ## Current state and features
 - Basic functionality:
-  - The randomizer works, enemy AI is 99% functional and the game can be completed! All boss encounters have been tested
-  - Rudimentary level scaling: Enemies and bosses are given the stats and loot tables of what they're replacing
-  - Current exceptions from randomization:
-    - Providence is not randomized
-    - Both Maelstrom encounters are not randomized
+  - Most enemies and bosses are replaced by others of the same "rank"
+  - The AI of replacements is 99% functional and the game can be completed! All boss encounters have been tested
+  - Rudimentary level scaling: Enemies and bosses are given the stats and loot tables of whatever they're replacing
+  - Excepted enemies:
+    - Providence is not randomized yet
+    - Both Maelstrom encounters are not randomized yet
+    - Most enemies summoned by other enemies are not randomized yet
     - Elder Naytiba phase 1 is excluded from replacing other bosses
-    - Most enemies summoned by other enemies are not randomized
-    - Stationary turrets and Hives are not randomized and probably never will be
-  - Bosses are shuffled instead of being fully randomized (so you can't get more than one Raven for example)
-  - Randomization can be seeded to generate consistent results
+    - Stationary turrets and Hives are not randomized
+  - By default bosses are shuffled in order to avoid duplicates
+  - Randomization can be seeded to achieve consistent results
 - Bonus features and options:
-  - NPC appearances can also be randomized (janky & funny)
+  - NPC appearances can be randomized as well (janky & funny but can occasionally make interacting with them impossible)
   - All spawns can be set to be replaced by the same enemy
 
-## Known issues (highest priority at the top)
+## How to use
+WIP
+
+## Compatibility
+The randomizer is incompatible with mods that make changes to any of the following game files:
+- CharacterTable.uasset
+- CharacterMoveTable.uasset
+- ConditionTable.uasset
+- EffectTable.uasset
+- EventActorEffectTable.uasset
+- EventSpawnTable.uasset
+- EventTheaterTable.uasset
+- LevelTargetFilter.uasset
+- M_Tachy_AI.uasset
+- SkillActiveStepTable.uasset
+- ZoneEventTable.uasset
+- ZoneTriggerTable.uasset
+
+## Known issues
 - Balancing issues:
+  - Abaddon phase 2 may not be triggering correctly
   - Karakuri minions are not scaled in difficulty
   - Which properties of an enemy should be replaced and which should be retained needs another thorough check
 - Minor / rare issues:
@@ -34,9 +54,8 @@ Thanks to the developers of third-party software **Retoc** and **UAssetAPI** whi
   - Certain attacks of NST_M_ElderPhase2_01 crash the game if there are multiple copies of him in the loaded area (I think?)
   - Bosses always put a large HP bar at the top of the screen but you can only ever see one of them at a time, making it totally useless if there's multiple bosses in close proximity => Somehow disable this when replacing regular enemies with bosses?
 
-## Planned features and changes (from most to least important)
+## Planned features & changes
 - High priority:
-  - Double-check if WLB Abaddon phase 2 is triggering correctly (from the start?)
   - Fix balancing issues
   - Include NG+ enemy spawns in randomization
   - Go through all bosses again and check for important condition triggers and event actor effects dependent on the spawn event
@@ -61,24 +80,6 @@ Thanks to the developers of third-party software **Retoc** and **UAssetAPI** whi
     - C: Random music
     - Notes: SoundEventTable has the music triggers. Look for ForceEventBattle and specific EventBattleState values! These settings determine what part of the zone's BGM to actually play (which includes battle music and boss themes)
       - The names of the sound events seem to correspond with zone event names?
-
-## How to use
-WIP
-
-## Compatibility
-The randomizer is incompatible with mods that make changes to any of the following game files:
-- CharacterTable.uasset
-- CharacterMoveTable.uasset
-- ConditionTable.uasset
-- EffectTable.uasset
-- EventActorEffectTable.uasset
-- EventSpawnTable.uasset
-- EventTheaterTable.uasset
-- LevelTargetFilter.uasset
-- M_Tachy_AI.uasset
-- SkillActiveStepTable.uasset
-- ZoneEventTable.uasset
-- ZoneTriggerTable.uasset
 
 ## For developers
 Requirements: .NET 8 SDK
