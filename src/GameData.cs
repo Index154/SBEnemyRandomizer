@@ -1079,7 +1079,12 @@ public static class GameData
 
     public static List<string> SpawnsRequiringImmortality = [
         "WLA_30_E_CharS_025",
-        //"SE_04_E_CharS_001"
+        "WLB_10_E_CharS_037",
+        //"SE_04_E_CharS_001",
+        "Nest_10_E_CharS_003",
+        "Nest_10_E_CharS_004",
+        "Nest_10_E_CharS_006",
+        "Nest_10_E_CharS_007"
     ];
 
     public static Dictionary<string, string[]> SpawnsWithEffects = new(){

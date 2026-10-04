@@ -139,6 +139,8 @@ public class Program{
                 // For some reason the name of the row does not have the number in it so we have to check the SpawnPointName property
                 if(((NamePropertyData)row["SpawnPointName"]).Value.ToString() == "WLA_10_E_CharS_252") continue;
             } 
+            // Skip Elder Phase 1 cutscene spawn
+            //if(row.Name.Value.ToString() == "Nest_10_E_CharS_007") continue;
 
             // Determine enemy rank
             EnemyRank rank;
@@ -409,6 +411,51 @@ public class Program{
                 ConditionTriggerExecType.Value = ConditionTriggerExecType.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerExecType_RunTime")}).ToArray();
                 ConditionTriggerExecType.Value = ConditionTriggerExecType.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerExecType_RunTime")}).ToArray();
                 ConditionTriggerExecType.Value = ConditionTriggerExecType.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerExecType_ToTrue")}).ToArray();
+        }
+
+        // Fix Elder Phase 1 replacement problems: Unknown
+        if(spawnEventName == "Nest_10_E_CharS_003")
+        {
+            // Change levelTargetFilter to target the new enemy
+            DataTableExport levelTargetFiltersTable = (DataTableExport)levelTargetFiltersAsset.Exports[0];
+            List<StructPropertyData> levelTargetFilters = levelTargetFiltersTable.Table.Data;
+            foreach(StructPropertyData row in levelTargetFilters)
+            {
+                if(row.Name.Value.ToString() == "Nest_10_LevelTargetFilter_007")
+                {
+                    ((NamePropertyData)row["TargetAlias"]).Value = FName.FromString(levelTargetFiltersAsset, newEnemyName);
+                }
+            }
+        }
+
+        // Fix Elder Phase 2 replacement problems: Unknown
+        if(spawnEventName == "Nest_10_E_CharS_006")
+        {
+            // Change levelTargetFilter to target the new enemy
+            DataTableExport levelTargetFiltersTable = (DataTableExport)levelTargetFiltersAsset.Exports[0];
+            List<StructPropertyData> levelTargetFilters = levelTargetFiltersTable.Table.Data;
+            foreach(StructPropertyData row in levelTargetFilters)
+            {
+                if(row.Name.Value.ToString() == "Nest_10_LevelTargetFilter_008")
+                {
+                    ((NamePropertyData)row["TargetAlias"]).Value = FName.FromString(levelTargetFiltersAsset, newEnemyName);
+                }
+            }
+        }
+
+        // Fix Exosuit replacement problems: Unknown
+        if(spawnEventName == "Nest_10_E_CharS_004")
+        {
+            // Change levelTargetFilter to target the new enemy
+            DataTableExport levelTargetFiltersTable = (DataTableExport)levelTargetFiltersAsset.Exports[0];
+            List<StructPropertyData> levelTargetFilters = levelTargetFiltersTable.Table.Data;
+            foreach(StructPropertyData row in levelTargetFilters)
+            {
+                if(row.Name.Value.ToString() == "Nest_10_LevelTargetFilter_006")
+                {
+                    ((NamePropertyData)row["TargetAlias"]).Value = FName.FromString(levelTargetFiltersAsset, newEnemyName);
+                }
+            }
         }
 
         // Fix Mann problems: Cutscenes teleport the player out of bounds and phase changes don't trigger

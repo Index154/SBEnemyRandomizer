@@ -1,5 +1,5 @@
 # Stellar Blade Enemy Randomizer
-An enemy randomizer mod for Stellar Blade. Currently in very early alpha. I'm a mostly self-taught hobby programmer so please excuse any inefficient or unclean code.
+An enemy randomizer mod for Stellar Blade. Currently in early beta. I'm a mostly self-taught hobby programmer so please excuse any inefficient or unclean code.
 
 Supported OS: Windows x64
 
@@ -7,23 +7,23 @@ Thanks to the developers of third-party software **Retoc** and **UAssetAPI** whi
 
 ## Current state and features
 - Basic functionality:
-  - Most enemies and bosses are replaced by others of the same "rank"
+  - The mod replaces all enemies by others of the same "rank" when randomized
   - The AI of replacements is 99% functional and the game can be completed! All boss encounters have been tested
   - Rudimentary level scaling: Enemies and bosses are given the stats and loot tables of whatever they're replacing
   - Excepted enemies:
-    - Providence is not randomized yet
-    - Both Maelstrom encounters are not randomized yet
-    - Most enemies summoned by other enemies are not randomized yet
-    - Elder Naytiba phase 1 is excluded from replacing other bosses
-    - Stationary turrets and Hives are not randomized
-  - By default bosses are shuffled in order to avoid duplicates
-  - Randomization can be seeded to achieve consistent results
+    - Providence is not randomized yet due to unidentified issues
+    - Both Maelstrom encounters are not randomized yet for balance reasons
+    - Most enemies summoned by other enemies are not randomized work in progress
+    - Elder Naytiba phase 1 is excluded from replacing other bosses because he's boring
+    - Stationary turrets and Hives are not randomized for many reasons
+  - Bosses are shuffled in order to avoid duplicates and other issues
+  - Randomization can be seeded to achieve reproducible results
 - Bonus features and options:
-  - NPC appearances can be randomized as well (janky & funny but can occasionally make interacting with them impossible)
-  - All spawns can be set to be replaced by the same enemy
+  - NPC appearances can be randomized as well. This is quite janky & funny but can occasionally prevent you from interacting with them. NPC apppearance randomization is not seeded so if you get stuck because of it you can just rerun the randomizer with the same seed to fix the problem
+  - All spawns can also be set to be replaced by the same enemy if desired. **Warning:** This is highly experimental for now since I haven't done a lot of testing with it. Some bosses like Mann and Scarlet will DEFINITELY not work when spawned multiple times across the game!
 
 ## How to use
-WIP
+Work in progress...
 
 ## Compatibility
 The randomizer is incompatible with mods that make changes to any of the following game files:
@@ -53,9 +53,14 @@ The randomizer is incompatible with mods that make changes to any of the followi
   - WLA_M_RoyalGuardFemale_01 encounter (WLA_30_E_CharS_025) no longer has battle music after being replaced. Other replaced bosses might also not have music or won't trigger a phase 2 music. I didn't pay much attention to this so far
   - Certain attacks of NST_M_ElderPhase2_01 crash the game if there are multiple copies of him in the loaded area (I think?)
   - Bosses always put a large HP bar at the top of the screen but you can only ever see one of them at a time, making it totally useless if there's multiple bosses in close proximity => Somehow disable this when replacing regular enemies with bosses?
+- "Non-issues" which I don't plan on fixing:
+  - Some boss cutscenes and death animations are missing
+  - When Mann changes to phase 2 he can be seen holding two weapons at once for a short duration
+  - The boss replacing Raven has her sword "equipped" for the entire battle (purely visual)
 
 ## Planned features & changes
 - High priority:
+  - Fix the ending (Final cutscene does not trigger. The theater event is targeting specific characters?)
   - Fix balancing issues
   - Include NG+ enemy spawns in randomization
   - Go through all bosses again and check for important condition triggers and event actor effects dependent on the spawn event
