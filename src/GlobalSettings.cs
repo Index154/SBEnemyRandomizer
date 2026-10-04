@@ -4,7 +4,7 @@ using static SBEnemyRandomizer.src.GameData;
 
 public class GlobalSettings
 {
-    // Settings provided by the user
+    // User settings
     // -------------------------------------------------------------------------
     public static string gamePath = "D:/Steam/steamapps/common/StellarBlade";   // Tell user: Select the folder with SB.exe
     public static int seed = 1234;
@@ -25,7 +25,7 @@ public class GlobalSettings
     public static bool lowerHiveHP = true;
 
 
-    // Which rank of enemy should an enemy of a given rank be changed to? (logic unimplemented)
+    // Which rank of enemy should an enemy of a given rank be changed to? (disabled ones are currently unimplemented)
     public static bool smallToSmall = true;
     public static bool smallToNormal = false;
     public static bool smallToBoss = false;
@@ -38,10 +38,9 @@ public class GlobalSettings
 
     // Shuffle bosses around or select them completely randomly
     public static bool onlyShuffleExistingBoss = true;
-    public static bool placeBossesRequiringGunAfterGunUnlock = true;
     public static bool reduceDestroyableProjectileSoftlocks = true;
     public static bool tryPlaceDuplicatesForAvoidableFights = true;
-    // Add non-story bosses to the pool (logic unimplemented)
+    // Add non-story bosses to the pool
     public static bool includeMann = true;
     public static bool includeScarlet = true;
 
@@ -80,6 +79,7 @@ public class GlobalSettings
     public static readonly string characterMoveTable = "CharacterMoveTable.uasset";
     public static readonly string skillActiveStepTable = "SkillActiveStepTable.uasset";
     public static readonly string zoneEventTable = "ZoneEventTable.uasset";
+    public static readonly string zoneTriggerTable = "ZoneTriggerTable.uasset";
     public static readonly string eventTheaterTable = "EventTheaterTable.uasset";
     public static readonly string tachyAI = "M_Tachy_AI.uasset";
 }

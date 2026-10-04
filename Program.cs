@@ -33,6 +33,7 @@ public class Program{
         await RetocToLegacy(characterMoveTable);
         await RetocToLegacy(skillActiveStepTable);
         await RetocToLegacy(zoneEventTable);
+        await RetocToLegacy(zoneTriggerTable);
         await RetocToLegacy(eventTheaterTable);
         await RetocToLegacy(tachyAI);
 
@@ -52,8 +53,19 @@ public class Program{
         UAsset characterMovesAsset = ReadUAsset($"{unpackTablePath}/{characterMoveTable}", mapPath);
         UAsset skillActiveStepsAsset = ReadUAsset($"{unpackTablePath}/{skillActiveStepTable}", mapPath);
         UAsset zoneEventsAsset = ReadUAsset($"{unpackTablePath}/{zoneEventTable}", mapPath);
+        UAsset zoneTriggersAsset = ReadUAsset($"{unpackTablePath}/{zoneTriggerTable}", mapPath);
         UAsset eventTheatersAsset = ReadUAsset($"{unpackTablePath}/{eventTheaterTable}", mapPath);
         UAsset tachyAIAsset = ReadUAsset($"{unpackAIPath}/{tachyAI}", mapPath);
+
+        // Exclude Mann and Scarlet if configured
+        if(!includeMann) {
+            RemoveFromDict(EnemiesToPlaceOnce[EnemyRank.Boss], "Mann", "");
+            EnemyCategoriesToPlace[EnemyRank.Boss] = EnemyCategoriesToPlace[EnemyRank.Boss].Where(val => val != "Mann").ToArray();
+        }
+        if(!includeScarlet) {
+            RemoveFromDict(EnemiesToPlaceOnce[EnemyRank.Boss], "Scarlet", "");
+            EnemyCategoriesToPlace[EnemyRank.Boss] = EnemyCategoriesToPlace[EnemyRank.Boss].Where(val => val != "Scarlet").ToArray();
+        }
 
         // Make modifications
         if(shuffleNPCAppearances) ShuffleNPCAppearances(charactersAsset);
@@ -62,6 +74,7 @@ public class Program{
         ModifySkillActiveSteps(skillActiveStepsAsset);
         ModifyCharacterMoves(characterMovesAsset);
         ModifyZoneEvents(zoneEventsAsset);
+        ModifyZoneTriggers(zoneTriggersAsset);
         ModifyEventTheaters(eventTheatersAsset);
         ModifyAI(tachyAIAsset);
         ModifyPlayer(charactersAsset);
@@ -79,6 +92,7 @@ public class Program{
         characterMovesAsset.Write($"{repackTablePath}/{characterMoveTable}");
         skillActiveStepsAsset.Write($"{repackTablePath}/{skillActiveStepTable}");
         zoneEventsAsset.Write($"{repackTablePath}/{zoneEventTable}");
+        zoneTriggersAsset.Write($"{repackTablePath}/{zoneTriggerTable}");
         eventTheatersAsset.Write($"{repackTablePath}/{eventTheaterTable}");
         tachyAIAsset.Write($"{repackAIPath}/{tachyAI}");
 
@@ -154,6 +168,13 @@ public class Program{
             // Testing for specific zone
             if(customZoneNameRestriction != "" && !zone.Value.ToString().Contains(customZoneNameRestriction)) continue;
 
+            // Skip final Raven hologram which spawns the same enemy as the actual boss fight for some reason. Replacing this spawn leads to the game crashing during the cutscene
+            if(row.Name.Value.ToString() == "WLA_10_E_CharS")
+            {
+                // For some reason the name of the row does not have the number in it so we have to check the SpawnPointName property
+                if(((NamePropertyData)row["SpawnPointName"]).Value.ToString() == "WLA_10_E_CharS_252") continue;
+            } 
+
             // Determine enemy rank
             EnemyRank rank;
             if(EnemiesToReplace[EnemyRank.Animal].Any(characterAlias.Value.ToString().Contains)) rank = EnemyRank.Animal;
@@ -182,8 +203,8 @@ public class Program{
             // Only replace enemies of specific rank for testing (edit all the other events anyway so the enemies can still spawn on a save file where they have been randomized, through resetAllEnemySpawnsOnLoad)
             if(customRankRestriction != null && rank != customRankRestriction) replacementAlias = characterAlias.Value.ToString();
 
-            // These bosses have two spawn events each so prevent these from being randomized separately
-            if(!consistentReplacements.ContainsKey(characterAlias.Value.ToString()) && (characterAlias.Value.ToString() == "NST_M_Raven_01" || characterAlias.Value.ToString() == "NST_M_ElderPhase1_01"))
+            // These bosses have two spawn events each so prevent them from being randomized separately
+            if(!consistentReplacements.ContainsKey(characterAlias.Value.ToString()) && characterAlias.Value.ToString() == "NST_M_ElderPhase1_01")
             {
                 consistentReplacements.Add(characterAlias.Value.ToString(), replacementAlias);
             }
@@ -192,7 +213,7 @@ public class Program{
             string newEnemyName = ModifyEnemy(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, characterAlias.Value.ToString(), replacementAlias, characters, row, rndCategory, rndAlias, zone.Value.ToString());
 
             // Modify the spawn event to spawn the new custom character instead
-            if(rank == EnemyRank.Boss) Log($"{incrementalID - 1} | {row.Name.Value}: {characterAlias.Value} => {newEnemyName}");
+            if(rank == EnemyRank.Boss) Log($"{incrementalID - 1} | {row.Name.Value}: {characterAlias.Value} => {replacementAlias}");
             characterAlias.Value = FName.FromString(spawnEventsAsset, newEnemyName);
         }
     }
@@ -273,13 +294,8 @@ public class Program{
         {
             stanceAliasArray.Value = stanceAliasArray.Value.Where(val => !val.ToString().Contains("_Finish")).ToArray();
         }
-        // Add special finisher stances to bosses in locations that normally have them
-        if(SpawnsRequiringStances.ContainsKey(spawnEventName))
-        {
-            stanceAliasArray.Value = stanceAliasArray.Value.Append(new NamePropertyData { Value = FName.FromString(charactersAsset, SpawnsRequiringStances[spawnEventName])}).ToArray();
-        }
 
-        // Add other default effects to enemies in specific spawn locations
+        // Add certain default effects to enemies in specific spawn locations
         if(SpawnsWithEffects.ContainsKey(spawnEventName))
         {
             foreach(string effect in SpawnsWithEffects[spawnEventName])
@@ -308,7 +324,7 @@ public class Program{
                     if(tagName.Value != null && tagName.Value.ToString() == "WLB_M_OpenerWasteland")
                     {
                         StructPropertyData eventActorClone = row;
-                        // Clone them for each Mann spawn so we can have more than one - But there's more work to be done for that...
+                        // Clone them for each spawn so we can have more than one - But there's more work to be done for that...
                         //StructPropertyData eventActorClone = (StructPropertyData)row.Clone();
                         //((UInt32PropertyData)eventActorClone["ID"]).Value = incrementalEventActorEffectID;
                         //eventActorClone.Name = FName.FromString(eventActorEffectsAsset, $"{incrementalEventActorEffectID}_{row.Name.Value}_{spawnEventName}");
@@ -400,7 +416,7 @@ public class Program{
                     if(tagName.Value != null && tagName.Value.ToString() == "M_Mann")
                     {
                         StructPropertyData eventActorClone = row;
-                        // Clone them for each Mann spawn so we can have more than one - But there's more work to be done for that...
+                        // Clone them for each spawn so we can have more than one - But there's more work to be done for that...
                         //StructPropertyData eventActorClone = (StructPropertyData)row.Clone();
                         //((UInt32PropertyData)eventActorClone["ID"]).Value = incrementalEventActorEffectID;
                         //eventActorClone.Name = FName.FromString(eventActorEffectsAsset, $"{incrementalEventActorEffectID}_{row.Name.Value}_{spawnEventName}");
@@ -451,7 +467,7 @@ public class Program{
                     if(tagName.Value != null && tagName.Value.ToString() == "M_Scarlet")
                     {
                         StructPropertyData eventActorClone = row;
-                        // Clone them for each Mann spawn so we can have more than one - But there's more work to be done for that...
+                        // Clone them for each spawn so we can have more than one - But there's more work to be done for that...
                         //StructPropertyData eventActorClone = (StructPropertyData)row.Clone();
                         //((UInt32PropertyData)eventActorClone["ID"]).Value = incrementalEventActorEffectID;
                         //eventActorClone.Name = FName.FromString(eventActorEffectsAsset, $"{incrementalEventActorEffectID}_{row.Name.Value}_{spawnEventName}");
@@ -505,7 +521,7 @@ public class Program{
             ((IntPropertyData)newEnemy["MaxHP"]).Value = (int)Math.Round(((IntPropertyData)newEnemy["MaxHP"]).Value * 0.8F, 0);
         }
 
-        // Fix Belial 2 replacement
+        // Fix Belial 2 replacement problems: Spawns invisible, spawns inactive and triggers problematic cutscenes
         if(spawnEventName == "SE_06_E_CharS_001")
         {
             ((ArrayPropertyData)spawnEvent["ConditionsTrigger"]).Value = [];
@@ -513,7 +529,25 @@ public class Program{
             ((ArrayPropertyData)spawnEvent["ConditionTriggerRunType"]).Value = [];
             ((ArrayPropertyData)spawnEvent["ConditionTriggerExecType"]).Value = [];
             ((ArrayPropertyData)spawnEvent["EventOnSpawning"]).Value = [];
+            // These effects are normally removed by the entry cutscene but the cutscene also somehow breaks the replacement's animations so I've prevented it from triggering
             ((BoolPropertyData)spawnEvent["bHidden"]).Value = false;
+            ((BoolPropertyData)spawnEvent["bSpawnToActive"]).Value = true;
+            // Triple HP and shield since Belial 2 normally heals itself twice
+            ((IntPropertyData)newEnemy["MaxHP"]).Value = (int)Math.Round(((IntPropertyData)newEnemy["MaxHP"]).Value * 3.0F, 0);
+            ((IntPropertyData)newEnemy["MaxShield"]).Value = (int)Math.Round(((IntPropertyData)newEnemy["MaxShield"]).Value * 3.0F, 0);
+        }
+
+        // Fix Raven replacement problems: Phase 2 cutscene breaks combat animations
+        if(spawnEventName == "WLA_10_E_CharS" && ((NamePropertyData)spawnEvent["SpawnPointName"]).Value.ToString() == "WLA_10_E_CharS_156")
+        {
+            ArrayPropertyData ConditionsTrigger = (ArrayPropertyData)spawnEvent["ConditionsTrigger"];
+                ConditionsTrigger.Value = ConditionsTrigger.Value.Where(val => !val.ToString().Contains("WLA_10_Condition_001")).ToArray();
+            ArrayPropertyData ConditionTriggerEvent = (ArrayPropertyData)spawnEvent["ConditionTriggerEvent"];
+                ConditionTriggerEvent.Value = ConditionTriggerEvent.Value.Where(val => !val.ToString().Contains("WLA_10_E_Theater_006")).ToArray();
+            ArrayPropertyData ConditionTriggerRunType = (ArrayPropertyData)spawnEvent["ConditionTriggerRunType"];
+                ConditionTriggerRunType.Value = [ new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerRunType_Once")} ];
+            ArrayPropertyData ConditionTriggerExecType = (ArrayPropertyData)spawnEvent["ConditionTriggerExecType"];
+                ConditionTriggerExecType.Value = [ new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerExecType_RunTime")} ];
         }
 
         // Alter Hive HP
@@ -617,6 +651,24 @@ public class Program{
                 if("M_ElderPhase2_KillRoutine2_Move1, M_ElderPhase2_BlinkCenterShot_Move2, M_ElderPhase2_PhaseChange3_Move5".Contains(moveName)) ((FloatPropertyData)row["UpValue"]).Value = 400.0F;
                 else if("M_ElderPhase2_PhaseChange3_Move2".Contains(moveName)) ((FloatPropertyData)row["UpValue"]).Value = 487.0F;
                 else ((FloatPropertyData)row["UpValue"]).Value = 861.0F;
+            }
+        }
+    }
+
+    static void ModifyZoneTriggers(UAsset asset)
+    {
+        Log("Modifying zone triggers...");
+        DataTableExport table = (DataTableExport)asset.Exports[0];
+        List<StructPropertyData> zoneTriggers = table.Table.Data;
+
+        foreach(StructPropertyData row in zoneTriggers)
+        {
+            // Prevent Belial 2 entry cutscene from triggering since it somehow breaks the replacement's animations
+            if(row.Name.Value.ToString() == "SE_06_ZTrigger_005")
+            {
+                ArrayPropertyData touchEvents = (ArrayPropertyData)row["TouchEvents"];
+                touchEvents.Value = [];
+                touchEvents.IsZero = true;
             }
         }
     }
@@ -726,7 +778,7 @@ public class Program{
             if(enemyName.Contains(kvp.Key)) continue;
 
             // Filter out bosses requiring the gun for spawnEvents before the gun unlock
-            if(placeBossesRequiringGunAfterGunUnlock && BossRequirements["GunRequired"].Any(kvp.Key.Contains) && spawnEventCategories["BeforeGun"].Any(spawnEventName.Contains)) continue;
+            if(BossRequirements["GunRequired"].Any(kvp.Key.Contains) && spawnEventCategories["NoGun"].Any(spawnEventName.Contains)) continue;
 
             // Filter out bosses that spawn destroyable projectiles for spawnEvents where they are likely to spawn out of bounds
             if(reduceDestroyableProjectileSoftlocks && BossRequirements["LargeArena"].Any(kvp.Key.Contains) && spawnEventCategories["SmallArena"].Any(spawnEventName.Contains)) continue;
@@ -859,6 +911,21 @@ public class Program{
         }
         int index = rndAlias.Next(tempEnemyList.Count);
         return tempEnemyList[index];
+    }
+
+    static void RemoveFromDict(Dictionary<string, string[]> dict, string key, string name)
+    {
+        List<string> tempList = dict[key].ToList();
+        if(name != "")
+        {
+            tempList.Remove(name);
+            dict[key] = tempList.ToArray();
+            if(dict[key].Length < 1) dict.Remove(key);
+        }else
+        {
+            dict.Remove(key);
+        }
+
     }
 
     static void ShuffleNPCAppearances(UAsset asset)

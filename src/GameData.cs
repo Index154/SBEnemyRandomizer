@@ -296,7 +296,7 @@ public static class GameData
             "DED_M_Opener_01",
             "NST_M_ElderPhase1_01",
             "NST_M_ElderPhase2_01",
-            "NST_M_ExoSuit_01",
+            //"NST_M_ExoSuit_01",       // Replacement currently slightly broken and hard to fix
             "NST_M_Raven_01",
             "SD_M_HedgeBoarBrute_01",
             "SE_M_Crawler_01",
@@ -591,10 +591,10 @@ public static class GameData
     public static readonly Dictionary<EnemyRank, string[]> EnemiesToPlace = new(){
 
         {EnemyRank.Boss, new[]{
-            //"ATL_M_Maelstrom_01",     // Not replaced so don't place them either
-            //"AYL_M_Maelstrom_01",
             "CHAL_M_Scarlet_01",
             "CHAL_XION_M_Mann_01",
+            //"ATL_M_Maelstrom_01",     // Not replaced so don't place them either
+            //"AYL_M_Maelstrom_01",
             "DEDA_M_GrubShooterElite_01",
             "DED_M_GorillaB_01",
             "DED_M_GrubShooterElite_01",
@@ -891,6 +891,8 @@ public static class GameData
     public static readonly Dictionary<EnemyRank, string[]> EnemyCategoriesToPlace = new(){
 
         {EnemyRank.Boss, new[]{
+            "Scarlet",
+            "Mann",
             "Behemoth",
             "Crawler",      // Democrawler
             //"ElderPhase1",
@@ -900,14 +902,12 @@ public static class GameData
             "GrubShooterElite",     // Corrupter
             "HedgeBoarBrute",
             "Maelstrom",
-            "Mann",
             "Marionette",       // Karakuri
             "Opener",       // Abaddon
             "RavenBeast",
             "Raven_",
             "RoyalGuardFemale",
             "Sawshark",     // Stalker
-            "Scarlet",
             "SkullJuggernaut",
             "Tachy",
             "WeaponMaster"      // Belial
@@ -1016,8 +1016,8 @@ public static class GameData
     };
 
     public static readonly Dictionary<string, string[]> spawnEventCategories = new(){
-        ["BeforeGun"] = ["SD_10_E_CharS_026", "DED10_E_CharS_003", "DED20_E_CharS_015", "DED30_E_CharS_027"],
-        ["SmallArena"] = ["ME_03_E_CharS_018", "ME_05_E_CharS_017", "SE_04_E_CharS_001"],
+        ["NoGun"] = ["SD_10_E_CharS_026", "DED10_E_CharS_003", "DED20_E_CharS_015", "DED30_E_CharS_027", "SE_08_E_CharS_004"],
+        ["SmallArena"] = ["ME_03_E_CharS_018", "ME_05_E_CharS_017", "SE_04_E_CharS_001", "SE_08_E_CharS_004"],
         ["AvoidableFight"] = ["SD_10_E_CharS_026", "WLB_30_E_CharS_002", "WLA_40_E_CharS_073", "DED40_E_CharS_055", "WLA_40_E_CharS_098", "WLB_50_E_CharS_001"]
     };
 
@@ -1054,18 +1054,17 @@ public static class GameData
         "SE_M_WeaponMasterB_01"
     ];
 
-    public static Dictionary<string, string> SpawnsRequiringStances = new(){
-        {"SE_04_E_CharS_001", "M_WeaponMasterB_Finish"}
-    };
-
     public static List<string> BossesWithImmortality = [
         "SD_M_HedgeBoarBrute_01",
         "DED_M_Opener_01",
+        "DED_M_GrubShooterElite_01",
         "DED_M_GorillaB_01",
         "WLA_M_RoyalGuardFemale_01",
+        "UME_M_Sawshark_01",
         "UME_M_SkullJuggernaut_01",
         "UME_M_Tachy_01",
         "WLB_M_RoyalGuardFemale_01",
+        "WLB_M_OpenerWasteland_01",
         "SE_M_WeaponMasterB_01",
         "SE_M_WeaponMasterA_01",
         "SE_M_Marionette_01",
