@@ -1,0 +1,20 @@
+- Seed input box
+- Game installation folder selection button (and popup selection window when trying to randomize while the path is missing)
+- Button for randomizing
+    - Progress bar and finish notification
+- Button for opening the save data location
+- Button for uninstalling the mod
+- Other settings:
+    - "Shuffle NPC appearances" checkbox
+    - "Reset all spawns on zone entry" checkbox (with a note that it's meant to be used when an enemy is not appearing or when using an existing save file)
+    - "Shuffle bosses" checkbox + sub-options:
+        - "Minimize destroyable projectile softlocks"
+        - "Try to place duplicate bosses in optional locations"
+- Json config loading and saving
+- Unrelated settings:
+    - "Hive HP multiplier" slider
+    - "Fishing power multiplier" slider
+- Complex settings:
+    - Extra page with list of all bosses with input boxes to determine how many are in the shuffle pool
+    - Extra page with list of all enemies as checkboxes to disable them from appearing
+    - Which of the above should have priority for bosses?

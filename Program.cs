@@ -1,25 +1,57 @@
-﻿using UAssetAPI;
+﻿using System.Diagnostics;
+using System.Text.RegularExpressions;
+using System.Text;
+using UAssetAPI;
 using UAssetAPI.ExportTypes;
 using UAssetAPI.PropertyTypes.Objects;
 using UAssetAPI.PropertyTypes.Structs;
 using UAssetAPI.UnrealTypes;
 using UAssetAPI.Unversioned;
-using System.Diagnostics;
 using static SBEnemyRandomizer.src.GlobalSettings;
 using static SBEnemyRandomizer.src.GameData;
 using static SBEnemyRandomizer.src.Logger;
-using System.Text.RegularExpressions;
-using System.Text;
+using SBEnemyRandomizer.Avalonia;
+using Avalonia;
 
 namespace SBEnemyRandomizer;
 
-public class Program{
+sealed class Program{
 
-    async static Task Main()
+    // Avalonia configuration
+    public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<App>()
+        .UsePlatformDetect()
+        #if DEBUG
+        .WithDeveloperTools()
+        #endif
+        .WithInterFont()
+        .LogToTrace();
+
+    [STAThread]
+    async static Task Main(string[] args)
     {
-        // Add GUI stuff here
+        // CLI execution
+        // dotnet run -- -cli
+        // SBEnemyRandomizer.exe -cli -seed=123
+        if(args.Length > 0) {
+            bool cli = false;
+            foreach(string a in args)
+            {
+                if(a == "-cli") cli = true;
+                if(a.Contains("-seed="))
+                {
+                    if(a.Length <= 6) {
+                        Log("Error: No seed provided");
+                        return;
+                    }
+                    seed = int.Parse(a.Split("=")[1]);
+                }
+            }
+            if(!cli) return;
+            await Run();
+            return;
+        }
 
-        await Run();
+        BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
 
     async static Task Run()
@@ -31,6 +63,7 @@ public class Program{
         Directory.CreateDirectory(repackAIPath);
 
         // Extract uassets from the game files and convert to legacy format using retoc
+        Log("Unpacking game files...");
         await RetocToLegacy(characterTable);
         await RetocToLegacy(eventSpawnTable);
         await RetocToLegacy(levelTargetFilterTable);
@@ -51,6 +84,7 @@ public class Program{
         Random rndAlias = new(randoSeed);
         
         // Load legacy uassets
+        Log("Loading uasset files for modification...");
         UAsset charactersAsset = ReadUAsset($"{unpackTablePath}/{characterTable}", mapPath);
         UAsset spawnEventsAsset = ReadUAsset($"{unpackTablePath}/{eventSpawnTable}", mapPath);
         UAsset levelTargetFiltersAsset = ReadUAsset($"{unpackTablePath}/{levelTargetFilterTable}", mapPath);
@@ -85,11 +119,11 @@ public class Program{
         ModifyEventTheaters(eventTheatersAsset);
         ModifyAI(tachyAIAsset);
         ModifyVanillaCharacters(charactersAsset);
-        Check(effectsAsset);
+        //Check(effectsAsset);
 
         // Save modified uassets
-        Log($"Seed = {seed}");
-        Log("Saving files...");
+        Log($"Seed: {seed}");
+        Log("Saving changes...");
         charactersAsset.Write($"{repackTablePath}/{characterTable}");
         spawnEventsAsset.Write($"{repackTablePath}/{eventSpawnTable}");
         levelTargetFiltersAsset.Write($"{repackTablePath}/{levelTargetFilterTable}");
@@ -138,9 +172,7 @@ public class Program{
             {
                 // For some reason the name of the row does not have the number in it so we have to check the SpawnPointName property
                 if(((NamePropertyData)row["SpawnPointName"]).Value.ToString() == "WLA_10_E_CharS_252") continue;
-            } 
-            // Skip Elder Phase 1 cutscene spawn
-            //if(row.Name.Value.ToString() == "Nest_10_E_CharS_007") continue;
+            }
 
             // Determine enemy rank
             EnemyRank rank;
@@ -907,6 +939,7 @@ public class Program{
 
     static void ShuffleNPCAppearances(UAsset asset)
     {
+        Log("Shuffling NPC appearances...");
         DataTableExport dtExport = (DataTableExport)asset.Exports[0];
         List<StructPropertyData> entries = dtExport.Table.Data;
         Random rndAppearance = new();
@@ -982,11 +1015,9 @@ public class Program{
     {
         if(File.Exists($"{unpackTablePath}/{uAssetName}") || File.Exists($"{unpackAIPath}/{uAssetName}"))
         {
-            Log($"[{uAssetName}] has already been unpacked");
             return;
         }
         await RunRetoc($"to-legacy \"{gamePakPath}\" \"{tempPath}/unpacked\" -f \"{uAssetName}\"");
-        Log($"Unpacked [{uAssetName}]!");
     }
 
     async static Task RetocToZen()
@@ -998,7 +1029,7 @@ public class Program{
         File.Move($"{tempPath}/{modName}.pak", gamePakPath + $"/~mods/{modName}.pak", overwrite: true);
         File.Move($"{tempPath}/{modName}.ucas", gamePakPath + $"/~mods/{modName}.ucas", overwrite: true);
         File.Move($"{tempPath}/{modName}.utoc", gamePakPath + $"/~mods/{modName}.utoc", overwrite: true);
-        Log("Mod files moved to game directory!");
+        Log("Mod moved to game directory");
     }
 
     static UAsset ReadUAsset(string uAssetPath, string mapPath){

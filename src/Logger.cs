@@ -7,7 +7,7 @@ public static class Logger
     private static readonly object _lock = new();
 
     private static readonly string LogFile =
-        Path.Combine(logPath, $"{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.log");
+        Path.Combine(logPath, $"{DateTime.Now:yyyy-MM-dd_HH-mm-ss}__{seed}.log");
 
     public static void Log(string message)
     {

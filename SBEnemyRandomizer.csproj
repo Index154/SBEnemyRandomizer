@@ -8,20 +8,41 @@
     <SelfContained>true</SelfContained>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
 
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>None</DebugType>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <ApplicationManifest>Avalonia\app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="12.1.3" />
-    <PackageReference Include="UAssetAPI" Version="1.1.0" />
+    <Folder Include="Avalonia\Models\" />
+    <AvaloniaResource Include="Avalonia\Assets\**" />
   </ItemGroup>
 
   <ItemGroup>
-  <None Include="tools\retoc\retoc.exe" CopyToPublishDirectory="PreserveNewest" />
-  <None Include="tools\StellarBlade_1.1.0.usmap" CopyToPublishDirectory="PreserveNewest" />
-  <None Include="LICENSE.md" CopyToPublishDirectory="PreserveNewest" />
-  <None Include="README.md" CopyToPublishDirectory="PreserveNewest" />
+    <PackageReference Include="UAssetAPI" Version="1.1.0" />
+    <PackageReference Include="Avalonia" Version="12.1.3" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.3" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.3" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.3" />
+    <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.3">
+      <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
+      <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Include="tools\retoc\retoc.exe" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <None Include="tools\StellarBlade_1.4.1.usmap" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <None Include="LICENSE.md" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="README.md" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <Target Name="RemovePublishPdbs" AfterTargets="_CopyResolvedFilesToPublishAlways">
+    <Delete Files="$(PublishDir)libSkiaSharp.pdb" />
+    <Delete Files="$(PublishDir)libHarfBuzzSharp.pdb" />
+  </Target>
 
 </Project>
