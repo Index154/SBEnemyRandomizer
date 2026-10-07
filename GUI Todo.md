@@ -1,12 +1,14 @@
 - Game installation folder selection button (and popup selection window when trying to randomize while the path is missing)
 - Json config loading and saving (important for the game install path)
+- "Reset all spawns on zone reset" checkbox
+- Make it a bit prettier
 - Button for uninstalling the mod
 - Other settings:
     - "Shuffle NPC appearances" checkbox
     - "Reset all spawns on zone entry" checkbox (with a note that it's meant to be used when an enemy is not appearing or when using an existing save file)
-    - "Shuffle bosses" checkbox + sub-options:
-        - "Minimize destroyable projectile softlocks"
-        - "Try to place duplicate bosses in optional locations"
+    - "Shuffle bosses" checkbox
+    - "Try to place duplicate bosses in optional locations" checkbox
+    - "Minimize destroyable projectile softlocks" checkbox
 - Button for opening the save data location
 - Unrelated settings:
     - "Hive HP multiplier" slider
