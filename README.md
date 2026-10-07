@@ -3,7 +3,7 @@ An enemy randomizer mod for Stellar Blade. Currently in early beta. I'm a mostly
 
 Supported OS: Windows x64
 
-Thanks to the developers of third-party software **Retoc** and **UAssetAPI** which are included in this project! (See `LICENSE.md`)
+Thanks to the developers of third-party software **Retoc**, **UAssetAPI** and **Avalonia** which are included in this project! (See `LICENSE.md`)
 
 ## Current state and features
 - Basic functionality:
@@ -22,8 +22,20 @@ Thanks to the developers of third-party software **Retoc** and **UAssetAPI** whi
   - NPC appearances can be randomized as well. This is quite janky & funny but can occasionally prevent you from interacting with them. NPC apppearance randomization is not seeded so if you get stuck because of it you can just rerun the randomizer with the same seed to fix the problem
   - All spawns can also be set to be replaced by the same enemy if desired. **Warning:** This is highly experimental since I haven't done a lot of testing with it. Some bosses like Mann and Scarlet will DEFINITELY not work when spawned multiple times across the game! Expect softlocks and crashes
 
-## How to use
-Work in progress...
+## Usage instructions
+**The mod is currently in beta so no release has been published yet**
+- Download the current release from the [releases page](https://github.com/Index154/SBEnemyRandomizer/releases)
+- Extract the downloaded zip file to a folder of your choice
+- Run SBEnemyRandomizer.exe
+- Tweak the randomization options if you like
+- Click the button that says "Randomize"
+  - The first time you do this you will be asked to provide the path to your game's installation directory. You must select the folder containing SB.exe, usually something like `C:\Program Files (x86)\Steam\steamapps\common\StellarBlade`
+  - The randomizer will automatically create a mod "SBEnemyRandomizer_P" and place it in your game directory under `.\SB\Content\Paks\~mods`.
+- Launch the game as you normally would. I __strongly__ recommend starting a new save file / NG+ cycle!
+  - **IMPORTANT KNOWLEDGE:** Most bosses and some regular enemies in the game are only spawned *once*. In most cases these enemies are spawned immediately upon entering the zone they're in. The game remembers whether these enemies are still there by recording them in your save file in some way. Loading a used save file after randomizing the enemies will make these previously spawned enemies **vanish forever** by default. If you experience this issue and resting at a camp does not fix it then please proceed as follows:
+    - Run the randomizer, enable the setting "Reset all spawns on zone reset" and randomize the enemies again (you can use the same seed as before)
+    - Launch the game and load the affected save file, then rest at a camp. This should now respawn all enemies in the current zone (possibly including bosses you've already defeated)
+    - If you want, you can keep playing from here. But I suggest saving, quitting and running the randomizer again with the same seed but without the "Reset all spawns on zone reset" option. This way you won't have to deal with the consequences of all enemies and bosses respawning whenever you rest at a camp
 
 ## Compatibility
 The randomizer is incompatible with mods that make changes to any of the following game files:
@@ -96,6 +108,8 @@ The randomizer is incompatible with mods that make changes to any of the followi
 ## For developers
 Requirements: .NET 8 SDK
 
-Debugging: `dotnet run`
+Testing with UI: `dotnet run`
 
-Publishing: `dotnet publish -c Release`
+Testing with console only: `dotnet run -- -cli`
+
+Publishing: `dotnet publish -c Release -p:OutputType=WinExe`

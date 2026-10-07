@@ -5,5 +5,5 @@ namespace SBEnemyRandomizer.Avalonia.ViewModels;
 public partial class MainViewModel : ViewModelBase
 {
     [ObservableProperty]
-    private string _greeting = "Enemy Randomizer";
+    public int _seed = 0;
 }

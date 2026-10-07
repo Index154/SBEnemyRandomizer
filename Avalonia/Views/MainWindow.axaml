@@ -3,11 +3,13 @@
         xmlns:vm="using:SBEnemyRandomizer.Avalonia.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="250"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="SBEnemyRandomizer.Avalonia.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Icon="/Avalonia/Assets/avalonia-logo.ico"
-        Title="SBEnemyRandomizer">
+        Title="SBEnemyRandomizer"
+        Width="600"
+        Height="700">
 
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
@@ -15,8 +17,24 @@
         <vm:MainViewModel />
     </Design.DataContext>
 
-    <TextBox Text="{Binding Greeting}"
-             HorizontalAlignment="Center"
-             VerticalAlignment="Center" />
+    <StackPanel Margin="20">
+        <SelectableTextBlock Margin="0 5">Seed (set to 0 for random):</SelectableTextBlock>
+
+        <NumericUpDown x:Name="SeedInput" Value="{Binding Seed}" Increment="1" FormatString="0" Minimum="-2147483647" Maximum="2147483647"
+        ShowButtonSpinner="False" AllowSpin="False" />
+
+        <Button x:Name="RandomizeButton" Click="RandomizeOnClick">Randomize</Button>
+        
+        <Popup x:Name="FinishedNotification"
+            PlacementTarget="{Binding #RandomizeButton}"
+            Placement="Bottom"
+            IsLightDismissEnabled="True">
+            <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                    BorderThickness="1" CornerRadius="4" Padding="8">
+                <TextBlock x:Name="RandomizerResult" Text="Finished!" />
+            </Border>
+        </Popup>
+    </StackPanel>
 
 </Window>

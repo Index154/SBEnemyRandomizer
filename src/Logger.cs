@@ -1,6 +1,7 @@
-namespace SBEnemyRandomizer.src;
-
+using System.Diagnostics;
 using static SBEnemyRandomizer.src.GlobalSettings;
+
+namespace SBEnemyRandomizer.src;
 
 public static class Logger
 {

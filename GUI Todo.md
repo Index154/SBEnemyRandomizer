@@ -1,8 +1,5 @@
-- Seed input box
 - Game installation folder selection button (and popup selection window when trying to randomize while the path is missing)
-- Button for randomizing
-    - Progress bar and finish notification
-- Button for opening the save data location
+- Json config loading and saving (important for the game install path)
 - Button for uninstalling the mod
 - Other settings:
     - "Shuffle NPC appearances" checkbox
@@ -10,7 +7,7 @@
     - "Shuffle bosses" checkbox + sub-options:
         - "Minimize destroyable projectile softlocks"
         - "Try to place duplicate bosses in optional locations"
-- Json config loading and saving
+- Button for opening the save data location
 - Unrelated settings:
     - "Hive HP multiplier" slider
     - "Fishing power multiplier" slider
