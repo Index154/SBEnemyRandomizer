@@ -15,7 +15,7 @@ namespace SBEnemyRandomizer.src;
 
 static class Func{
     
-    async public static Task Randomizer(IProgress<int>? progress = null)
+    async public static Task Randomizer(IProgress<int>? progress = null, CancellationToken token = default)
     {
         // Create folders
         Directory.CreateDirectory(unpackTablePath);
@@ -24,48 +24,34 @@ static class Func{
         Directory.CreateDirectory(repackAIPath);
 
         // Extract uassets from the game files and convert to legacy format using retoc
-        Log("Unpacking game files...");
-        await RetocToLegacy(characterTable);
-        await RetocToLegacy(eventSpawnTable);
-        await RetocToLegacy(levelTargetFilterTable);
-        await RetocToLegacy(eventActorEffectTable);
-        await RetocToLegacy(conditionTable);
-        await RetocToLegacy(effectTable);
-        await RetocToLegacy(characterMoveTable);
-        await RetocToLegacy(skillActiveStepTable);
-        await RetocToLegacy(zoneEventTable);
-        await RetocToLegacy(zoneTriggerTable);
-        await RetocToLegacy(eventTheaterTable);
-        await RetocToLegacy(tachyAI);
+        Log("Unpacking assets...");
+        foreach(string ass in assetNames) await RetocToLegacy($"{ass}.uasset");
 
-        // Random seeds
+        // Random seed
         if(seed == 0) seed = new Random().Next(1, int.MaxValue);
         int categorySeed = new Random(seed).Next(int.MinValue, int.MaxValue);
         Random rndCategory = new(categorySeed);
         Random rndAlias = new(seed);
         Log($"Seed: {seed}");
         
-        // Load legacy uassets
-        Log("Loading uasset files for modification...");
-        UAsset charactersAsset = ReadUAsset($"{unpackTablePath}/{characterTable}", mapPath);
-        progress?.Report(2);
-        UAsset spawnEventsAsset = ReadUAsset($"{unpackTablePath}/{eventSpawnTable}", mapPath);
-        progress?.Report(7);
-        UAsset levelTargetFiltersAsset = ReadUAsset($"{unpackTablePath}/{levelTargetFilterTable}", mapPath);
-        UAsset eventActorEffectsAsset = ReadUAsset($"{unpackTablePath}/{eventActorEffectTable}", mapPath);
-        UAsset conditionsAsset = ReadUAsset($"{unpackTablePath}/{conditionTable}", mapPath);
-        progress?.Report(9);
-        UAsset effectsAsset = ReadUAsset($"{unpackTablePath}/{effectTable}", mapPath);
-        progress?.Report(22);
-        UAsset characterMovesAsset = ReadUAsset($"{unpackTablePath}/{characterMoveTable}", mapPath);
-        progress?.Report(27);
-        UAsset skillActiveStepsAsset = ReadUAsset($"{unpackTablePath}/{skillActiveStepTable}", mapPath);
-        progress?.Report(39);
-        UAsset zoneEventsAsset = ReadUAsset($"{unpackTablePath}/{zoneEventTable}", mapPath);
-        UAsset zoneTriggersAsset = ReadUAsset($"{unpackTablePath}/{zoneTriggerTable}", mapPath);
-        UAsset eventTheatersAsset = ReadUAsset($"{unpackTablePath}/{eventTheaterTable}", mapPath);
-        UAsset tachyAIAsset = ReadUAsset($"{unpackAIPath}/{tachyAI}", mapPath);
-        progress?.Report(42);
+        // Load assets
+        Log("Loading assets...");
+        Usmap mappings = new(mapPath);
+        List<Task<UAsset>> LoadTaskList = [];
+        int completedLoads = 0;
+        foreach(string ass in assetNames)
+        {
+            string path = ass.Contains("Table") || ass == "LevelTargetFilter" ? $"{unpackTablePath}/{ass}.uasset" : $"{unpackAIPath}/{ass}.uasset";
+            LoadTaskList.Add( Task.Run(() => {
+                UAsset asset = ReadUAsset(path, mappings);
+                int count = Interlocked.Increment(ref completedLoads);
+                progress?.Report(count * 40 / assetNames.Count);
+                return asset;
+            } ));
+        }
+        Task.WaitAll(LoadTaskList.ToArray());
+        List<UAsset> assets = LoadTaskList.Select(task => task.Result).ToList();
+        if (token.IsCancellationRequested) return;
 
         // Exclude Mann and Scarlet if configured
         if(!includeMann) {
@@ -78,40 +64,40 @@ static class Func{
         }
 
         // Make modifications
-        if(shuffleNPCAppearances) ShuffleNPCAppearances(charactersAsset);
-        FindAndModifyEffects(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, rndCategory, rndAlias);
-        RandomizeSpawns(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, rndCategory, rndAlias);
-        ModifySkillActiveSteps(skillActiveStepsAsset);
-        ModifyCharacterMoves(characterMovesAsset);
-        ModifyZoneEvents(zoneEventsAsset);
-        ModifyZoneTriggers(zoneTriggersAsset);
-        ModifyEventTheaters(eventTheatersAsset);
-        ModifyAI(tachyAIAsset);
-        ModifyVanillaCharacters(charactersAsset);
-        //Check(effectsAsset);
-        progress?.Report(45);
+        if(shuffleNPCAppearances) ShuffleNPCAppearances(assets[0]);
+        FindAndModifyEffects(assets[0], assets[1], assets[3], assets[4], assets[5], assets[6], rndCategory, rndAlias);
+        FindAndModifyEffects(assets[0], assets[2], assets[3], assets[4], assets[5], assets[6], rndCategory, rndAlias);
+        RandomizeSpawns(assets[0], assets[1], assets[3], assets[4], assets[5], assets[6], rndCategory, rndAlias);
+        RandomizeSpawns(assets[0], assets[2], assets[3], assets[4], assets[5], assets[6], rndCategory, rndAlias);
+        ModifyCharacterMoves(assets[7]);
+        ModifySkillActiveSteps(assets[8]);
+        ModifyZoneEvents(assets[9]);
+        ModifyZoneTriggers(assets[10]);
+        ModifyEventTheaters(assets[11]);
+        ModifyAI(assets[12]);
+        ModifyVanillaCharacters(assets[0]);
+        //Check(assets[6]);
+        if (token.IsCancellationRequested) return;
 
         // Save modified uassets
         Log($"Seed: {seed}");
         Log("Saving changes...");
-        charactersAsset.Write($"{repackTablePath}/{characterTable}");
-        progress?.Report(51);
-        spawnEventsAsset.Write($"{repackTablePath}/{eventSpawnTable}");
-        progress?.Report(57);
-        levelTargetFiltersAsset.Write($"{repackTablePath}/{levelTargetFilterTable}");
-        eventActorEffectsAsset.Write($"{repackTablePath}/{eventActorEffectTable}");
-        conditionsAsset.Write($"{repackTablePath}/{conditionTable}");
-        effectsAsset.Write($"{repackTablePath}/{effectTable}");
-        progress?.Report(77);
-        characterMovesAsset.Write($"{repackTablePath}/{characterMoveTable}");
-        progress?.Report(82);
-        skillActiveStepsAsset.Write($"{repackTablePath}/{skillActiveStepTable}");
-        progress?.Report(94);
-        zoneEventsAsset.Write($"{repackTablePath}/{zoneEventTable}");
-        zoneTriggersAsset.Write($"{repackTablePath}/{zoneTriggerTable}");
-        progress?.Report(96);
-        eventTheatersAsset.Write($"{repackTablePath}/{eventTheaterTable}");
-        tachyAIAsset.Write($"{repackAIPath}/{tachyAI}");
+        List<Task> SaveTaskList = [];
+        int i = 0;
+        int completedSaves = 0;
+        foreach(string ass in assetNames)
+        {
+            int index = i;  // Important reassignment in this scope for async tasks!
+            string writePath = ass.Contains("Table") || ass == "LevelTargetFilter" ? $"{repackTablePath}/{ass}.uasset" : $"{repackAIPath}/{ass}.uasset";
+            SaveTaskList.Add(Task.Run(() => {
+                SaveUAsset(assets[index], writePath);
+                int count = Interlocked.Increment(ref completedSaves);
+                progress?.Report(40 + count * 60 / assetNames.Count);
+            }));
+            i++;
+        }
+        Task.WaitAll(SaveTaskList.ToArray());
+        if (token.IsCancellationRequested) return;
 
         // Repack modified uassets, convert to game-ready zen format using retoc and move the resulting mod files to the mods folder
         await RetocToZen();
@@ -169,7 +155,7 @@ static class Func{
             }
             else{
                 // Select random enemy from different category
-                replacementAlias = PickRandomEnemy(characterAlias.Value.ToString(), rank, rndCategory, rndAlias);
+                replacementAlias = PickRandomEnemy(characterAlias.Value.ToString(), ((NamePropertyData)row["SpawnPointName"]).Value.ToString(), rank, rndCategory, rndAlias);
             }
 
             // Force specific enemy for testing
@@ -189,7 +175,7 @@ static class Func{
 
             // Modify the spawn event to spawn the new custom character instead
             if(rank == EnemyRank.Boss) Log($"{incrementalID - 1} | {row.Name.Value}: {characterAlias.Value} => {replacementAlias}");
-            characterAlias.Value = FName.FromString(spawnEventsAsset, newEnemyName);
+            if(!keepVanilla) characterAlias.Value = FName.FromString(spawnEventsAsset, newEnemyName);
         }
     }
 
@@ -205,12 +191,14 @@ static class Func{
             if(enemyName.Contains(kvp.Key)) continue;
 
             // Filter out bosses requiring the gun for spawnEvents before the gun unlock
-            if(BossRequirements["GunRequired"].Any(kvp.Key.Contains) && spawnEventCategories["NoGun"].Any(spawnEventName.Contains)) continue;
+            if(!allowGunBossesBeforeXion && EnemyRequirements["GunRequired"].Any(kvp.Key.Contains) && spawnEventCategories["BeforeGun"].Any(spawnEventName.Contains)) continue;
+            // Filter out bosses requiring the gun for the Marionette encounter which disables your gun
+            if(EnemyRequirements["GunRequired"].Any(kvp.Key.Contains) && spawnEventCategories["NoGun"].Any(spawnEventName.Contains)) continue;
 
             // Filter out bosses that spawn destroyable projectiles for spawnEvents where they are likely to spawn out of bounds
-            if(reduceDestroyableProjectileSoftlocks && BossRequirements["LargeArena"].Any(kvp.Key.Contains) && spawnEventCategories["SmallArena"].Any(spawnEventName.Contains)) continue;
+            if(reduceDestroyableProjectileSoftlocks && EnemyRequirements["LargeArena"].Any(kvp.Key.Contains) && spawnEventCategories["SmallArena"].Any(spawnEventName.Contains)) continue;
 
-            //Log($"{spawnEventName} + {enemyName} => {kvp.Key} / {BossRequirements["GunRequired"].Any(kvp.Key.Contains)}");
+            //Log($"{spawnEventName} + {enemyName} => {kvp.Key} / {EnemyRequirements["GunRequired"].Any(kvp.Key.Contains)}");
             tempBossCategories.Add(kvp.Key);
         }
         // Fail-safe in case there were no valid categories remaining after filtering them
@@ -231,14 +219,21 @@ static class Func{
         return replacementAlias;
     }
     
-    static string PickRandomEnemy(string originalName, EnemyRank rank, Random rndCategory, Random rndAlias)
+    static string PickRandomEnemy(string originalName, string spawnEventName, EnemyRank rank, Random rndCategory, Random rndAlias)
     {
         // Pick a different enemy category
-        string replacementCategory = originalName;
-        // Change this approach later by using a temporary list...
-        while(originalName.Contains(replacementCategory)){
-            replacementCategory = EnemyCategoriesToPlace[rank][rndCategory.Next(EnemyCategoriesToPlace[rank].Length)];
+        List<string> tempCategories = [];
+        foreach(string category in EnemyCategoriesToPlace[rank])
+        {
+            // Filter out the category of the enemy being replaced
+            if(originalName.Contains(category)) continue;
+
+            // Filter out special conditions
+            if(EnemyRequirements["DontPlaceInSpecialSpawns"].Any(category.Contains) && spawnEventCategories["SpecialSpawn"].Any(spawnEventName.Contains)) continue;
+            
+            tempCategories.Add(category);
         }
+        string replacementCategory = tempCategories.ElementAt(rndCategory.Next(tempCategories.Count));
 
         // Pick a random enemy from the category
         List<string> tempEnemyList = [];
@@ -634,6 +629,14 @@ static class Func{
             spawnEffectList.Value = spawnEffectList.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "BlockAI_Infinite")}).ToArray();
         }
 
+        // Size randomization
+        if(randomEnemySizes)
+        {
+            float[] scaleMultipliers = [0.5F, 0.6F, 0.7F, 0.8F, 1.0F, 1.2F, 1.3F, 1.4F, 1.5F, 2.0F];
+            float multiplier = scaleMultipliers[new Random().Next(scaleMultipliers.Length)];
+            ((FloatPropertyData)newEnemy["MeshScale"]).Value = ((FloatPropertyData)newEnemy["MeshScale"]).Value * 0.5F;
+        }
+
         // Save cloned enemy under new name
         newEnemy.Name = FName.FromString(charactersAsset, newEnemyName);
         characters.Add(newEnemy);
@@ -668,7 +671,7 @@ static class Func{
             string actionValueStr = actionValue1.Value.ToString();
             EnemyRank rank = effectName.Contains("Skulling_Summon") ? EnemyRank.Normal : EnemyRank.Animal;
             string previousAlias = Regex.Replace(actionValueStr.Split("{\"CharacterAlias\":\"")[1], "\".*", $"");
-            string replacementAlias = PickRandomEnemy(previousAlias, rank, rndCategory, rndAlias);
+            string replacementAlias = PickRandomEnemy(previousAlias, "SUMMON", rank, rndCategory, rndAlias);
             string newEnemyName = ModifyEnemy(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, previousAlias, replacementAlias, characters, spawnEvent, rndCategory, rndAlias, zoneName);
 
             string newAction1Value = actionValueStr.Replace(previousAlias, newEnemyName);
@@ -702,7 +705,7 @@ static class Func{
             StrPropertyData actionValue1 = (StrPropertyData)row["ActionValue1"];
             string actionValueStr = actionValue1.Value.ToString();
             string previousAlias = Regex.Replace(actionValueStr.Split("{\"CharacterAlias\":\"")[1], "\".*", $"");
-            string replacementAlias = PickRandomEnemy(previousAlias, EnemyRank.Animal, rndCategory, rndAlias);
+            string replacementAlias = PickRandomEnemy(previousAlias, "SUMMON", EnemyRank.Animal, rndCategory, rndAlias);
             // Knowlingly pass the effect instead of a spawnEvent since we don't have access to one here. Only the name is used in the function anyway so it doesn't matter
             string newEnemyName = ModifyEnemy(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, previousAlias, replacementAlias, characters, row, rndCategory, rndAlias, zoneName);
             string newAction1Value = actionValueStr.Replace(previousAlias, newEnemyName);
@@ -924,7 +927,7 @@ static class Func{
             NamePropertyData refAppearance = (NamePropertyData)row["RefAppearance"];
             string apr = refAppearance.Value.ToString();
             // Avoid replacing some stuff as they cause crashes or other issues
-            if(refAppearance.Value != null && apr.StartsWith("N_") && !apr.Contains("Dummy") && !apr.Contains("Camera") && !apr.Contains("Roxa") && !apr.Contains("Drone") && !apr.Contains("Raven") && !apr.Contains("Adam") && !apr.Contains("Lily")) {
+            if(refAppearance.Value != null && apr.StartsWith("N_") && !apr.Contains("Dummy") && !apr.Contains("Camera") && !apr.Contains("Roxa") && !apr.Contains("Tachy") && !apr.Contains("Drone") && !apr.Contains("Raven") && !apr.Contains("Adam") && !apr.Contains("Lily")) {
                 string replacementAppearance = EnemyAppearances[rndAppearance.Next(EnemyAppearances.Count)];
                 refAppearance.Value = FName.FromString(asset, replacementAppearance);
                 //NamePropertyData defaultStanceAlias = (NamePropertyData)row["DefaultStanceAlias"];
@@ -1008,8 +1011,13 @@ static class Func{
         Log("Mod moved to game directory");
     }
 
-    static UAsset ReadUAsset(string uAssetPath, string mapPath){
-        return new UAsset(uAssetPath, EngineVersion.VER_UE4_26, new Usmap(mapPath));
+    static UAsset ReadUAsset(string uAssetPath, Usmap mappings){
+        return new UAsset(uAssetPath, EngineVersion.VER_UE4_26, mappings);
+    }
+
+    static void SaveUAsset(UAsset asset, string path)
+    {
+        asset.Write(path);
     }
 
 }

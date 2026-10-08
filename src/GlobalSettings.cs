@@ -7,9 +7,11 @@ public class GlobalSettings
     // User settings
     // -------------------------------------------------------------------------
     public static string gamePath = "D:/Steam/steamapps/common/StellarBlade";   // Tell user: Select the folder with SB.exe
-    public static int seed = 15451;
+    public static int seed = 112233;
     public static bool shuffleNPCAppearances = false;
-    public static bool resetAllEnemySpawnsOnLoad = true;
+    public static bool randomEnemySizes = false;
+    public static bool duplicateEnemies = false;
+    public static bool resetAllEnemySpawnsOnLoad = false;
     public static string forceReplacementBossName = "";
     public static string forceReplacementEnemyName = "";
     // Testing settings
@@ -20,6 +22,7 @@ public class GlobalSettings
     public static string customZoneNameRestriction = "";
     public static EnemyRank? customRankRestriction = null;
     public static bool replaceSaveDataOnRun = false;
+    public static bool keepVanilla = false;
     // Unrelated QoL settings
     public static float fishingPowerMultiplier = 6.0F;
     public static float hiveHPMultiplier = 0.4F;
@@ -38,6 +41,7 @@ public class GlobalSettings
 
     // Shuffle bosses around or select them completely randomly
     public static bool shuffleBosses = true;
+    public static bool allowGunBossesBeforeXion = false;
     public static bool reduceDestroyableProjectileSoftlocks = true;
     public static bool tryPlaceDuplicatesForAvoidableFights = true;
     // Add non-story bosses to the pool
@@ -70,16 +74,19 @@ public class GlobalSettings
     public static readonly string repackTablePath = $"{tempPath}/modified/{tableSubdirectory}";
     public static readonly string repackAIPath = $"{tempPath}/modified/{aiSubdirectory}";
     // Assets
-    public static readonly string characterTable = "CharacterTable.uasset";
-    public static readonly string eventSpawnTable = "EventSpawnTable.uasset";
-    public static readonly string levelTargetFilterTable = "LevelTargetFilter.uasset";
-    public static readonly string eventActorEffectTable = "EventActorEffectTable.uasset";
-    public static readonly string conditionTable = "ConditionTable.uasset";
-    public static readonly string effectTable = "EffectTable.uasset";
-    public static readonly string characterMoveTable = "CharacterMoveTable.uasset";
-    public static readonly string skillActiveStepTable = "SkillActiveStepTable.uasset";
-    public static readonly string zoneEventTable = "ZoneEventTable.uasset";
-    public static readonly string zoneTriggerTable = "ZoneTriggerTable.uasset";
-    public static readonly string eventTheaterTable = "EventTheaterTable.uasset";
-    public static readonly string tachyAI = "M_Tachy_AI.uasset";
+    public static readonly List<string> assetNames = [
+        "CharacterTable",
+        "EventSpawnTable",
+        "EventNewGamePlusSpawnTable",
+        "LevelTargetFilter",
+        "EventActorEffectTable",
+        "ConditionTable",
+        "EffectTable",
+        "CharacterMoveTable",
+        "SkillActiveStepTable",
+        "ZoneEventTable",
+        "ZoneTriggerTable",
+        "EventTheaterTable",
+        "M_Tachy_AI"
+    ];
 }

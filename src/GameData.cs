@@ -1009,16 +1009,19 @@ public static class GameData
         }
     };
 
-    public static readonly Dictionary<string, string[]> BossRequirements = new(){
+    public static readonly Dictionary<string, string[]> EnemyRequirements = new(){
         ["GunRequired"] = ["Maelstrom", "RavenBeast", "ElderPhase2", "ExoSuit"],
         ["LargeArena"] = ["RavenBeast", "ElderPhase2"],
-        ["Duplicate"] = ["WLA_M_GorillaBBrokenHead_01", "DEDA_M_GrubShooterElite_01", "WLA_M_GrubShooterEliteB_01", "SD_M_HedgeBoarBrute_01", "AYL_M_Maelstrom_01", "DED_M_Opener_01", "WLA_M_RoyalGuardFemale_01", "SE_M_WeaponMasterB_01"]
+        ["Duplicate"] = ["WLA_M_GorillaBBrokenHead_01", "DEDA_M_GrubShooterElite_01", "WLA_M_GrubShooterEliteB_01", "SD_M_HedgeBoarBrute_01", "AYL_M_Maelstrom_01", "DED_M_Opener_01", "WLA_M_RoyalGuardFemale_01", "SE_M_WeaponMasterB_01"],
+        ["DontPlaceInSpecialSpawns"] = ["Tentacle", "Cocoon"]
     };
 
     public static readonly Dictionary<string, string[]> spawnEventCategories = new(){
-        ["NoGun"] = ["SD_10_E_CharS_026", "DED10_E_CharS_003", "DED20_E_CharS_015", "DED30_E_CharS_027", "SE_08_E_CharS_004"],
+        ["BeforeGun"] = ["SD_10_E_CharS_026", "DED10_E_CharS_003", "DED20_E_CharS_015", "DED30_E_CharS_027"],
+        ["NoGun"] = ["SE_08_E_CharS_004"],
         ["SmallArena"] = ["ME_03_E_CharS_018", "ME_05_E_CharS_017", "SE_04_E_CharS_001", "SE_08_E_CharS_004"],
-        ["AvoidableFight"] = ["SD_10_E_CharS_026", "WLB_30_E_CharS_002", "WLA_40_E_CharS_073", "DED40_E_CharS_055", "WLA_40_E_CharS_098", "WLB_50_E_CharS_001"]
+        ["AvoidableFight"] = ["SD_10_E_CharS_026", "WLB_30_E_CharS_002", "WLA_40_E_CharS_073", "DED40_E_CharS_055", "WLA_40_E_CharS_098", "WLB_50_E_CharS_001"],
+        ["SpecialSpawn"] = ["DED10_E_CharS_134", "DED10_E_CharS_132", "DED10_E_CharS_131", "DED10_E_CharS_130", "DED10_E_CharS_128", "DED10_E_CharS_127", "DED10_E_CharS_125", "DED10_E_CharS_124", "DED10_E_CharS_040", "DED10_E_CharS_037"]
     };
 
     public static List<string> EnemyPropertiesToRetain = [

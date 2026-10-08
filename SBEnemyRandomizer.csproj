@@ -8,8 +8,6 @@
     <SelfContained>true</SelfContained>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
 
-    <DebugSymbols>false</DebugSymbols>
-    <DebugType>None</DebugType>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <ApplicationManifest>Avalonia\app.manifest</ApplicationManifest>
@@ -43,6 +41,7 @@
   <Target Name="RemovePublishPdbs" AfterTargets="_CopyResolvedFilesToPublishAlways">
     <Delete Files="$(PublishDir)libSkiaSharp.pdb" />
     <Delete Files="$(PublishDir)libHarfBuzzSharp.pdb" />
+    <Delete Files="$(PublishDir)SBEnemyRandomizer.pdb" />
   </Target>
 
 </Project>

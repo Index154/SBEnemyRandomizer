@@ -32,7 +32,7 @@ Thanks to the developers of third-party software **Retoc**, **UAssetAPI** and **
   - The first time you do this you will be asked to provide the path to your game's installation directory. You must select the folder containing SB.exe, usually something like `C:\Program Files (x86)\Steam\steamapps\common\StellarBlade`
   - Wait for randomization to finish. It will automatically create a mod "SBEnemyRandomizer_P" and place it in your game directory under `.\SB\Content\Paks\~mods`
 - Launch the game as you normally would. I strongly recommend starting a new save file / NG+ cycle!
-  - **IMPORTANT KNOWLEDGE:** Most bosses and some regular enemies in the game are only spawned *once* immediately upon entering the zone they're in. The game remembers whether these enemies are still there by recording them in your save file in some way. Loading a used save file after randomizing them will cause these previously spawned enemies to **vanish forever** by default. If you experience this issue and resting at a camp does not fix it then proceed as follows:
+  - **IMPORTANT KNOWLEDGE:** Most bosses and some regular enemies in the game are only spawned *once* immediately upon entering the zone they're in. The game remembers whether these enemies are still there by recording them in your save file in some way. Loading a used save file after randomizing will cause these previously spawned enemies to **vanish** instead of being replaced. If you experience this issue and resting at a camp does not fix it then proceed as follows:
     - Run the randomizer, enable the setting "Reset all spawns on zone reset" and randomize the enemies again (you can use the same seed as before)
     - Launch the game and load the affected save file, then rest at a camp. This should now respawn all enemies in the current zone (possibly including bosses you've already defeated) and update your save file to no longer be softlocked
     - Close the game and run the randomizer again using the same seed but without the "Reset all spawns on zone reset" option. After this you should be able to continue playing normally
@@ -44,6 +44,7 @@ The randomizer is incompatible with mods that make changes to any of the followi
 - ConditionTable.uasset
 - EffectTable.uasset
 - EventActorEffectTable.uasset
+- EventNewGamePlusSpawnTable.uasset
 - EventSpawnTable.uasset
 - EventTheaterTable.uasset
 - LevelTargetFilter.uasset
@@ -85,7 +86,7 @@ The randomizer is incompatible with mods that make changes to any of the followi
     - Uninstall the DLC and check if she's still in the charactertable
     - => Implement a check in the code that excludes her if the DLC content is missing
   - Randomization of enemies summoned by other enemies (current implementation is only working for Maelstrom)
-  - A GUI and usage documentation, followed by a downloadable and playable release build! (https://github.com/AvaloniaUI/Avalonia.Samples, https://docs.avaloniaui.net/docs/get-started/starter-tutorial/)
+  - A GUI and usage documentation, followed by a downloadable and playable release build
 - Low priority:
   - Fix minor issues
   - Try adding energy shield effect to Cocoon replacements
@@ -97,8 +98,9 @@ The randomizer is incompatible with mods that make changes to any of the followi
     - A list of all bosses that lets the user determine how many of them are in the shuffle pool. If the user reduces the number below the minimum then tell them that empty locations will be filled with random duplicates
 - Rough ideas:
   - Cross-randomizing of enemies between different ranks (also changing their mesh scale maybe)
+  - "Random enemy sizes" checkbox (could be funny)
   - Automatic save file backups? Maybe? Though it's easier to just warn the user to backup their saves before using the randomizer
-  - A setting for boss music. Options:
+  - Boss music setting:
     - A: Music is based on the location (default / vanilla behavior)
     - B: Music matches the randomly placed boss
     - C: Random music
@@ -110,6 +112,6 @@ Requirements: .NET 8 SDK
 
 Testing with UI: `dotnet run`
 
-Testing with console only: `dotnet run -- -cli`
+Testing with console only (uses default settings): `dotnet run -- -cli`
 
 Publishing: `dotnet publish -c Release -p:OutputType=WinExe`
