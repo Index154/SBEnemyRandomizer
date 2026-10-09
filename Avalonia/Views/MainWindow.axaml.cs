@@ -36,7 +36,6 @@ public partial class MainWindow : Window
         resetAllEnemySpawnsOnLoad = s.ResetSpawnsOnZoneReset;
         enemyHPMultiplier = s.EnemyHPMultiplier;
         enemyAttackMultiplier = s.EnemyAttackMultiplier;
-        randomEnemySizes = s.RandomEnemySize;
         shuffleNPCAppearances = s.ShuffleNPCAppearances;
         fishingPowerMultiplier = s.FishingPowerMultiplier;
         hiveHPMultiplier = s.HiveHPMultiplier;

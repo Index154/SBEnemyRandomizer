@@ -9,9 +9,9 @@ public class AppSettings
     public int Seed { get; set; } = 0;
     public bool BossShuffle { get; set; } = true;
     public bool AddMann { get; set; } = true;
-    public bool AddScarlet { get; set; }  = true;
-    public bool BossDupesInOptionalEncounters { get; set; }  = true;
-    public bool GunBossesBeforeXion { get; set; }  = false;
+    public bool AddScarlet { get; set; } = false;
+    public bool BossDupesInOptionalEncounters { get; set; } = true;
+    public bool GunBossesBeforeXion { get; set; } = false;
     public bool ProjectileSoftlockReduction { get; set; } = true;
     public bool SmallToSmall { get; set; } = true;
     public bool SmallToNormal { get; set; } = false;
@@ -25,7 +25,6 @@ public class AppSettings
     public bool ResetSpawnsOnZoneReset { get; set; } = false;
     public float EnemyHPMultiplier { get; set; } = 1.0F;
     public float EnemyAttackMultiplier { get; set; } = 1.0F;
-    public bool RandomEnemySize { get; set; } = false;
     public bool ShuffleNPCAppearances { get; set; } = false;
     public float FishingPowerMultiplier { get; set; } = 1.0F;
     public float HiveHPMultiplier { get; set; } = 1.0F;
@@ -68,7 +67,6 @@ public class SettingsService
         settings.ResetSpawnsOnZoneReset = resetAllEnemySpawnsOnLoad;
         settings.EnemyHPMultiplier = enemyHPMultiplier;
         settings.EnemyAttackMultiplier = enemyAttackMultiplier;
-        settings.RandomEnemySize = randomEnemySizes;
         settings.ShuffleNPCAppearances = shuffleNPCAppearances;
         settings.FishingPowerMultiplier = fishingPowerMultiplier;
         settings.HiveHPMultiplier = hiveHPMultiplier;

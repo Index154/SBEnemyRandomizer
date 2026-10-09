@@ -11,9 +11,8 @@ public class GlobalSettings
     #else
     public static string gamePath = "";
     #endif
-    public static int seed = 112233;
+    public static int seed = 0;
     public static bool shuffleNPCAppearances = false;
-    public static bool randomEnemySizes = false;
     public static bool resetAllEnemySpawnsOnLoad = false;
     public static string forceReplacementBossName = "";
     public static string forceReplacementEnemyName = "";
@@ -27,8 +26,8 @@ public class GlobalSettings
     public static bool replaceSaveDataOnRun = false;
     public static bool keepVanilla = false;
     // Unrelated QoL settings
-    public static float fishingPowerMultiplier = 6.0F;
-    public static float hiveHPMultiplier = 0.4F;
+    public static float fishingPowerMultiplier = 1.0F;
+    public static float hiveHPMultiplier = 1.0F;
 
 
     // Which rank of enemy should an enemy of a given rank be changed to? (disabled ones are currently unimplemented)
@@ -49,7 +48,7 @@ public class GlobalSettings
     public static bool tryPlaceDuplicatesForAvoidableFights = true;
     // Add non-story bosses to the pool
     public static bool includeMann = true;
-    public static bool includeScarlet = true;
+    public static bool includeScarlet = false;
 
     // Incremental IDs for cloned table rows
     public static uint incrementalID = 990000000;

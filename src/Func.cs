@@ -629,14 +629,6 @@ static class Func{
             spawnEffectList.Value = spawnEffectList.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "BlockAI_Infinite")}).ToArray();
         }
 
-        // Size randomization
-        if(randomEnemySizes)
-        {
-            float[] scaleMultipliers = [0.5F, 0.6F, 0.7F, 0.8F, 1.0F, 1.2F, 1.3F, 1.4F, 1.5F, 2.0F];
-            float multiplier = scaleMultipliers[new Random().Next(scaleMultipliers.Length)];
-            ((FloatPropertyData)newEnemy["MeshScale"]).Value = ((FloatPropertyData)newEnemy["MeshScale"]).Value * 0.5F;
-        }
-
         // Save cloned enemy under new name
         newEnemy.Name = FName.FromString(charactersAsset, newEnemyName);
         characters.Add(newEnemy);
