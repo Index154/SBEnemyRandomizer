@@ -4,3 +4,4 @@ bin/
 tools/retoc/oo2core_9_win64.dll
 .editorconfig
 Directory.Build.props
+config.json

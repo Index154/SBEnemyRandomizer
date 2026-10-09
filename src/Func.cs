@@ -267,10 +267,10 @@ static class Func{
         {
             newEnemy[property].RawValue = originalEnemy[property].RawValue;
         }
-        // Lower HP / DMG for testing
-        if(enemyHPForTesting > 0) ((IntPropertyData)newEnemy["MaxHP"]).Value = enemyHPForTesting;
-        if(enemyDMGForTesting > 0) ((FloatPropertyData)newEnemy["PhysicAttackPower"]).Value = enemyDMGForTesting;
-        if(enemyDMGForTesting > 0) ((FloatPropertyData)newEnemy["RangeAttackPower"]).Value = enemyDMGForTesting;
+        // HP and damage multipliers
+        ((IntPropertyData)newEnemy["MaxHP"]).Value = (int)Math.Round(((IntPropertyData)newEnemy["MaxHP"]).Value * enemyHPMultiplier, 0);
+        ((FloatPropertyData)newEnemy["PhysicAttackPower"]).Value = ((FloatPropertyData)newEnemy["PhysicAttackPower"]).Value * enemyAttackMultiplier;
+        ((FloatPropertyData)newEnemy["RangeAttackPower"]).Value = ((FloatPropertyData)newEnemy["RangeAttackPower"]).Value * enemyAttackMultiplier;
 
         // Add ranged damage multipliers to enemies in ATL and AYL. Also check for Projectile2_Summon and M_Maelstrom for the function call from FindAndModifyEffects()
         ArrayPropertyData defaultEffectArray = (ArrayPropertyData)newEnemy["DefaultEffectArray"];
@@ -911,7 +911,7 @@ static class Func{
             // Lower Hive HP
             else if(charName.Contains("RoadBlock"))
             {
-                ((IntPropertyData)row["MaxHP"]).Value = (int)Math.Round(((IntPropertyData)row["MaxHP"]).Value * hiveHPMultiplier, 0);
+                ((IntPropertyData)row["MaxHP"]).Value = (int)Math.Round(((IntPropertyData)row["MaxHP"]).Value * enemyHPMultiplier * hiveHPMultiplier, 0);
             }
         }
     }
