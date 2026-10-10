@@ -76,12 +76,15 @@ public partial class MainWindow : Window
             {
                 RandomizerResult.Text = "Game path missing!";
             }
-            else
+            else if(files[0].ToString().Contains("/SB.exe"))
             {
                 string folder = files[0].Path.ToString().Split("/SB.exe")[0].Split("///")[1];
                 Console.WriteLine(folder);
                 gamePath = folder;
                 folderFound = true;
+            }else
+            {
+                RandomizerResult.Text = "SB.exe not found";
             }
         }
 

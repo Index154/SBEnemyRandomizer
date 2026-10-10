@@ -4,8 +4,6 @@ using static SBEnemyRandomizer.src.GameData;
 
 public class GlobalSettings
 {
-    // User settings
-    // -------------------------------------------------------------------------
     #if DEBUG
     public static string gamePath = "D:/Steam/steamapps/common/StellarBlade";   // game folder path for cli testing
     #else
@@ -14,16 +12,16 @@ public class GlobalSettings
     public static int seed = 0;
     public static bool shuffleNPCAppearances = false;
     public static bool resetAllEnemySpawnsOnLoad = false;
-    public static string forceReplacementBossName = "";
-    public static string forceReplacementEnemyName = "";
     public static float enemyHPMultiplier = 1.0F;
     public static float enemyAttackMultiplier = 1.0F;
     // Testing settings
+    public static string forceReplacementBossName = "";
+    public static string forceReplacementEnemyName = "s";
     public static string forceReplacementForEvent = "";
     public static bool blockAIForTesting = false;
     public static string customZoneNameRestriction = "";
     public static EnemyRank? customRankRestriction = null;
-    public static bool replaceSaveDataOnRun = false;
+    public static bool replaceSaveDataOnRun = true;
     public static bool keepVanilla = false;
     // Unrelated QoL settings
     public static float fishingPowerMultiplier = 1.0F;

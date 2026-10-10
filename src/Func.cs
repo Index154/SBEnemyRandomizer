@@ -53,20 +53,31 @@ static class Func{
         List<UAsset> assets = LoadTaskList.Select(task => task.Result).ToList();
         if (token.IsCancellationRequested) return;
 
+        // Create temporary boss lists to remove from during shuffle mode randomization
+        BossesToPlaceOnceTemp = [];
+        foreach(KeyValuePair<string, string[]> kvp in EnemiesToPlaceOnce[EnemyRank.Boss])
+        {
+            BossesToPlaceOnceTemp.Add(kvp.Key, []);
+            foreach(string st in kvp.Value)
+            {
+                List<string> temp = BossesToPlaceOnceTemp[kvp.Key].ToList();
+                temp.Add(st);
+                BossesToPlaceOnceTemp[kvp.Key] = temp.ToArray();
+            }
+        }
         // Exclude Mann and Scarlet if configured
         if(!includeMann) {
-            RemoveFromDict(EnemiesToPlaceOnce[EnemyRank.Boss], "Mann", "");
+            RemoveFromDict(BossesToPlaceOnceTemp, "Mann", "");
             EnemyCategoriesToPlace[EnemyRank.Boss] = EnemyCategoriesToPlace[EnemyRank.Boss].Where(val => val != "Mann").ToArray();
         }
         if(!includeScarlet) {
-            RemoveFromDict(EnemiesToPlaceOnce[EnemyRank.Boss], "Scarlet", "");
+            RemoveFromDict(BossesToPlaceOnceTemp, "Scarlet", "");
             EnemyCategoriesToPlace[EnemyRank.Boss] = EnemyCategoriesToPlace[EnemyRank.Boss].Where(val => val != "Scarlet").ToArray();
         }
 
         // Make modifications
         if(shuffleNPCAppearances) ShuffleNPCAppearances(assets[0]);
         FindAndModifyEffects(assets[0], assets[1], assets[3], assets[4], assets[5], assets[6], rndCategory, rndAlias);
-        FindAndModifyEffects(assets[0], assets[2], assets[3], assets[4], assets[5], assets[6], rndCategory, rndAlias);
         RandomizeSpawns(assets[0], assets[1], assets[3], assets[4], assets[5], assets[6], rndCategory, rndAlias);
         RandomizeSpawns(assets[0], assets[2], assets[3], assets[4], assets[5], assets[6], rndCategory, rndAlias);
         ModifyCharacterMoves(assets[7]);
@@ -173,6 +184,8 @@ static class Func{
             // Clone and modify the replacement charactertable entry. This is necessary so we can have different scaling for each copy of an enemy. We could add some more checks to reduce some of the duplicate entries this produces but I don't think that's worth the effort
             string newEnemyName = ModifyEnemy(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, characterAlias.Value.ToString(), replacementAlias, characters, row, rndCategory, rndAlias, zone.Value.ToString());
 
+            if(row.Name.Value.ToString().Contains("ATL_03")) Log($"{row.Name.Value} = {newEnemyName}");
+
             // Modify the spawn event to spawn the new custom character instead
             if(rank == EnemyRank.Boss) Log($"{incrementalID - 1} | {row.Name.Value}: {characterAlias.Value} => {replacementAlias}");
             if(!keepVanilla) characterAlias.Value = FName.FromString(spawnEventsAsset, newEnemyName);
@@ -181,7 +194,7 @@ static class Func{
 
     static string PickShuffleBoss(string enemyName, string spawnEventName, Random rndCategory, Random rndAlias)
     {
-        Dictionary<string, string[]> enemyShuffleDict = EnemiesToPlaceOnce[EnemyRank.Boss];
+        Dictionary<string, string[]> enemyShuffleDict = BossesToPlaceOnceTemp;
         
         // Make temporary list of categories to pick from
         List<string> tempBossCategories = [];
@@ -207,9 +220,6 @@ static class Func{
         string replacementCategoryName = tempBossCategories.ElementAt(rndCategory.Next(tempBossCategories.Count));
         string[] replacementCategory = enemyShuffleDict[replacementCategoryName];
         string replacementAlias = replacementCategory[rndAlias.Next(replacementCategory.Length)];
-
-        // TODO: Make a list of boss spawn event indices and modify them in a custom order where optional boss encounters are LAST so usedBossCategories can actually be used to put duplicates in those locations! For now it has no purpose
-        usedBossCategories.Add(replacementCategoryName);
 
         // Remove selected enemy from the list and remove category if it's empty
         List<string> tempList = enemyShuffleDict[replacementCategoryName].ToList();

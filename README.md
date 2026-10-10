@@ -9,8 +9,8 @@ Thanks to the developers of third-party software **Retoc**, **UAssetAPI** and **
 - Basic functionality:
   - The mod replaces all enemies by others of the same "rank" when randomized
   - The AI of replacements is 99% functional and the game can be completed (almost)! All boss encounters have been tested
-  - Rudimentary level scaling: Enemies and bosses are given the stats and loot tables of whatever they're replacing
-  - Excepted enemies:
+  - Rudimentary level scaling: Enemies and bosses are given HP, damage, loot drops, detection range and hardmode stat multipliers of whatever they're replacing
+  - Excluded enemies:
     - Providence is not randomized yet due to unidentified issues (WIP)
     - Both Maelstrom encounters are not randomized yet for balance reasons (WIP)
     - Most enemies summoned by other enemies are not randomized (WIP)
@@ -21,6 +21,9 @@ Thanks to the developers of third-party software **Retoc**, **UAssetAPI** and **
 - Bonus features and options:
   - NPC appearances can be randomized as well. This is quite janky & funny but can occasionally prevent you from interacting with them. NPC apppearance randomization is not seeded so if you get stuck because of it you can just rerun the randomizer with the same seed to fix the problem
   - All spawns can also be set to be replaced by the same enemy if desired. **Warning:** This is highly experimental since I haven't done a lot of testing with it. Some bosses like Mann and Scarlet will DEFINITELY not work when spawned multiple times across the game! Expect softlocks and crashes
+  - A fishing power multiplier
+  - Enemy HP and damage multipliers
+  - An additional HP multiplier for Hives
 
 ## Usage instructions
 **The mod is currently in beta so no release has been published yet**
@@ -29,9 +32,9 @@ Thanks to the developers of third-party software **Retoc**, **UAssetAPI** and **
 - Run SBEnemyRandomizer.exe
 - Tweak the randomization options if you like. Hover over options with your mouse to see detailed tooltip explanations if available
 - Click the button that says "Randomize"
-  - The first time you do this you will be asked to provide the path to your game's installation directory. You must select the folder containing SB.exe, usually something like `C:\Program Files (x86)\Steam\steamapps\common\StellarBlade`
+  - The first time you do this you will be asked to provide the path to SB.exe in your game's installation directory. Usually this path will be something like this: `C:\Program Files (x86)\Steam\steamapps\common\StellarBlade\SB.exe`
   - Wait for randomization to finish. It will automatically create a mod "SBEnemyRandomizer_P" and place it in your game directory under `.\SB\Content\Paks\~mods`
-- Launch the game as you normally would. I strongly recommend starting a new save file / NG+ cycle!
+- Launch the game as you normally would. I strongly recommend starting a new save file or NG+!
   - **IMPORTANT KNOWLEDGE:** Most bosses and some regular enemies in the game are only spawned *once* immediately upon entering the zone they're in. The game remembers whether these enemies are still there by recording them in your save file in some way. Loading a used save file after randomizing will cause these previously spawned enemies to **vanish** instead of being replaced. If you experience this issue and resting at a camp does not fix it then proceed as follows:
     - Run the randomizer, enable the setting "Reset all spawns on zone reset" and randomize the enemies again (you can use the same seed as before)
     - Launch the game and load the affected save file, then rest at a camp. This should now respawn all enemies in the current zone (possibly including bosses you've already defeated) and update your save file to no longer be softlocked
@@ -54,10 +57,16 @@ The randomizer is incompatible with mods that make changes to any of the followi
 - ZoneTriggerTable.uasset
 
 ## Known issues
+- Major issues:
+  - Exosuit has its AI disabled if it replaces ElderPhase2
+    - Enable AI through eventOnBattle?
+  - The ending cutscene is not triggering
+    - The theater event seems to be targeting specific characters like M_ElderPhase1 and M_Exosuit
+    - Find a way to easily test cutscenes and figure out which is the correct one
+    - Try triggering the ending cutscene at a different point in time "manually", for example through EventOnDead. Could be an easy workaround!
 - Balancing issues:
   - Abaddon phase 2 may not be triggering correctly
   - Karakuri minions are not scaled in difficulty
-  - Which properties of an enemy should be replaced and which should be retained needs another thorough check
 - Minor / rare issues:
   - The secret room in Eidos 7 where you interact with the corpse and then a glass wall shatters did not have an enemy when I tested it => Needs another look
   - Gigas spawns halfway underground when replacing Belial 1 and does not attack the player until phase 2 because of it
@@ -74,13 +83,8 @@ The randomizer is incompatible with mods that make changes to any of the followi
 
 ## Planned features & changes
 - High priority:
-  - Fix the ending (final cutscene does not trigger)
-    - The theater event seems to be targeting specific characters like M_ElderPhase1 and M_Exosuit but because they don't exist it's taking random enemies from Wasteland instead?
-    - Find a way to easily test cutscenes and figure out which is the correct one
-    - Try triggering the ending cutscene at a different point in time "manually", for example through EventOnDead. Could be an easy workaround!
-  - Fix final boss replacement issues: Exosuit has its AI disabled if it replaces ElderPhase2x
+  - Fix major issues
   - Fix balancing issues
-  - Include NG+ enemy spawns in randomization
   - Go through all bosses again and check for important condition triggers and event actor effects dependent on the spawn event
   - Ensure that Scarlet can only spawn if the player has the DLC installed
     - Uninstall the DLC and check if she's still in the charactertable

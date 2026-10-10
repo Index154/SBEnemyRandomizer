@@ -983,7 +983,7 @@ public static class GameData
 
     };
 
-    public static Dictionary<EnemyRank, Dictionary<string, string[]>> EnemiesToPlaceOnce = new(){
+    public static readonly Dictionary<EnemyRank, Dictionary<string, string[]>> EnemiesToPlaceOnce = new(){
         
         [EnemyRank.Boss] = new(){
             ["Behemoth"] = ["WLB_M_Behemoth_01"],
@@ -1021,10 +1021,40 @@ public static class GameData
         ["NoGun"] = ["SE_08_E_CharS_004"],
         ["SmallArena"] = ["ME_03_E_CharS_018", "ME_05_E_CharS_017", "SE_04_E_CharS_001", "SE_08_E_CharS_004"],
         ["AvoidableFight"] = ["SD_10_E_CharS_026", "WLB_30_E_CharS_002", "WLA_40_E_CharS_073", "DED40_E_CharS_055", "WLA_40_E_CharS_098", "WLB_50_E_CharS_001"],
-        ["SpecialSpawn"] = ["DED10_E_CharS_134", "DED10_E_CharS_132", "DED10_E_CharS_131", "DED10_E_CharS_130", "DED10_E_CharS_128", "DED10_E_CharS_127", "DED10_E_CharS_125", "DED10_E_CharS_124", "DED10_E_CharS_040", "DED10_E_CharS_037"]
+        ["SpecialSpawn"] = [
+            // Eidos 7 ambush spawns can softlock if replaced by tentacles since the enemies have to move into position
+            "DED10_E_CharS_134",
+            "DED10_E_CharS_132",
+            "DED10_E_CharS_131",
+            "DED10_E_CharS_130",
+            "DED10_E_CharS_128",
+            "DED10_E_CharS_127",
+            "DED10_E_CharS_125",
+            "DED10_E_CharS_124",
+            "DED10_E_CharS_040",
+            "DED10_E_CharS_037",
+            // Laser battle arena spawns can softlock if replaced by tentacles since they need to fall down from above for example
+            "ATL_03_E_CharS_001",
+            "ATL_03_E_CharS_002",
+            "ATL_03_E_CharS_003",
+            "ATL_03_E_CharS_005",
+            "ATL_03_E_CharS_030",
+            "ATL_03_E_CharS_006",
+            "ATL_03_E_CharS_007",
+            "ATL_03_E_CharS_022",
+            "ATL_03_E_CharS_013",
+            "ATL_03_E_CharS_017",
+            "ATL_03_E_CharS_018",
+            "ATL_03_E_CharS_021",
+            "ATL_03_E_CharS_016",
+            "ATL_03_E_CharS_019",
+            "ATL_03_E_CharS_020",
+            "ATL_03_E_CharS_023"
+        ]
     };
 
-    public static List<string> EnemyPropertiesToRetain = [
+    public static readonly List<string> EnemyPropertiesToRetain = [
+        // Things to retain from replaced enemy: Combat stats, player detection range, loot drops, difficulty scaling group
         "Rank",
         "MaxHP",
         "MaxShield",
@@ -1032,32 +1062,39 @@ public static class GameData
         "RangeAttackPower",
         "ShieldAttackPower",
         "StaminaAttackPower",
+        "BaseDamageReductionByShield",
+        "DamageReductionPerShieldBock",
         "ShieldRegenPerSecond",
         "ShieldRegenPerSecondWhenBattle",
+        "StaminaRegenPerSecond",
         "HPRegenPerSecond",
+        "CriticalPercentage",
+        "CriticalValueRate",
         "ShieldIgnorePercentage",
+        "TargetFilterRadius",
+        "ProjectileTargetFilterRadius",
+        "DifficultyStatGroupAlias",
+        "DefaultDetectAIAlias",
+        "NarrowDetectAIAlias",
+        "DetectViewingSocketName",
+        "AIAuditorySenseRadius",
+        "AIAuditorySenseDecibel",
+        "AIAuditorySenseDuration",
         "HitDefenseLevel",
         "RewardGroupAlias",
         "RewardSpawnBucketType",
         "RewardOverrideSaveType",
         "RewardFormationAssetPath",
-        "TargetFilterRadius",
-        "ProjectileTargetFilterRadius",
-        "DefaultDetectAIAlias",
-        "NarrowDetectAIAlias",
-        "AIAuditorySenseRadius",
-        "AIAuditorySenseDecibel",
-        "AIAuditorySenseDuration"
     ];
 
-    public static List<string> BossesWithFinishStance = [
+    public static readonly List<string> BossesWithFinishStance = [
         "UME_M_Tachy_01",
         "DED_M_GorillaB_01",
         "UME_M_SkullJuggernaut_01",
         "SE_M_WeaponMasterB_01"
     ];
 
-    public static List<string> BossesWithImmortality = [
+    public static readonly List<string> BossesWithImmortality = [
         "SD_M_HedgeBoarBrute_01",
         "DED_M_Opener_01",
         "DED_M_GrubShooterElite_01",
@@ -1080,7 +1117,7 @@ public static class GameData
         "CHAL_M_Scarlet_01"
     ];
 
-    public static List<string> SpawnsRequiringImmortality = [
+    public static readonly List<string> SpawnsRequiringImmortality = [
         "WLA_30_E_CharS_025",
         "WLB_10_E_CharS_037",
         //"SE_04_E_CharS_001",
@@ -1090,7 +1127,7 @@ public static class GameData
         "Nest_10_E_CharS_007"
     ];
 
-    public static Dictionary<string, string[]> SpawnsWithEffects = new(){
+    public static readonly Dictionary<string, string[]> SpawnsWithEffects = new(){
         ["ME_03_E_CharS_018"] = ["M_Sawshark_Matrix"],
         ["ATL_03_E_CharS_014"] = ["M_Maelstrom_HPDamageReductionRate", "M_Maelstrom_ShieldDamageReductionRate"],
         ["AYL_06_E_CharS_002"] = ["M_Maelstrom_HPDamageReductionRate", "M_Maelstrom_ShieldDamageReductionRate"]
@@ -1141,6 +1178,5 @@ public static class GameData
     };
 
     // Lists to modify at runtime for persistent data
-    public static List<string> usedBossCategories = [];
-
+    public static Dictionary<string, string[]> BossesToPlaceOnceTemp = [];
 }
