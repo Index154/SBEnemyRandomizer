@@ -30,7 +30,7 @@ public partial class MainWindow : Window
         includeMann = s.AddMann;
         includeScarlet = s.AddScarlet;
         tryPlaceDuplicatesForAvoidableFights = s.BossDupesInOptionalEncounters;
-        allowGunBossesBeforeXion = s.GunBossesBeforeXion;
+        preventGunBossesBeforeXion = s.PreventGunBossesBeforeXion;
         reduceDestroyableProjectileSoftlocks = s.ProjectileSoftlockReduction;
 
         resetAllEnemySpawnsOnLoad = s.ResetSpawnsOnZoneReset;

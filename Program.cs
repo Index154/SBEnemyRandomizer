@@ -3,7 +3,6 @@ using static SBEnemyRandomizer.src.Func;
 using static SBEnemyRandomizer.src.Logger;
 using SBEnemyRandomizer.Avalonia;
 using Avalonia;
-using Avalonia.Controls;
 
 namespace SBEnemyRandomizer;
 

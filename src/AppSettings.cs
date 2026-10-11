@@ -11,7 +11,7 @@ public class AppSettings
     public bool AddMann { get; set; } = true;
     public bool AddScarlet { get; set; } = false;
     public bool BossDupesInOptionalEncounters { get; set; } = true;
-    public bool GunBossesBeforeXion { get; set; } = false;
+    public bool PreventGunBossesBeforeXion { get; set; } = false;
     public bool ProjectileSoftlockReduction { get; set; } = true;
     public bool SmallToSmall { get; set; } = true;
     public bool SmallToNormal { get; set; } = false;
@@ -61,7 +61,7 @@ public class SettingsService
         settings.AddMann = includeMann;
         settings.AddScarlet = includeScarlet;
         settings.BossDupesInOptionalEncounters = tryPlaceDuplicatesForAvoidableFights;
-        settings.GunBossesBeforeXion = allowGunBossesBeforeXion;
+        settings.PreventGunBossesBeforeXion = preventGunBossesBeforeXion;
         settings.ProjectileSoftlockReduction = reduceDestroyableProjectileSoftlocks;
 
         settings.ResetSpawnsOnZoneReset = resetAllEnemySpawnsOnLoad;

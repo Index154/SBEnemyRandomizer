@@ -68,7 +68,6 @@ The randomizer is incompatible with mods that make changes to any of the followi
   - Abaddon phase 2 may not be triggering correctly
   - Karakuri minions are not scaled in difficulty
 - Minor / rare issues:
-  - The secret room in Eidos 7 where you interact with the corpse and then a glass wall shatters did not have an enemy when I tested it => Needs another look
   - Gigas spawns halfway underground when replacing Belial 1 and does not attack the player until phase 2 because of it
   - The boss replacing Providence has no combat animations. Currently this boss is not being replaced
   - Replacing Maelstrom with a different boss can result in unwinnable situations due to ammo shortage + no way to parry etc. Placing Maelstrom in a different arena where you can walk behind it can also make the fight feel rather unbalanced => For now I am leaving the Maelstrom encounters untouched (aside from randomizing what minions they summon)
@@ -86,11 +85,9 @@ The randomizer is incompatible with mods that make changes to any of the followi
   - Fix major issues
   - Fix balancing issues
   - Go through all bosses again and check for important condition triggers and event actor effects dependent on the spawn event
-  - Ensure that Scarlet can only spawn if the player has the DLC installed
-    - Uninstall the DLC and check if she's still in the charactertable
-    - => Implement a check in the code that excludes her if the DLC content is missing
+  - Ensure that Scarlet is removed properly if the DLC is uninstalled
   - Randomization of enemies summoned by other enemies (current implementation is only working for Maelstrom)
-  - A GUI and usage documentation, followed by a downloadable and playable release build
+  - GUI and usage documentation, followed by a downloadable and playable release build
 - Low priority:
   - Fix minor issues
   - Try adding energy shield effect to Cocoon replacements

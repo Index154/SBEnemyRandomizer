@@ -17,11 +17,11 @@ static class Func{
     
     async public static Task Randomizer(IProgress<int>? progress = null, CancellationToken token = default)
     {
-        // Create folders
         Directory.CreateDirectory(unpackTablePath);
         Directory.CreateDirectory(repackTablePath);
         Directory.CreateDirectory(unpackAIPath);
         Directory.CreateDirectory(repackAIPath);
+        if(!File.Exists(Path.Combine(gamePakPath, "pakchunk3-WindowsNoEditor.ucas"))) dlcPresent = false;
 
         // Extract uassets from the game files and convert to legacy format using retoc
         Log("Unpacking assets...");
@@ -70,7 +70,7 @@ static class Func{
             RemoveFromDict(BossesToPlaceOnceTemp, "Mann", "");
             EnemyCategoriesToPlace[EnemyRank.Boss] = EnemyCategoriesToPlace[EnemyRank.Boss].Where(val => val != "Mann").ToArray();
         }
-        if(!includeScarlet) {
+        if(!includeScarlet || !dlcPresent) {
             RemoveFromDict(BossesToPlaceOnceTemp, "Scarlet", "");
             EnemyCategoriesToPlace[EnemyRank.Boss] = EnemyCategoriesToPlace[EnemyRank.Boss].Where(val => val != "Scarlet").ToArray();
         }
@@ -184,8 +184,6 @@ static class Func{
             // Clone and modify the replacement charactertable entry. This is necessary so we can have different scaling for each copy of an enemy. We could add some more checks to reduce some of the duplicate entries this produces but I don't think that's worth the effort
             string newEnemyName = ModifyEnemy(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, characterAlias.Value.ToString(), replacementAlias, characters, row, rndCategory, rndAlias, zone.Value.ToString());
 
-            if(row.Name.Value.ToString().Contains("ATL_03")) Log($"{row.Name.Value} = {newEnemyName}");
-
             // Modify the spawn event to spawn the new custom character instead
             if(rank == EnemyRank.Boss) Log($"{incrementalID - 1} | {row.Name.Value}: {characterAlias.Value} => {replacementAlias}");
             if(!keepVanilla) characterAlias.Value = FName.FromString(spawnEventsAsset, newEnemyName);
@@ -204,7 +202,7 @@ static class Func{
             if(enemyName.Contains(kvp.Key)) continue;
 
             // Filter out bosses requiring the gun for spawnEvents before the gun unlock
-            if(!allowGunBossesBeforeXion && EnemyRequirements["GunRequired"].Any(kvp.Key.Contains) && spawnEventCategories["BeforeGun"].Any(spawnEventName.Contains)) continue;
+            if(preventGunBossesBeforeXion && EnemyRequirements["GunRequired"].Any(kvp.Key.Contains) && spawnEventCategories["BeforeGun"].Any(spawnEventName.Contains)) continue;
             // Filter out bosses requiring the gun for the Marionette encounter which disables your gun
             if(EnemyRequirements["GunRequired"].Any(kvp.Key.Contains) && spawnEventCategories["NoGun"].Any(spawnEventName.Contains)) continue;
 
@@ -237,6 +235,14 @@ static class Func{
         {
             // Filter out the category of the enemy being replaced
             if(originalName.Contains(category)) continue;
+
+            // Filter out bosses requiring the gun for spawnEvents before the gun unlock
+            if(preventGunBossesBeforeXion && EnemyRequirements["GunRequired"].Any(category.Contains) && spawnEventCategories["BeforeGun"].Any(spawnEventName.Contains)) continue;
+            // Filter out bosses requiring the gun for the Marionette encounter which disables your gun
+            if(EnemyRequirements["GunRequired"].Any(category.Contains) && spawnEventCategories["NoGun"].Any(spawnEventName.Contains)) continue;
+
+            // Filter out bosses that spawn destroyable projectiles for spawnEvents where they are likely to spawn out of bounds
+            if(reduceDestroyableProjectileSoftlocks && EnemyRequirements["LargeArena"].Any(category.Contains) && spawnEventCategories["SmallArena"].Any(spawnEventName.Contains)) continue;
 
             // Filter out special conditions
             if(EnemyRequirements["DontPlaceInSpecialSpawns"].Any(category.Contains) && spawnEventCategories["SpecialSpawn"].Any(spawnEventName.Contains)) continue;
@@ -345,6 +351,18 @@ static class Func{
         {
             ArrayPropertyData spawnEffectList = (ArrayPropertyData)spawnEvent["SpawnEffectList"];
             spawnEffectList.Value = spawnEffectList.Value.Where(val => !val.ToString().Contains("BlockAI_Infinite") && !val.ToString().Contains("M_OpenerWasteland_Phase1Dispel")).ToArray();
+        }
+
+        // RoyalGuard HP reduction because the fight doesn't deserve to be that long
+        if(vanillaEnemyName.Contains("RoyalGuardFemale"))
+        {
+            ((IntPropertyData)newEnemy["MaxHP"]).Value = (int)Math.Round(((IntPropertyData)newEnemy["MaxHP"]).Value * 0.5F, 0);
+        }
+
+        // RoyalGuard replacement HP increase because the fight should be longer
+        if(spawnEventName == "WLA_30_E_CharS_025" || spawnEventName == "WLB_10_E_CharS_037")
+        {
+            ((IntPropertyData)newEnemy["MaxHP"]).Value = (int)Math.Round(((IntPropertyData)newEnemy["MaxHP"]).Value * 1.5F, 0);
         }
 
         // Modify eventActorEffect targets for Abaddon 2

@@ -3,13 +3,13 @@
         xmlns:vm="using:SBEnemyRandomizer.Avalonia.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="700"
+        mc:Ignorable="d" d:DesignWidth="640" d:DesignHeight="520"
         x:Class="SBEnemyRandomizer.Avalonia.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Icon="/Avalonia/Assets/avalonia-logo.ico"
         Title="SBEnemyRandomizer"
-        Width="600"
-        Height="700">
+        Width="640"
+        Height="520">
 
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
@@ -17,24 +17,61 @@
         <vm:MainViewModel />
     </Design.DataContext>
 
-    <StackPanel Margin="20">
-        <SelectableTextBlock Margin="0 5">Seed (set to 0 for random):</SelectableTextBlock>
+    <DockPanel TextElement.FontSize="16">
+        <Menu DockPanel.Dock="Top" Background="Gray" IsVisible="False">
+            <MenuItem Header="_Main"/>
+            <MenuItem Header="_Boss pool"/>
+        </Menu>
 
-        <NumericUpDown x:Name="SeedInput" Value="{Binding Seed}" Increment="1" FormatString="0" Minimum="-2147483647" Maximum="2147483647"
-        ShowButtonSpinner="False" AllowSpin="False" />
-
-        <Button x:Name="RandomizeButton" Click="RandomizeOnClick">Randomize</Button>
-        
+        <Button x:Name="RandomizeButton" Content="Content Center" DockPanel.Dock="Bottom" HorizontalAlignment="Stretch" Click="RandomizeOnClick" Height="40">
+            <TextBlock Text="Randomize" FontWeight="Bold" TextAlignment="Center" VerticalAlignment="Center"/>
+        </Button>
         <Popup x:Name="FinishedNotification"
             PlacementTarget="{Binding #RandomizeButton}"
-            Placement="Bottom"
-            IsLightDismissEnabled="True">
+            Placement="Top"
+            IsLightDismissEnabled="True"
+            Margin="20">
             <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
                     BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"
                     BorderThickness="1" CornerRadius="4" Padding="8">
                 <TextBlock x:Name="RandomizerResult" Text="Finished!" />
             </Border>
         </Popup>
-    </StackPanel>
+
+        <ScrollViewer>
+            <StackPanel Margin="20">
+
+                <WrapPanel ItemSpacing="8">
+                    <SelectableTextBlock Margin="0 5">Seed:</SelectableTextBlock>
+                    <NumericUpDown Value="{Binding Seed}" Increment="1" FormatString="0" Minimum="-2147483647" Maximum="2147483647" ShowButtonSpinner="False" AllowSpin="False" Width="150" />
+                    <SelectableTextBlock Margin="0 5">(0 = Random)</SelectableTextBlock>
+                </WrapPanel>
+
+                <CheckBox IsChecked="{Binding BossShuffle}" ToolTip.Tip="Shuffles available bosses without creating additional duplicates" Content="Shuffle bosses"/>
+                <CheckBox IsChecked="{Binding AddMann}" Content="Add Mann to boss pool"/>
+                <CheckBox IsChecked="{Binding AddScarlet}" Content="Add Scarlet to boss pool"/>
+                <CheckBox IsChecked="{Binding PreventGunBossesBeforeXion}" ToolTip.Tip="Only disable this for NG+ playthroughs" Content="Prevent bosses requiring the gun from appearing before the gun unlock"/>
+                <CheckBox IsChecked="{Binding ResetSpawnsOnZoneReset}" ToolTip.Tip="Use this setting if you're softlocked due to missing enemies" Content="Reset spawns on zone reset"/>
+                <CheckBox IsChecked="{Binding ShuffleNPCAppearances}" ToolTip.Tip="Re-randomize with the same seed if an NPC becomes uninteractable" Content="Randomize friendly NPC appearances (experimental)"/>
+                <WrapPanel ItemSpacing="8">
+                    <SelectableTextBlock Margin="0 5">Enemy HP multiplier:</SelectableTextBlock>
+                    <NumericUpDown Value="{Binding EnemyHPMultiplier}" Increment="0.1" FormatString="0.0" Minimum="0" Maximum="999" ShowButtonSpinner="True" AllowSpin="True" Width="150" />
+                </WrapPanel>
+                <WrapPanel ItemSpacing="8">
+                    <SelectableTextBlock Margin="0 5">Enemy attack multiplier:</SelectableTextBlock>
+                    <NumericUpDown Value="{Binding EnemyAttackMultiplier}" Increment="0.1" FormatString="0.0" Minimum="0" Maximum="999" ShowButtonSpinner="True" AllowSpin="True" Width="150" />
+                </WrapPanel>
+                <WrapPanel ItemSpacing="8">
+                    <SelectableTextBlock Margin="0 5">Fishing power multiplier:</SelectableTextBlock>
+                    <NumericUpDown Value="{Binding FishingPowerMultiplier}" Increment="0.1" FormatString="0.0" Minimum="0" Maximum="999" ShowButtonSpinner="True" AllowSpin="True" Width="150" />
+                </WrapPanel>
+                <WrapPanel ItemSpacing="8">
+                    <SelectableTextBlock Margin="0 5">Hive HP multiplier</SelectableTextBlock>
+                    <NumericUpDown Value="{Binding HiveHPMultiplier}" Increment="0.1" FormatString="0.0" Minimum="0" Maximum="999" ShowButtonSpinner="True" AllowSpin="True" Width="150" />
+                </WrapPanel>
+
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
 
 </Window>

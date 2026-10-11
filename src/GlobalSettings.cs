@@ -16,12 +16,12 @@ public class GlobalSettings
     public static float enemyAttackMultiplier = 1.0F;
     // Testing settings
     public static string forceReplacementBossName = "";
-    public static string forceReplacementEnemyName = "s";
+    public static string forceReplacementEnemyName = "";
     public static string forceReplacementForEvent = "";
     public static bool blockAIForTesting = false;
     public static string customZoneNameRestriction = "";
     public static EnemyRank? customRankRestriction = null;
-    public static bool replaceSaveDataOnRun = true;
+    public static bool replaceSaveDataOnRun = false;
     public static bool keepVanilla = false;
     // Unrelated QoL settings
     public static float fishingPowerMultiplier = 1.0F;
@@ -41,14 +41,14 @@ public class GlobalSettings
 
     // Shuffle bosses around or select them completely randomly
     public static bool shuffleBosses = true;
-    public static bool allowGunBossesBeforeXion = false;
+    public static bool preventGunBossesBeforeXion = true;
     public static bool reduceDestroyableProjectileSoftlocks = true;
     public static bool tryPlaceDuplicatesForAvoidableFights = true;
     // Add non-story bosses to the pool
     public static bool includeMann = true;
     public static bool includeScarlet = false;
 
-    // Incremental IDs for cloned table rows
+    public static bool dlcPresent = true;
     public static uint incrementalID = 990000000;
     public static uint incrementalEffectID = 9000000;
     public static uint incrementalEventActorEffectID = 10000;
