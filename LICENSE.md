@@ -1,6 +1,6 @@
 The original source code of this project
 --------------------------------------------
-SBEnemyRandomizer © 2026 by Index154 aka ArtificialIndex is licensed under CC BY-NC 4.0 International. To view a copy of this license, visit https://creativecommons.org/licenses/by-nc/4.0/. This license requires that reusers give credit to the creator. It allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, for noncommercial purposes only.
+If you use, adapt, or redistribute this project, please credit me (Index154) and link back to this repository!
 
     MIT License
 
@@ -23,10 +23,6 @@ SBEnemyRandomizer © 2026 by Index154 aka ArtificialIndex is licensed under CC B
     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
-
-## Attribution
-If you use, adapt, or redistribute this project, please credit me (Index154) and link back to this repository!
-
 
 Third-party software
 --------------------------------------------
