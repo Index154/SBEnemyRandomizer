@@ -12,8 +12,7 @@ public class AppSettings
     public bool AddScarlet { get; set; } = false;
     public bool BossDupesInOptionalEncounters { get; set; } = true;
     public bool PreventGunBossesBeforeXion { get; set; } = false;
-    public bool ProjectileSoftlockReduction { get; set; } = true;
-    public bool SmallToSmall { get; set; } = true;
+    /*public bool SmallToSmall { get; set; } = true;
     public bool SmallToNormal { get; set; } = false;
     public bool SmallToBoss { get; set; } = false;
     public bool NormalToSmall { get; set; } = false;
@@ -21,7 +20,7 @@ public class AppSettings
     public bool NormalToBoss { get; set; } = false;
     public bool BossToSmall { get; set; } = false;
     public bool BossToNormal { get; set; } = false;
-    public bool BossToBoss { get; set; } = true;
+    public bool BossToBoss { get; set; } = true;*/
     public bool ResetSpawnsOnZoneReset { get; set; } = false;
     public float EnemyHPMultiplier { get; set; } = 1.0F;
     public float EnemyAttackMultiplier { get; set; } = 1.0F;
@@ -62,7 +61,6 @@ public class SettingsService
         settings.AddScarlet = includeScarlet;
         settings.BossDupesInOptionalEncounters = tryPlaceDuplicatesForAvoidableFights;
         settings.PreventGunBossesBeforeXion = preventGunBossesBeforeXion;
-        settings.ProjectileSoftlockReduction = reduceDestroyableProjectileSoftlocks;
 
         settings.ResetSpawnsOnZoneReset = resetAllEnemySpawnsOnLoad;
         settings.EnemyHPMultiplier = enemyHPMultiplier;

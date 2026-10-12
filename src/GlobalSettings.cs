@@ -5,7 +5,7 @@ using static SBEnemyRandomizer.src.GameData;
 public class GlobalSettings
 {
     #if DEBUG
-    public static string gamePath = "D:/Steam/steamapps/common/StellarBlade";   // game folder path for cli testing
+    public static string gamePath = "D:/Steam/steamapps/common/StellarBlade";   // Default game folder path for cli testing
     #else
     public static string gamePath = "";
     #endif
@@ -27,7 +27,6 @@ public class GlobalSettings
     public static float fishingPowerMultiplier = 1.0F;
     public static float hiveHPMultiplier = 1.0F;
 
-
     // Which rank of enemy should an enemy of a given rank be changed to? (disabled ones are currently unimplemented)
     public static bool smallToSmall = true;
     public static bool smallToNormal = false;
@@ -39,12 +38,9 @@ public class GlobalSettings
     public static bool bossToNormal = false;
     public static bool bossToBoss = true;
 
-    // Shuffle bosses around or select them completely randomly
     public static bool shuffleBosses = true;
     public static bool preventGunBossesBeforeXion = true;
-    public static bool reduceDestroyableProjectileSoftlocks = true;
     public static bool tryPlaceDuplicatesForAvoidableFights = true;
-    // Add non-story bosses to the pool
     public static bool includeMann = true;
     public static bool includeScarlet = false;
 
@@ -53,8 +49,7 @@ public class GlobalSettings
     public static uint incrementalEffectID = 9000000;
     public static uint incrementalEventActorEffectID = 10000;
 
-    // Constants
-    // -------------------------------------------------------------------------
+    // Use project folder for debugging
     #if DEBUG
     public static readonly string basePath = Directory.GetCurrentDirectory();
     #else
@@ -63,7 +58,6 @@ public class GlobalSettings
     public static readonly string gamePakPath = $"{gamePath}/SB/Content/Paks";
     public static readonly string tableSubdirectory = "SB/Content/Local/Data";
     public static readonly string aiSubdirectory = "SB/Content/GameDesign/Combat/BehaviorTree/Monster";
-    // Paths dependent on the basePath
     public static readonly string tempPath = Path.Combine(basePath, "temp");
     public static readonly string retocPath = Path.Combine(basePath, "tools/retoc/retoc.exe");
     public static readonly string mapPath = Path.Combine(basePath, "tools/StellarBlade_1.4.1.usmap");
@@ -73,7 +67,6 @@ public class GlobalSettings
     public static readonly string unpackAIPath = $"{tempPath}/unpacked/{aiSubdirectory}";
     public static readonly string repackTablePath = $"{tempPath}/modified/{tableSubdirectory}";
     public static readonly string repackAIPath = $"{tempPath}/modified/{aiSubdirectory}";
-    // Assets
     public static readonly List<string> assetNames = [
         "CharacterTable",
         "EventSpawnTable",

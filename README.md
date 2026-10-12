@@ -1,7 +1,5 @@
 # Stellar Blade Enemy Randomizer
-An enemy randomizer mod for Stellar Blade. I'm a mostly self-taught hobby programmer so please excuse any inefficient or unclean code.
-
-Supported OS: Windows x64
+An enemy randomizer mod for Stellar Blade running on Windows x64.
 
 If you use, adapt, or redistribute this project, please credit me (Index154) and link back to this repository!
 

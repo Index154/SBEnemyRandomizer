@@ -207,7 +207,7 @@ static class Func{
             if(EnemyRequirements["GunRequired"].Any(kvp.Key.Contains) && spawnEventCategories["NoGun"].Any(spawnEventName.Contains)) continue;
 
             // Filter out bosses that spawn destroyable projectiles for spawnEvents where they are likely to spawn out of bounds
-            if(reduceDestroyableProjectileSoftlocks && EnemyRequirements["LargeArena"].Any(kvp.Key.Contains) && spawnEventCategories["SmallArena"].Any(spawnEventName.Contains)) continue;
+            if(EnemyRequirements["LargeArena"].Any(kvp.Key.Contains) && spawnEventCategories["SmallArena"].Any(spawnEventName.Contains)) continue;
 
             //Log($"{spawnEventName} + {enemyName} => {kvp.Key} / {EnemyRequirements["GunRequired"].Any(kvp.Key.Contains)}");
             tempBossCategories.Add(kvp.Key);
@@ -242,7 +242,7 @@ static class Func{
             if(EnemyRequirements["GunRequired"].Any(category.Contains) && spawnEventCategories["NoGun"].Any(spawnEventName.Contains)) continue;
 
             // Filter out bosses that spawn destroyable projectiles for spawnEvents where they are likely to spawn out of bounds
-            if(reduceDestroyableProjectileSoftlocks && EnemyRequirements["LargeArena"].Any(category.Contains) && spawnEventCategories["SmallArena"].Any(spawnEventName.Contains)) continue;
+            if(EnemyRequirements["LargeArena"].Any(category.Contains) && spawnEventCategories["SmallArena"].Any(spawnEventName.Contains)) continue;
 
             // Filter out special conditions
             if(EnemyRequirements["DontPlaceInSpecialSpawns"].Any(category.Contains) && spawnEventCategories["SpecialSpawn"].Any(spawnEventName.Contains)) continue;

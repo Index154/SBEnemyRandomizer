@@ -31,7 +31,6 @@ public partial class MainWindow : Window
         includeScarlet = s.AddScarlet;
         tryPlaceDuplicatesForAvoidableFights = s.BossDupesInOptionalEncounters;
         preventGunBossesBeforeXion = s.PreventGunBossesBeforeXion;
-        reduceDestroyableProjectileSoftlocks = s.ProjectileSoftlockReduction;
 
         resetAllEnemySpawnsOnLoad = s.ResetSpawnsOnZoneReset;
         enemyHPMultiplier = s.EnemyHPMultiplier;
