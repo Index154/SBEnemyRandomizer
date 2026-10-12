@@ -1,9 +1,11 @@
 # Stellar Blade Enemy Randomizer
-An enemy randomizer mod for Stellar Blade. Currently in early beta. I'm a mostly self-taught hobby programmer so please excuse any inefficient or unclean code.
+An enemy randomizer mod for Stellar Blade. I'm a mostly self-taught hobby programmer so please excuse any inefficient or unclean code.
 
 Supported OS: Windows x64
 
-Thanks to the developers of third-party software **Retoc**, **UAssetAPI** and **Avalonia** which are included in this project! (See `LICENSE.md`)
+If you use, adapt, or redistribute this project, please credit me (Index154) and link back to this repository!
+
+Thank you to the developers of third-party software **[Retoc](https://github.com/trumank/retoc)**, **[UAssetAPI](https://github.com/atenfyr/UAssetAPI)** and **[Avalonia](https://github.com/AvaloniaUI/Avalonia)** which are included in this project! (See `LICENSE.md` for respective licenses)
 
 ## Current state and features
 - Basic functionality:
