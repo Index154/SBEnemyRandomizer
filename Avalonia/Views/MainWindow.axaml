@@ -47,7 +47,7 @@
                     <SelectableTextBlock Margin="0 5">(0 = Random)</SelectableTextBlock>
                 </WrapPanel>
 
-                <CheckBox IsChecked="{Binding BossShuffle}" ToolTip.Tip="Shuffles available bosses without creating additional duplicates" Content="Shuffle bosses"/>
+                <CheckBox IsChecked="{Binding BossShuffle}" ToolTip.Tip="Shuffles available bosses without creating additional duplicates" Content="Boss shuffle mode"/>
                 <CheckBox IsChecked="{Binding AddMann}" Content="Add Mann to boss pool"/>
                 <CheckBox IsChecked="{Binding AddScarlet}" Content="Add Scarlet to boss pool"/>
                 <CheckBox IsChecked="{Binding PreventGunBossesBeforeXion}" ToolTip.Tip="Only disable this for NG+ playthroughs" Content="Prevent bosses requiring the gun from appearing before the gun unlock"/>

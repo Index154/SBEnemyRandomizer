@@ -69,15 +69,17 @@ The randomizer is incompatible with mods that make changes to any of the followi
   - Karakuri minions are not scaled in difficulty
 - Minor / rare issues:
   - Gigas spawns halfway underground when replacing Belial 1 and does not attack the player until phase 2 because of it
-  - The boss replacing Providence has no combat animations. Currently this boss is not being replaced
+    - => Test Gigas in other arenas to see if it happens elsewhere. Reduce his meshscale for these locations as an easy workaround?
+  - Unidentified Naytiba sometimes freezes in place after her aerial attacks. You can just shoot her to get her to continue fighting so it's not a big deal
+  - The boss replacing Providence has no combat animations. To prevent this issue this boss is currently not being replaced
   - Replacing Maelstrom with a different boss can result in unwinnable situations due to ammo shortage + no way to parry etc. Placing Maelstrom in a different arena where you can walk behind it can also make the fight feel rather unbalanced => For now I am leaving the Maelstrom encounters untouched (aside from randomizing what minions they summon)
-  - WLA_M_RoyalGuardFemale_01 encounter (WLA_30_E_CharS_025) no longer has battle music after being replaced. Other replaced bosses might also not have music or won't trigger a phase 2 music. I didn't pay much attention to this so far
+  - The RoyalGuardFemale encounters no longer have battle music after being replaced. Other replaced bosses might also not have music or won't trigger a phase 2 music. I didn't pay much attention to this so far
   - Certain attacks of NST_M_ElderPhase2_01 crash the game if there are multiple copies of him in the loaded area (I think?)
   - Bosses always put a large HP bar at the top of the screen but you can only ever see one of them at a time, making it totally useless if there's multiple bosses in close proximity => Somehow disable this when replacing regular enemies with bosses?
 - "Non-issues" which I don't plan on fixing:
-  - Some boss cutscenes and death animations are missing. This is usually on purpose to avoid softlocks
-  - Most cutscenes that remain are extremely janky looking. I see this as a positive
-  - When Mann changes to phase 2 he can be seen holding two weapons at once for a short duration
+  - Some boss cutscenes and death animations are missing. This is usually on purpose to avoid gamebreaking issues
+  - Most cutscenes are extremely janky looking. I consider this a desirable feature :D
+  - When Mann changes to phase 2 he can sometimes be seen holding two weapons at once for a short duration
   - The boss replacing Raven has her sword "equipped" for the entire battle (purely visual)
 
 ## Planned features & changes
@@ -99,7 +101,6 @@ The randomizer is incompatible with mods that make changes to any of the followi
     - A list of all bosses that lets the user determine how many of them are in the shuffle pool. If the user reduces the number below the minimum then tell them that empty locations will be filled with random duplicates
 - Rough ideas:
   - Cross-randomizing of enemies between different ranks (also changing their mesh scale maybe)
-  - "Random enemy sizes" checkbox (could be funny)
   - Automatic save file backups? Maybe? Though it's easier to just warn the user to backup their saves before using the randomizer
   - Boss music setting:
     - A: Music is based on the location (default / vanilla behavior)

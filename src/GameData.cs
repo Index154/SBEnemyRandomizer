@@ -1017,6 +1017,7 @@ public static class GameData
     };
 
     public static readonly Dictionary<string, string[]> spawnEventCategories = new(){
+        // RavenBeast causes lots of lag in WLB_10_E_CharS_037 and one of the projectiles is somewhat likely to end up in the wall
         ["BeforeGun"] = ["SD_10_E_CharS_026", "DED10_E_CharS_003", "DED20_E_CharS_015", "DED30_E_CharS_027"],
         ["NoGun"] = ["SE_08_E_CharS_004"],
         ["SmallArena"] = ["ME_03_E_CharS_018", "ME_05_E_CharS_017", "SE_04_E_CharS_001", "SE_08_E_CharS_004"],
