@@ -15,7 +15,7 @@ public class GlobalSettings
     public static float enemyHPMultiplier = 1.0F;
     public static float enemyAttackMultiplier = 1.0F;
     // Testing settings
-    public static string forceReplacementBossName = "";
+    public static string forceReplacementBossName = "DED_M_GorillaB_01";
     public static string forceReplacementEnemyName = "";
     public static string forceReplacementForEvent = "";
     public static bool blockAIForTesting = false;

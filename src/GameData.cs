@@ -1017,11 +1017,12 @@ public static class GameData
     };
 
     public static readonly Dictionary<string, string[]> spawnEventCategories = new(){
-        // RavenBeast causes lots of lag in WLB_10_E_CharS_037 and one of the projectiles is somewhat likely to end up in the wall
+        // RavenBeast causes lots of lag in WLB_10_E_CharS_037 and one of the projectiles is somewhat likely to end up in the wall. Consider adding to SmallArena
         ["BeforeGun"] = ["SD_10_E_CharS_026", "DED10_E_CharS_003", "DED20_E_CharS_015", "DED30_E_CharS_027"],
         ["NoGun"] = ["SE_08_E_CharS_004"],
-        ["SmallArena"] = ["ME_03_E_CharS_018", "ME_05_E_CharS_017", "SE_04_E_CharS_001", "SE_08_E_CharS_004"],
+        ["SmallArena"] = ["DED20_E_CharS_015", "WLA_40_E_CharS_098", "ME_03_E_CharS_018", "ME_05_E_CharS_017", "SE_04_E_CharS_001", "SE_06_E_CharS_001", "SE_08_E_CharS_004"],
         ["AvoidableFight"] = ["SD_10_E_CharS_026", "WLB_30_E_CharS_002", "WLA_40_E_CharS_073", "DED40_E_CharS_055", "WLA_40_E_CharS_098", "WLB_50_E_CharS_001"],
+        ["GroundClipping"] = ["WLA_30_E_CharS_025", "SE_04_E_CharS_001", "Xion_21_E_CharS_001"],
         ["SpecialSpawn"] = [
             // Eidos 7 ambush spawns can softlock if replaced by tentacles since the enemies have to move into position
             "DED10_E_CharS_134",

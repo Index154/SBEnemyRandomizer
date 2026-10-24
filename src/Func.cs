@@ -308,11 +308,18 @@ static class Func{
             ReplaceSummonEffect(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, characters, spawnEvent, rndCategory, rndAlias, zoneName, effectWhenZeroHPArray);
         }
 
-        // Reset spawn on zone reset - For testing. Enemies with SaveType Save will have their name and last position (?) written into your save file. This prevents rerandomizing enemies mid-playthrough without softlocking the game (in many cases). Most enemies are spawned the moment you enter the zone so it's very unwieldy to test the game without changing the SaveType. (Exlude spawnEventname M_Maelstrom for the call from FindAndModifyEffects())
+        // Reset spawn on zone reset - For testing. Enemies with SaveType Save will have their state written into the save file. This prevents rerandomizing enemies mid-playthrough without softlocking the game in many cases. Most enemies are spawned the moment you enter the zone so it's very unwieldy to test the game without changing the SaveType. (Exlude spawnEventname M_Maelstrom for the call from FindAndModifyEffects())
         if(resetAllEnemySpawnsOnLoad && !spawnEventName.Contains("M_Maelstrom"))
         {
             EnumPropertyData saveType = (EnumPropertyData)spawnEvent["SaveType"];
             if(saveType.Value.ToString() == "ESBZoneObjSaveType_Save") saveType.Value = FName.FromString(spawnEventsAsset, "ESBZoneObjSaveType_ResetZone");
+
+            // Special fix for Behemoth because it normally only spawns once when its quest is triggered
+            EnumPropertyData spawnType = (EnumPropertyData)spawnEvent["SpawnType"];
+            if(spawnEventName == "WLB_30_E_CharS_002")
+            {
+                spawnType.Value = FName.FromString(spawnEventsAsset, "ESBSpawn_EnterZone");
+            }
         }
 
         // Conditional fixes
@@ -346,11 +353,26 @@ static class Func{
             }
         }
 
-        // Remove BlockAI and special effect from Abaddon 2 spawn event
+        // Remove effects from Abaddon 2 spawn event
         if(spawnEventName == "WLB_50_E_CharS_001")
         {
             ArrayPropertyData spawnEffectList = (ArrayPropertyData)spawnEvent["SpawnEffectList"];
             spawnEffectList.Value = spawnEffectList.Value.Where(val => !val.ToString().Contains("BlockAI_Infinite") && !val.ToString().Contains("M_OpenerWasteland_Phase1Dispel")).ToArray();
+
+            // Prevent the eventActorEffect that puts the phase1 effect on the boss. This is triggered through the intro cutscene
+            DataTableExport eventActorEffectsTable = (DataTableExport)eventActorEffectsAsset.Exports[0];
+            List<StructPropertyData> eventActorEffects = eventActorEffectsTable.Table.Data;
+            foreach(StructPropertyData row in eventActorEffects)
+            {
+                if(row.Name.Value.ToString().Contains("WLB_50"))
+                {
+                    NamePropertyData actorEffectAlias = (NamePropertyData)row["ActorEffectAlias"];
+                    if(actorEffectAlias.Value != null && actorEffectAlias.Value.ToString() == "M_OpenerWasteland_Phase1")
+                    {
+                        actorEffectAlias.Value = FName.FromString(eventActorEffectsAsset, "BlockAI_Dispel");
+                    }
+                }
+            }
         }
 
         // RoyalGuard HP reduction because the fight doesn't deserve to be that long
@@ -363,33 +385,6 @@ static class Func{
         if(spawnEventName == "WLA_30_E_CharS_025" || spawnEventName == "WLB_10_E_CharS_037")
         {
             ((IntPropertyData)newEnemy["MaxHP"]).Value = (int)Math.Round(((IntPropertyData)newEnemy["MaxHP"]).Value * 1.5F, 0);
-        }
-
-        // Modify eventActorEffect targets for Abaddon 2
-        if(vanillaEnemyName == "WLB_M_OpenerWasteland_01")
-        {
-            DataTableExport eventActorEffectsTable = (DataTableExport)eventActorEffectsAsset.Exports[0];
-            List<StructPropertyData> eventActorEffects = eventActorEffectsTable.Table.Data;
-            foreach(StructPropertyData row in eventActorEffects)
-            {
-                if(row.Name.Value.ToString().Contains("WLB_50"))
-                {
-                    NamePropertyData tagName = (NamePropertyData)row["TargetTagName"];
-                    if(tagName.Value != null && tagName.Value.ToString() == "WLB_M_OpenerWasteland")
-                    {
-                        StructPropertyData eventActorClone = row;
-                        // Clone them for each spawn so we can have more than one - But there's more work to be done for that...
-                        //StructPropertyData eventActorClone = (StructPropertyData)row.Clone();
-                        //((UInt32PropertyData)eventActorClone["ID"]).Value = incrementalEventActorEffectID;
-                        //eventActorClone.Name = FName.FromString(eventActorEffectsAsset, $"{incrementalEventActorEffectID}_{row.Name.Value}_{spawnEventName}");
-                        NamePropertyData newActorTag = (NamePropertyData)eventActorClone["TargetTagName"];
-                        newActorTag.Value = FName.FromString(eventActorEffectsAsset, ((NamePropertyData)spawnEvent["TagName"]).Value.ToString());
-
-                        //eventActorEffects.Add(eventActorClone);
-                        incrementalEventActorEffectID++;
-                    }
-                }
-            }
         }
 
         // Fix Tachy replacement problems: The death cutscene does not trigger and the quest does not complete
@@ -507,6 +502,7 @@ static class Func{
             // Modifying the tag of the spawnEvent would lead to issues with logic from the original arena (like intro cutscenes)
             DataTableExport eventActorEffectsTable = (DataTableExport)eventActorEffectsAsset.Exports[0];
             List<StructPropertyData> eventActorEffects = eventActorEffectsTable.Table.Data;
+            List<StructPropertyData> newEventActorEffects = [];
             foreach(StructPropertyData row in eventActorEffects)
             {
                 if(row.Name.Value.ToString().Contains("Xion_Boss_Mann"))
@@ -514,19 +510,21 @@ static class Func{
                     NamePropertyData tagName = (NamePropertyData)row["TargetTagName"];
                     if(tagName.Value != null && tagName.Value.ToString() == "M_Mann")
                     {
+                        // Clone them for each spawn so we can have more than one copy of the boss. But this also requires cloning the conditionGroup, leveltargetfilter, conditions and zoneEvents
                         StructPropertyData eventActorClone = row;
-                        // Clone them for each spawn so we can have more than one - But there's more work to be done for that...
                         //StructPropertyData eventActorClone = (StructPropertyData)row.Clone();
                         //((UInt32PropertyData)eventActorClone["ID"]).Value = incrementalEventActorEffectID;
                         //eventActorClone.Name = FName.FromString(eventActorEffectsAsset, $"{incrementalEventActorEffectID}_{row.Name.Value}_{spawnEventName}");
                         NamePropertyData newActorTag = (NamePropertyData)eventActorClone["TargetTagName"];
                         newActorTag.Value = FName.FromString(eventActorEffectsAsset, ((NamePropertyData)spawnEvent["TagName"]).Value.ToString());
+                        //newEventActorEffects.Add(eventActorClone);
 
                         //eventActorEffects.Add(eventActorClone);
                         incrementalEventActorEffectID++;
                     }
                 }
             }
+            foreach(StructPropertyData eff in newEventActorEffects) eventActorEffects.Add(eff);
 
             // Add conditional trigger for phase 2 to the spawn event
             ArrayPropertyData ConditionsTrigger = (ArrayPropertyData)spawnEvent["ConditionsTrigger"];
@@ -594,24 +592,12 @@ static class Func{
                 ConditionTriggerExecType.Value = ConditionTriggerExecType.Value.Append(new NamePropertyData { Value = FName.FromString(spawnEventsAsset, "ESBConditionTriggerExecType_RunTime")}).ToArray();
         }
 
-        // Elder phase 1 AI change (experimental)
-        if(vanillaEnemyName == "NST_M_ElderPhase1_01")
-        {
-            // Modifying the elder's stance and AI allows him to perform attacks but without animations or hitboxes (mostly). Getting it to work would probably require editing the characterStanceTable. Instead try to take another enemy and replace the appearance with his
-            // Need to randomly pick a valid enemy to clone
-            newEnemy = (StructPropertyData)originalEnemy.Clone();
-            ((NamePropertyData)newEnemy["RefAppearance"]).Value = FName.FromString(charactersAsset, "M_ElderPhase1");
-            //ArrayPropertyData defaultEquipmentAliasArray = (ArrayPropertyData)newEnemy["DefaultEquipmentAliasArray"];
-            //defaultEquipmentAliasArray.Value = [ new NamePropertyData {Value = FName.FromString(charactersAsset, "Raven_Blade")} ];
-            //stanceAliasArray.Value = [ new NamePropertyData {Value = FName.FromString(charactersAsset, "M_Raven_Phase2")} ];
-            //((NamePropertyData)newEnemy["DefaultStanceAlias"]).Value = FName.FromString(charactersAsset, "M_Raven_Default");
-            //((StrPropertyData)newEnemy["BehaviorTreeRes"]).Value = FString.FromString("/Game/GameDesign/Combat/BehaviorTree/Monster/M_Raven_AI", Encoding.UTF8);
-        }
-
-        // Set meshscale to 1.0 for SkullJuggernaut replacement
-        if(spawnEventName == "ME_05_E_CharS_017") ((FloatPropertyData)newEnemy["MeshScale"]).Value = 1.0F;
         // Set meshscale to 1.3 for SkullJuggernaut
         if(vanillaEnemyName == "UME_M_SkullJuggernaut_01") ((FloatPropertyData)newEnemy["MeshScale"]).Value = 1.3F;
+        // Set meshscale to 1.2 for Behemoth
+        if(vanillaEnemyName == "WLB_M_Behemoth_01") ((FloatPropertyData)newEnemy["MeshScale"]).Value = 1.2F;
+        // Set meshscale to 1.1 for RoyalGuardFemale
+        if(vanillaEnemyName.Contains("M_RoyalGuardFemale_01")) ((FloatPropertyData)newEnemy["MeshScale"]).Value = 1.1F;
 
         // Modify Belial 1 replacement
         if(spawnEventName == "SE_04_E_CharS_001")
@@ -634,6 +620,19 @@ static class Func{
             // Triple HP and shield since Belial 2 normally heals itself twice
             ((IntPropertyData)newEnemy["MaxHP"]).Value = (int)Math.Round(((IntPropertyData)newEnemy["MaxHP"]).Value * 3.0F, 0);
             ((IntPropertyData)newEnemy["MaxShield"]).Value = (int)Math.Round(((IntPropertyData)newEnemy["MaxShield"]).Value * 3.0F, 0);
+        }
+
+        // Reduce Belial 2 HP because he heals twice
+        if(vanillaEnemyName == "SE_M_WeaponMasterA_01")
+        {
+            ((IntPropertyData)newEnemy["MaxHP"]).Value = (int)Math.Round(((IntPropertyData)newEnemy["MaxHP"]).Value * 0.45F, 0);
+        }
+
+        // Resize Gigas and Tachy in specific arenas to prevent them from getting stuck
+        // Doesn't work for RavenBeast arena... MeshScale is reset by the cutscene?
+        if(vanillaEnemyName.Contains("M_GorillaB") && spawnEventCategories["GroundClipping"].Any(spawnEventName.Contains))
+        {
+            ((FloatPropertyData)newEnemy["MeshScale"]).Value = 0.3F;
         }
 
         // Fix Raven replacement problems: Phase 2 cutscene breaks combat animations
