@@ -71,7 +71,7 @@ The randomizer is incompatible with mods that make changes to any of the followi
     - Abaddon 1, phase 2 (?)
     - Brute 2, phase 2 (?)
     - Stalker phase 2 (?)
-    - Juggernaut phase 2 (??)
+    - Juggernaut phase 2 (??)d
     - ! Tachy phase 2
     - Stalker 2, phase 2 (?)
     - ! Both RoyalGuard bosses
