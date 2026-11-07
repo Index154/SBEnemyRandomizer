@@ -8,7 +8,7 @@
         x:DataType="vm:MainViewModel"
         Icon="/Avalonia/Assets/avalonia-logo.ico"
         Title="SBEnemyRandomizer"
-        Width="640"
+        Width="750"
         Height="520">
 
     <Design.DataContext>
@@ -50,6 +50,7 @@
                 <CheckBox IsChecked="{Binding BossShuffle}" ToolTip.Tip="Shuffles available bosses without creating additional duplicates" Content="Boss shuffle mode"/>
                 <CheckBox IsChecked="{Binding AddMann}" Content="Add Mann to boss pool"/>
                 <CheckBox IsChecked="{Binding AddScarlet}" Content="Add Scarlet to boss pool"/>
+                <CheckBox IsChecked="{Binding BossDupesInOptionalEncounters}" ToolTip.Tip="" Content="Place duplicate bosses in optional locations (includes tutorial boss encounter)"/>
                 <CheckBox IsChecked="{Binding PreventGunBossesBeforeXion}" ToolTip.Tip="Only disable this for NG+ playthroughs" Content="Prevent bosses requiring the gun from appearing before the gun unlock"/>
                 <CheckBox IsChecked="{Binding ResetSpawnsOnZoneReset}" ToolTip.Tip="Use this setting if you're softlocked due to missing enemies" Content="Reset spawns on zone reset"/>
                 <CheckBox IsChecked="{Binding ShuffleNPCAppearances}" ToolTip.Tip="Re-randomize with the same seed if an NPC becomes uninteractable" Content="Randomize friendly NPC appearances (experimental)"/>

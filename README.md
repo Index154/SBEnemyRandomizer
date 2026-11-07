@@ -59,16 +59,14 @@ The randomizer is incompatible with mods that make changes to any of the followi
 
 ## Known issues
 - Major issues:
-  - Some bosses are stuck in the floor in specific spawn locations:
-    - Gigas and Tachy in front of Altess Levoire entrance
-    - Gigas and Tachy in Presence Chamber
-    - Gigas (and Tachy?) in Belial 1 arena
-      - => Applying an effect to the enemy that triggers a movement without collision checks doesn't seem to work. Altering the intro cutscene also doesn't seem like a feasible way to fix this. But it does seem like maybe the intro cutscene is responsible in some way?
   - Exosuit has its AI disabled when replacing ElderPhase2, probably also when replacing phase 1
   - The ending cutscene is not triggering
     - Find a way to easily test cutscenes and figure out which is the correct one
     - Try triggering the ending cutscene at a different point in time "manually", for example by replacing the "adam's death" cutscene (if that is even a thing)
   - The boss replacing Providence has no combat animations. Fixing this would likely require removing the cutscene that plays before the fight but I suspect that to cause other problems. For the time being this boss is currently not being replaced so I suggest not taking Adam's hand
+- Balancing issues:
+  - Karakuri minions are not scaled at all
+- Minor / rare issues:
   - Missing music triggers:
     - Abaddon 1, phase 2 (?)
     - Brute 2, phase 2 (?)
@@ -81,14 +79,11 @@ The randomizer is incompatible with mods that make changes to any of the followi
     - ! Democrawler phase 2
     - ! Raven phase 2
     - ! ElderPhase2 phase 2
-- Balancing issues:
-  - Karakuri minions are not scaled at all
-- Minor / rare issues:
   - The enemy on the platform in front of the second power generator for the Hypertube clips into the ground when replaced by a tentacle, preventing you from hitting it with the sword
-  - The Juggernaut replacement always has its meshScale set to 1.3, probably by the intro cutscene - For some bosses the camera can be troublesome when they're this much larger than normal
+  - The Juggernaut replacement always has its meshScale set to 1.3, probably through the intro cutscene - For some bosses the camera can be troublesome when they're this much larger than normal
   - Mann, Scarlet and Elder Phase 2 will most likely have broken AI if they are placed in the game more than once because there are a lot of different triggers, conditions and effects tied to their spawn event that are required in order for the phase changes to work. All of these have to be cloned and modified for every copy of the boss
   - If the boss replacing Abaddon 2 is also present elsewhere in the Great Desert (or across the entire game?) then its AI remains disabled after the intro cutscene => Try removing the cutscene and modify bSpawnToActive + bHidden. But this might break the sidequest
-  - Unidentified Naytiba sometimes freezes in place after certain aerial attacks. You can shoot her to get her to continue fighting so it's not a big deal
+  - Unidentified Naytiba sometimes freezes in place after certain aerial attacks. You can shoot her to get her to continue fighting
   - Replacing Maelstrom with a different boss can result in unwinnable situations due to ammo shortage + no way to parry or blink. Placing Maelstrom in an arena where you can walk behind it can also make the fight feel rather unbalanced and clunky. For the time being these bosses are excluded from randomization and replacing others
   - Certain attacks of ElderPhase2 crash the game if there are multiple copies of him in the loaded area (I think?)
   - Bosses always put a large HP bar at the top of the screen but you can only ever see one of them at a time, making it totally useless if there's multiple bosses in close proximity => Somehow disable this when replacing regular enemies with bosses?

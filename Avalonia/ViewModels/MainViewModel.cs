@@ -18,6 +18,8 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     public bool _addScarlet = includeScarlet;
     [ObservableProperty]
+    public bool _bossDupesInOptionalEncounters = tryPlaceDuplicatesForAvoidableFights;
+    [ObservableProperty]
     public bool _preventGunBossesBeforeXion = preventGunBossesBeforeXion;
     [ObservableProperty]
     public bool _resetSpawnsOnZoneReset = resetAllEnemySpawnsOnLoad;
@@ -53,6 +55,9 @@ public partial class MainViewModel : ViewModelBase
                 break;
             case nameof(AddScarlet):
                 includeScarlet = AddScarlet;
+                break;
+            case nameof(BossDupesInOptionalEncounters):
+                tryPlaceDuplicatesForAvoidableFights = BossDupesInOptionalEncounters;
                 break;
             case nameof(PreventGunBossesBeforeXion):
                 preventGunBossesBeforeXion = PreventGunBossesBeforeXion;

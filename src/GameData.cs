@@ -992,7 +992,7 @@ public static class GameData
             ["ElderPhase2"] = ["NST_M_ElderPhase2_01"],
             ["ExoSuit"] = ["NST_M_ExoSuit_01"],
             ["Gorilla"] = ["DED_M_GorillaB_01", "WLA_M_GorillaBBrokenHead_01"],
-            ["GrubShooterElite"] = ["DED_M_GrubShooterElite_01", "DEDA_M_GrubShooterElite_01", "WLA_M_GrubShooterEliteB_01"],
+            ["GrubShooterElite"] = ["DED_M_GrubShooterElite_01", "WLA_M_GrubShooterEliteB_01", "DEDA_M_GrubShooterElite_01"],
             ["HedgeBoarBrute"] = ["SD_M_HedgeBoarBrute_01", "WLA_M_HedgeBoarBrute_01"],
             //["Maelstrom"] = ["ATL_M_Maelstrom_01", "AYL_M_Maelstrom_01"],
             ["Mann"] = ["CHAL_XION_M_Mann_01"],
@@ -1005,14 +1005,15 @@ public static class GameData
             ["Scarlet"] = ["CHAL_M_Scarlet_01"],
             ["SkullJuggernaut"] = ["UME_M_SkullJuggernaut_01"],
             ["Tachy"] = ["UME_M_Tachy_01"],
-            ["WeaponMaster"] = ["SE_M_WeaponMasterA_01", "SE_M_WeaponMasterB_01"]
+            ["WeaponMaster"] = ["SE_M_WeaponMasterB_01", "SE_M_WeaponMasterA_01"]
         }
     };
 
     public static readonly Dictionary<string, string[]> EnemyRequirements = new(){
         ["GunRequired"] = ["Maelstrom", "RavenBeast", "ElderPhase2", "ExoSuit"],
         ["LargeArena"] = ["RavenBeast", "ElderPhase2"],
-        ["Duplicate"] = ["WLA_M_GorillaBBrokenHead_01", "DEDA_M_GrubShooterElite_01", "WLA_M_GrubShooterEliteB_01", "SD_M_HedgeBoarBrute_01", "AYL_M_Maelstrom_01", "DED_M_Opener_01", "WLA_M_RoyalGuardFemale_01", "SE_M_WeaponMasterB_01"],
+        ["PreferForOptionalSpawns"] = ["DEDA_M_GrubShooterElite_01", "WLA_M_GrubShooterEliteB_01", "SD_M_HedgeBoarBrute_01", "AYL_M_Maelstrom_01", "DED_M_Opener_01", "WLA_M_RoyalGuardFemale_01", "SE_M_WeaponMasterB_01"],
+        ["DontPlaceInClippingSpawns"] = ["Gorilla", "Tachy"],
         ["DontPlaceInSpecialSpawns"] = ["Tentacle", "Cocoon"]
     };
 
@@ -1021,7 +1022,7 @@ public static class GameData
         ["BeforeGun"] = ["SD_10_E_CharS_026", "DED10_E_CharS_003", "DED20_E_CharS_015", "DED30_E_CharS_027"],
         ["NoGun"] = ["SE_08_E_CharS_004"],
         ["SmallArena"] = ["DED20_E_CharS_015", "WLA_40_E_CharS_098", "ME_03_E_CharS_018", "ME_05_E_CharS_017", "SE_04_E_CharS_001", "SE_06_E_CharS_001", "SE_08_E_CharS_004"],
-        ["AvoidableFight"] = ["SD_10_E_CharS_026", "WLB_30_E_CharS_002", "WLA_40_E_CharS_073", "DED40_E_CharS_055", "WLA_40_E_CharS_098", "WLB_50_E_CharS_001"],
+        ["AvoidableFight"] = ["SD_10_E_CharS_026", "WLA_40_E_CharS_098", "WLA_40_E_CharS_073", "WLA_40_E_CharS_076", "WLB_30_E_CharS_002", "WLB_50_E_CharS_001", "DED40_E_CharS_055"],
         ["GroundClipping"] = ["WLA_30_E_CharS_025", "SE_04_E_CharS_001", "Xion_21_E_CharS_001"],
         ["SpecialSpawn"] = [
             // Eidos 7 ambush spawns can softlock if replaced by tentacles since the enemies have to move into position
@@ -1177,6 +1178,39 @@ public static class GameData
         {"M_Maelstrom_SummonProjectile_Summon", 0},
         {"M_Maelstrom_SummonProjectile_Summon_AYL", 0},
         {"M_Bot_SummonBotUpperBody", 0}        // Currently not working because the effect that summons the enemy is triggered indirectly through this one
+    };
+
+    public static Dictionary<string, int> BossSpawnIndices = new(){
+        // Optional boss spawns
+        {"SD_10_E_CharS_026", 0},   // Brute
+        {"WLA_40_E_CharS_098", 0},  // Corrupter 2
+        {"WLB_30_E_CharS_002", 0}, // Behemoth
+        {"WLB_50_E_CharS_001", 0},  // Abaddon 2
+        {"DED40_E_CharS_055", 0},   // Corrupter 3
+        {"WLA_40_E_CharS_076", 0},  // Brute 2
+        {"WLA_40_E_CharS_073", 0},  // Gigas 2
+        // Spawns with more than one restriction
+        {"SE_04_E_CharS_001", 0},   // Belial 1
+        {"SE_08_E_CharS_004", 0},   // Karakuri
+        {"DED20_E_CharS_015", 0},   // Corrupter
+        // Spawns with one restriction
+        {"WLA_30_E_CharS_025", 0},  // RoyalGuard
+        {"ME_05_E_CharS_017", 0},   // Juggernaut
+        {"SE_06_E_CharS_001", 0},   // Belial 2
+        {"Xion_21_E_CharS_001", 0}, // RavenBeast
+        // Spawns with one conditional restriction
+        {"ME_03_E_CharS_018", 0},   // Stalker
+        {"DED10_E_CharS_003", 0},   // Abaddon
+        {"DED30_E_CharS_027", 0},   // Gigas
+        // Spawns without restrictions
+        {"ME_06_E_CharS_001", 0},  // Tachy
+        {"WLB_20_E_CharS_022", 0},  // Stalker 2
+        {"WLB_10_E_CharS_037", 0},  // RoyalGuard 2
+        {"SE_10_E_CharS_001", 0},   // Democrawler
+        {"WLA_10_E_CharS", 0},      // Raven
+        {"Nest_10_E_CharS_003", 0}, // Elder phase 1
+        {"Nest_10_E_CharS_007", 0}, // Elder phase 1
+        {"Nest_10_E_CharS_006", 0},  // Elder phase 2
     };
 
     // Lists to modify at runtime for persistent data

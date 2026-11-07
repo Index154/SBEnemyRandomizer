@@ -28,6 +28,8 @@ static class Func{
         foreach(string ass in assetNames) await RetocToLegacy($"{ass}.uasset");
 
         // Random seed
+        bool noSeed = false;
+        if(seed == 0) noSeed = true;
         if(seed == 0) seed = new Random().Next(1, int.MaxValue);
         int categorySeed = new Random(seed).Next(int.MinValue, int.MaxValue);
         Random rndCategory = new(categorySeed);
@@ -78,8 +80,8 @@ static class Func{
         // Make modifications
         if(shuffleNPCAppearances) ShuffleNPCAppearances(assets[0]);
         FindAndModifyEffects(assets[0], assets[1], assets[3], assets[4], assets[5], assets[6], rndCategory, rndAlias);
-        RandomizeSpawns(assets[0], assets[1], assets[3], assets[4], assets[5], assets[6], rndCategory, rndAlias);
-        RandomizeSpawns(assets[0], assets[2], assets[3], assets[4], assets[5], assets[6], rndCategory, rndAlias);
+        RandomizeSpawns(assets[0], assets[1], assets[3], assets[4], assets[5], assets[6], rndCategory, rndAlias, true);
+        RandomizeSpawns(assets[0], assets[2], assets[3], assets[4], assets[5], assets[6], rndCategory, rndAlias, false);
         ModifyCharacterMoves(assets[7]);
         ModifySkillActiveSteps(assets[8]);
         ModifyZoneEvents(assets[9]);
@@ -111,13 +113,14 @@ static class Func{
         if (token.IsCancellationRequested) return;
 
         // Repack modified uassets, convert to game-ready zen format using retoc and move the resulting mod files to the mods folder
+        if(noSeed) seed = 0;
         await RetocToZen();
 
         // Save file reset for testing
         if(replaceSaveDataOnRun) File.Copy(Environment.ExpandEnvironmentVariables("%userprofile%/Downloads/StellarBladeSave03.sav"), Environment.ExpandEnvironmentVariables("%userprofile%/AppData/Local/SB/Saved/SaveGames/76561198169967897/StellarBladeSave03.sav"), overwrite: true);
     }
 
-    static void RandomizeSpawns(UAsset charactersAsset, UAsset spawnEventsAsset, UAsset levelTargetFiltersAsset, UAsset eventActorEffectsAsset, UAsset conditionsAsset, UAsset effectsAsset, Random rndCategory, Random rndAlias)
+    static void RandomizeSpawns(UAsset charactersAsset, UAsset spawnEventsAsset, UAsset levelTargetFiltersAsset, UAsset eventActorEffectsAsset, UAsset conditionsAsset, UAsset effectsAsset, Random rndCategory, Random rndAlias, bool includeBosses)
     {
         Log("Randomizing enemies...");
         DataTableExport spawnEventsTable = (DataTableExport)spawnEventsAsset.Exports[0];
@@ -127,72 +130,113 @@ static class Func{
 
         Dictionary<string, string> consistentReplacements = [];
 
-        // Go through spawn events and modify all that are relevant
+        // Replace regular enemies and collect boss spawn indices
+        int x = -1;
         foreach(StructPropertyData row in spawnEvents)
         {
-            ArrayPropertyData characterAliasArray = (ArrayPropertyData)row["CharacterAlias"];
-            if(characterAliasArray.Value == null || characterAliasArray.Value.Length < 1) continue;
-            NamePropertyData characterAlias = (NamePropertyData)characterAliasArray.Value[0];
-
-            // Ignore spawn events in irrelevant zones
-            NamePropertyData zone = (NamePropertyData)row["Zone"];
-            if(zone.Value == null || RelevantZones.IndexOf(zone.Value.ToString()) == -1) continue;
-            // Testing for specific zone
-            if(customZoneNameRestriction != "" && !zone.Value.ToString().Contains(customZoneNameRestriction)) continue;
-
-            // Skip final Raven hologram which spawns the same enemy as the actual boss fight for some reason. Replacing this spawn leads to the game crashing during the cutscene
-            if(row.Name.Value.ToString() == "WLA_10_E_CharS")
-            {
-                // For some reason the name of the row does not have the number in it so we have to check the SpawnPointName property
-                if(((NamePropertyData)row["SpawnPointName"]).Value.ToString() == "WLA_10_E_CharS_252") continue;
-            }
-
-            // Determine enemy rank
-            EnemyRank rank;
-            if(EnemiesToReplace[EnemyRank.Animal].Any(characterAlias.Value.ToString().Contains)) rank = EnemyRank.Animal;
-            else if(EnemiesToReplace[EnemyRank.Normal].Any(characterAlias.Value.ToString().Contains)) rank = EnemyRank.Normal;
-            else if(EnemiesToReplace[EnemyRank.Boss].Any(characterAlias.Value.ToString().Contains)) rank = EnemyRank.Boss;
-            else continue;
-
-            // Determine replacement enemy
-            string replacementAlias = "";
-            if(consistentReplacements.ContainsKey(characterAlias.Value.ToString()))
-            {
-                replacementAlias = consistentReplacements[characterAlias.Value.ToString()];
-            }
-            else if(shuffleBosses && rank == EnemyRank.Boss)
-            {
-                replacementAlias = PickShuffleBoss(characterAlias.Value.ToString(), row.Name.Value.ToString(), rndCategory, rndAlias);
-            }
-            else{
-                // Select random enemy from different category
-                replacementAlias = PickRandomEnemy(characterAlias.Value.ToString(), ((NamePropertyData)row["SpawnPointName"]).Value.ToString(), rank, rndCategory, rndAlias);
-            }
-
-            // Force specific enemy for testing
-            if(forceReplacementEnemyName != "" && (forceReplacementForEvent == "" || forceReplacementForEvent == row.Name.Value.ToString())) replacementAlias = forceReplacementEnemyName;
-            if(forceReplacementBossName != "" && rank == EnemyRank.Boss && (forceReplacementForEvent == "" || forceReplacementForEvent == row.Name.Value.ToString())) replacementAlias = forceReplacementBossName;
-            // Only replace enemies of specific rank for testing (edit all the other events anyway so the enemies can still spawn on a save file where they have been randomized, through resetAllEnemySpawnsOnLoad)
-            if(customRankRestriction != null && rank != customRankRestriction) replacementAlias = characterAlias.Value.ToString();
-
-            // These bosses have two spawn events each so prevent them from being randomized separately
-            if(!consistentReplacements.ContainsKey(characterAlias.Value.ToString()) && characterAlias.Value.ToString() == "NST_M_ElderPhase1_01")
-            {
-                consistentReplacements.Add(characterAlias.Value.ToString(), replacementAlias);
-            }
-
-            // Clone and modify the replacement charactertable entry. This is necessary so we can have different scaling for each copy of an enemy. We could add some more checks to reduce some of the duplicate entries this produces but I don't think that's worth the effort
-            string newEnemyName = ModifyEnemy(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, characterAlias.Value.ToString(), replacementAlias, characters, row, rndCategory, rndAlias, zone.Value.ToString());
-
-            // Modify the spawn event to spawn the new custom character instead
-            if(rank == EnemyRank.Boss) Log($"{incrementalID - 1} | {row.Name.Value}: {characterAlias.Value} => {replacementAlias}");
-            if(!keepVanilla) characterAlias.Value = FName.FromString(spawnEventsAsset, newEnemyName);
+            x++;
+            RandomizeSpawn(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, rndCategory, rndAlias, false, row, characters, consistentReplacements, x);
         }
+        // Replace bosses in a predetermined order so spawns with restrictions can be processed first
+        if(includeBosses)
+        {
+            foreach(KeyValuePair<string, int> kvp in BossSpawnIndices)
+            {
+                if(kvp.Value == 0)
+                {
+                    Log($"ERROR: Boss spawn {kvp.Key} has no documented index");
+                    return;
+                }
+                RandomizeSpawn(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, rndCategory, rndAlias, true, spawnEvents[kvp.Value], characters, consistentReplacements, x);
+            }
+        }
+    }
+
+    static void RandomizeSpawn(UAsset charactersAsset, UAsset spawnEventsAsset, UAsset levelTargetFiltersAsset, UAsset eventActorEffectsAsset, UAsset conditionsAsset, UAsset effectsAsset, Random rndCategory, Random rndAlias, bool placeBosses, StructPropertyData spawn, List<StructPropertyData> characters, Dictionary<string, string> consistentReplacements, int x)
+    {
+        ArrayPropertyData characterAliasArray = (ArrayPropertyData)spawn["CharacterAlias"];
+        if(characterAliasArray.Value == null || characterAliasArray.Value.Length < 1) return;
+        NamePropertyData characterAlias = (NamePropertyData)characterAliasArray.Value[0];
+        string enemyName = characterAlias.Value.ToString();
+        string spawnEventName = spawn.Name.Value.ToString();
+
+        // Ignore spawn events in irrelevant zones
+        NamePropertyData zone = (NamePropertyData)spawn["Zone"];
+        if(zone.Value == null || RelevantZones.IndexOf(zone.Value.ToString()) == -1) return;
+        // Testing for specific zone
+        if(customZoneNameRestriction != "" && !zone.Value.ToString().Contains(customZoneNameRestriction)) return;
+
+        // Skip final Raven hologram which spawns the same enemy as the actual boss fight for some reason. Replacing this spawn leads to the game crashing during the cutscene
+        if(spawnEventName == "WLA_10_E_CharS")
+        {
+            // The name of the row does not have the number in it so we have to check the SpawnPointName property
+            if(((NamePropertyData)spawn["SpawnPointName"]).Value.ToString() == "WLA_10_E_CharS_252") return;
+        }
+
+        // Determine enemy rank
+        EnemyRank rank;
+        if(EnemiesToReplace[EnemyRank.Animal].Any(enemyName.Contains)) rank = EnemyRank.Animal;
+        else if(EnemiesToReplace[EnemyRank.Normal].Any(enemyName.Contains)) rank = EnemyRank.Normal;
+        else if(EnemiesToReplace[EnemyRank.Boss].Any(enemyName.Contains)) rank = EnemyRank.Boss;
+        else return;
+
+        // For the first execution of the function: Save boss spawn event indices for ordered replacement later
+        if(!placeBosses && rank == EnemyRank.Boss)
+        {
+            //Log($"Found boss: {spawnEventName} => {x}");
+            BossSpawnIndices[spawnEventName] = x;
+            return;
+        }
+        // For the second execution only replace bosses
+        if(placeBosses && rank != EnemyRank.Boss) return;
+
+        // Determine replacement enemy
+        string replacementAlias = "";
+        if(consistentReplacements.ContainsKey(enemyName))
+        {
+            replacementAlias = consistentReplacements[enemyName];
+        }
+        else if(shuffleBosses && rank == EnemyRank.Boss)
+        {
+            replacementAlias = PickShuffleBoss(enemyName, spawnEventName, rndCategory, rndAlias);
+        }
+        else{
+            // Select random enemy from different category
+            replacementAlias = PickRandomEnemy(enemyName, ((NamePropertyData)spawn["SpawnPointName"]).Value.ToString(), rank, rndCategory, rndAlias);
+        }
+
+        // Force specific enemy for testing
+        if(forceReplacementEnemyName != "" && (forceReplacementForEvent == "" || forceReplacementForEvent == spawnEventName)) replacementAlias = forceReplacementEnemyName;
+        if(forceReplacementBossName != "" && rank == EnemyRank.Boss && (forceReplacementForEvent == "" || forceReplacementForEvent == spawnEventName)) replacementAlias = forceReplacementBossName;
+        // Only replace enemies of specific rank for testing (edit all the other events anyway so the enemies can still spawn on a save file where they have been randomized, through resetAllEnemySpawnsOnLoad)
+        if(customRankRestriction != null && rank != customRankRestriction) replacementAlias = enemyName;
+
+        // These bosses have two spawn events each so prevent them from being randomized separately
+        if(!consistentReplacements.ContainsKey(enemyName) && enemyName == "NST_M_ElderPhase1_01")
+        {
+            consistentReplacements.Add(enemyName, replacementAlias);
+        }
+
+        // Clone and modify the replacement charactertable entry. This is necessary so we can have different scaling for each copy of an enemy. We could add some more checks to reduce some of the duplicate entries this produces but I don't think that's worth the effort
+        string newEnemyName = ModifyEnemy(charactersAsset, spawnEventsAsset, levelTargetFiltersAsset, eventActorEffectsAsset, conditionsAsset, effectsAsset, enemyName, replacementAlias, characters, spawn, rndCategory, rndAlias, zone.Value.ToString());
+
+        // Modify the spawn event to spawn the new custom character instead
+        if(rank == EnemyRank.Boss) Log($"{incrementalID - 1} | {spawnEventName}: {enemyName} => {replacementAlias}");
+        if(!keepVanilla) characterAlias.Value = FName.FromString(spawnEventsAsset, newEnemyName);
     }
 
     static string PickShuffleBoss(string enemyName, string spawnEventName, Random rndCategory, Random rndAlias)
     {
         Dictionary<string, string[]> enemyShuffleDict = BossesToPlaceOnceTemp;
+
+        // Count available categories with multiple entries (duplicate bosses)
+        int duplicateCount = 0;
+        foreach(KeyValuePair<string, string[]> kvp in enemyShuffleDict)
+        {
+            if(enemyName.Contains(kvp.Key)) continue;
+            if(kvp.Value.Length < 2) continue;
+            duplicateCount++;
+        }
         
         // Make temporary list of categories to pick from
         List<string> tempBossCategories = [];
@@ -205,11 +249,15 @@ static class Func{
             if(preventGunBossesBeforeXion && EnemyRequirements["GunRequired"].Any(kvp.Key.Contains) && spawnEventCategories["BeforeGun"].Any(spawnEventName.Contains)) continue;
             // Filter out bosses requiring the gun for the Marionette encounter which disables your gun
             if(EnemyRequirements["GunRequired"].Any(kvp.Key.Contains) && spawnEventCategories["NoGun"].Any(spawnEventName.Contains)) continue;
+            // Filter out bosses that spawn clipping into the ground in certain spawns
+            if(EnemyRequirements["DontPlaceInClippingSpawns"].Any(kvp.Key.Contains) && spawnEventCategories["GroundClipping"].Any(spawnEventName.Contains)) continue;
 
             // Filter out bosses that spawn destroyable projectiles for spawnEvents where they are likely to spawn out of bounds
             if(EnemyRequirements["LargeArena"].Any(kvp.Key.Contains) && spawnEventCategories["SmallArena"].Any(spawnEventName.Contains)) continue;
 
-            //Log($"{spawnEventName} + {enemyName} => {kvp.Key} / {EnemyRequirements["GunRequired"].Any(kvp.Key.Contains)}");
+            // Filter out boss categories not containing duplicates for avoidable boss fights if enabled (until there's no more duplicates left to place)
+            if(duplicateCount > 0 && tryPlaceDuplicatesForAvoidableFights && kvp.Value.Length < 2 && spawnEventCategories["AvoidableFight"].Any(spawnEventName.Contains)) continue;
+
             tempBossCategories.Add(kvp.Key);
         }
         // Fail-safe in case there were no valid categories remaining after filtering them
@@ -217,7 +265,16 @@ static class Func{
 
         string replacementCategoryName = tempBossCategories.ElementAt(rndCategory.Next(tempBossCategories.Count));
         string[] replacementCategory = enemyShuffleDict[replacementCategoryName];
-        string replacementAlias = replacementCategory[rndAlias.Next(replacementCategory.Length)];
+        string replacementAlias = "";
+        // For duplicate bosses in optional boss encounters always place the less interesting variant of the boss
+        if(tryPlaceDuplicatesForAvoidableFights && replacementCategory.Length > 1 && spawnEventCategories["AvoidableFight"].Any(spawnEventName.Contains))
+        {
+            replacementAlias = replacementCategory[0];
+        }
+        else
+        {
+            replacementAlias = replacementCategory[rndAlias.Next(replacementCategory.Length)];
+        }
 
         // Remove selected enemy from the list and remove category if it's empty
         List<string> tempList = enemyShuffleDict[replacementCategoryName].ToList();
@@ -240,6 +297,8 @@ static class Func{
             if(preventGunBossesBeforeXion && EnemyRequirements["GunRequired"].Any(category.Contains) && spawnEventCategories["BeforeGun"].Any(spawnEventName.Contains)) continue;
             // Filter out bosses requiring the gun for the Marionette encounter which disables your gun
             if(EnemyRequirements["GunRequired"].Any(category.Contains) && spawnEventCategories["NoGun"].Any(spawnEventName.Contains)) continue;
+            // Filter out bosses that spawn clipping into the ground in certain spawns
+            if(EnemyRequirements["DontPlaceInClippingSpawns"].Any(category.Contains) && spawnEventCategories["GroundClipping"].Any(spawnEventName.Contains)) continue;
 
             // Filter out bosses that spawn destroyable projectiles for spawnEvents where they are likely to spawn out of bounds
             if(EnemyRequirements["LargeArena"].Any(category.Contains) && spawnEventCategories["SmallArena"].Any(spawnEventName.Contains)) continue;
