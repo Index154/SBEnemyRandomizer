@@ -34,6 +34,7 @@ Thank you to the developers of third-party software **[Retoc](https://github.com
   2. Wait for randomization to finish. Once finished, a mod "SBEnemyRandomizer_P" will be created and placed in your game directory under `.\SB\Content\Paks\~mods`
 6. I **strongly** recommend making backups of your save files before using this mod. **Loading vanilla save files with the randomizer installed WILL permanently softlock them!** You can find your save files by opening this path in your file explorer: `%LOCALAPPDATA%\SB\Saved\SaveGames`
 7. Launch the game. For each randomization, create a new save file or NG+ cycle! Avoid re-randomizing the enemies mid-playthrough unless you're stuck!
+8. If you reach the final boss, do NOT take Adam's hand. Providence is currently not randomized yet!
 
 To remove the mod, simply delete the three files with "SBEnemyRandomizer_P" in their name from `StellarBlade\SB\Content\Paks\~mods`. Do note that due to the way enemy spawns work this might softlock all save files you've played on with the enemies randomized.
 
