@@ -196,7 +196,8 @@ static class Func{
         {
             replacementAlias = consistentReplacements[enemyName];
         }
-        else if(shuffleBosses && rank == EnemyRank.Boss)
+        // Shufflebosses is currently forced to always be enabled regardless of UI choice
+        else if((shuffleBosses || true) && rank == EnemyRank.Boss)
         {
             replacementAlias = PickShuffleBoss(enemyName, spawnEventName, rndCategory, rndAlias);
         }

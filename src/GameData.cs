@@ -1181,7 +1181,7 @@ public static class GameData
     };
 
     public static Dictionary<string, int> BossSpawnIndices = new(){
-        // Optional boss spawns
+        // Optional bosses
         {"SD_10_E_CharS_026", 0},   // Brute
         {"WLA_40_E_CharS_098", 0},  // Corrupter 2
         {"WLB_30_E_CharS_002", 0}, // Behemoth
