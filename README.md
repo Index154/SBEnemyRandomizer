@@ -24,7 +24,7 @@ Thank you to the developers of third-party software **[Retoc](https://github.com
   - An additional HP multiplier for Hives because I think they're too tanky
 
 ## Usage instructions
-**The mod is currently in an early testing stage so no release has been published yet. This **
+**The mod is currently in an early testing stage so no release has been published yet**
 1. Download the current release from the [releases page](https://github.com/Index154/SBEnemyRandomizer/releases)
 2. Extract the downloaded zip to a folder of your choice
 3. Run SBEnemyRandomizer.exe
@@ -71,7 +71,7 @@ The randomizer is incompatible with mods that make changes to any of the followi
     - Abaddon 1, phase 2 (?)
     - Brute 2, phase 2 (?)
     - Stalker phase 2 (?)
-    - Juggernaut phase 2 (??)d
+    - Juggernaut phase 2 (??)
     - ! Tachy phase 2
     - Stalker 2, phase 2 (?)
     - ! Both RoyalGuard bosses
