@@ -1,5 +1,6 @@
 namespace SBEnemyRandomizer.src;
 
+using System.IO;
 using static SBEnemyRandomizer.src.GameData;
 
 public class GlobalSettings
@@ -11,13 +12,13 @@ public class GlobalSettings
     #endif
     public static int seed = 0;
     public static bool shuffleNPCAppearances = false;
-    public static bool resetAllEnemySpawnsOnLoad = false;
+    public static bool resetAllEnemySpawnsOnLoad = true;
     public static float enemyHPMultiplier = 1.0F;
     public static float enemyAttackMultiplier = 1.0F;
     // Testing settings
-    public static string forceReplacementBossName = "";
+    public static string forceReplacementBossName = "NST_M_ElderPhase2_01";
     public static string forceReplacementEnemyName = "";
-    public static string forceReplacementForEvent = "";
+    public static string forceReplacementForEvent = "Nest_10_E_CharS_003";
     public static bool blockAIForTesting = false;
     public static string customZoneNameRestriction = "";
     public static EnemyRank? customRankRestriction = null;
@@ -60,7 +61,7 @@ public class GlobalSettings
     public static readonly string aiSubdirectory = "SB/Content/GameDesign/Combat/BehaviorTree/Monster";
     public static readonly string tempPath = Path.Combine(basePath, "temp");
     public static readonly string retocPath = Path.Combine(basePath, "tools/retoc/retoc.exe");
-    public static readonly string mapPath = Path.Combine(basePath, "tools/StellarBlade_1.4.1.usmap");
+    public static readonly string mapPath = Path.Combine(basePath, "tools/StellarBlade_1.5.0.usmap");
     public static readonly string logPath = Path.Combine(basePath, "logs");
     // Temp folders. The subdirectory of the modified assets must match how they were extracted
     public static readonly string unpackTablePath = $"{tempPath}/unpacked/{tableSubdirectory}";

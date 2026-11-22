@@ -104,7 +104,7 @@ The randomizer is incompatible with mods that make changes to any of the followi
   - The boss replacing Raven has her sword "equipped" for the entire battle
   - Small enemies sometimes spin in place at exponentially increasing speeds while idle (check out the funny guy on top of the boxes after solving the minigame in the Spire lobby)
 
-## Planned features & changes (To-do list)
+## Planned fixes, changes & additions (To-do list)
 - High priority:
   - Test Exosuit, Elder1 and Elder2 in the other spawns in Nest to see if their AI gets disabled
   - Fix major issues:
@@ -123,12 +123,11 @@ The randomizer is incompatible with mods that make changes to any of the followi
   - (GUI) Allow disabling the "shuffle bosses" setting (requires other fixes to be done first, see above)
   - (GUI) A checklist of every enemy type so the user can prevent specific ones from appearing
   - (GUI) Things that go with the "shuffle bosses" setting:
-    - "Try to place duplicate bosses in optional locations"
     - A list of all bosses that lets the user determine how many of them are in the shuffle pool. If the user reduces the number below the minimum then tell them that empty locations will be filled with random duplicates
 - Rough ideas:
   - Option for randomizing Karakuri minions
   - Options for cross-randomizing of enemies between different ranks (also changing their mesh scale maybe)
-  - Boss music behavior setting. With these options:
+  - Boss music setting with these options:
     - A: Music is based on the location (vanilla behavior)
     - B: Music is based on the boss
     - C: Random music
@@ -136,8 +135,8 @@ The randomizer is incompatible with mods that make changes to any of the followi
 ## For developers
 Requirements: .NET 8 SDK
 
-Testing with UI: `dotnet run` (uses config.json in project folder)
+Testing with UI: `dotnet run` (uses settings from config.json in project folder)
 
-Testing with console only: `dotnet run -- -cli` (uses default GlobalSettings)
+Faster testing without UI: `dotnet run -- -cli` (uses default GlobalSettings)
 
 Publishing: `dotnet publish -c Release -p:OutputType=WinExe`

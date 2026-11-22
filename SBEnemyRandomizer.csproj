@@ -33,7 +33,7 @@
 
   <ItemGroup>
     <None Include="tools\retoc\retoc.exe" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
-    <None Include="tools\StellarBlade_1.4.1.usmap" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <None Include="tools\StellarBlade_1.5.0.usmap" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
     <None Include="LICENSE.md" CopyToPublishDirectory="PreserveNewest" />
     <None Include="README.md" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
